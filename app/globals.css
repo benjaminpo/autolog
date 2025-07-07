@@ -1,0 +1,361 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Enhanced light mode colors for better contrast and visual hierarchy */
+  --background: #ffffff;
+  --foreground: #0f172a;  /* Much darker for better contrast */
+  --surface: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --muted: #334155;  /* Much darker gray-700 for better readability */
+  --muted-foreground: #1e293b;  /* Darker gray-800 for secondary text */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;  /* Darker for better contrast */
+  --accent: #f8fafc;
+  --accent-foreground: #0f172a;  /* Much darker */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+  /* Enhanced input styling */
+  --input-background: #ffffff;
+  --input-border: #d1d5db;
+  --input-border-focus: #3b82f6;
+  --input-placeholder: #6b7280;  /* Slightly darker placeholder */
+  /* Card and container styling */
+  --card-background: #ffffff;
+  --card-border: #e5e7eb;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --surface: #111111;
+    --surface-elevated: #1a1a1a;
+    --surface-hover: #2a2a2a;
+    --border: #2a2a2a;
+    --border-light: #1a1a1a;
+    --muted: #9ca3af;
+    --muted-foreground: #6b7280;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #1a1a1a;
+    --secondary-foreground: #a1a1a1;
+    --accent: #111111;
+    --accent-foreground: #ededed;
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+    --success: #10b981;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+    --info: #3b82f6;
+    --info-foreground: #ffffff;
+    --input-background: #1a1a1a;
+    --input-border: #2a2a2a;
+    --input-border-focus: #3b82f6;
+    --input-placeholder: #6b7280;
+    --card-background: #1a1a1a;
+    --card-border: #2a2a2a;
+    --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+    --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* Explicit dark mode overrides */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --surface: #111111;
+  --surface-elevated: #1a1a1a;
+  --surface-hover: #2a2a2a;
+  --border: #2a2a2a;
+  --border-light: #1a1a1a;
+  --muted: #9ca3af;
+  --muted-foreground: #6b7280;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #a1a1a1;
+  --accent: #111111;
+  --accent-foreground: #ededed;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+  --input-background: #1a1a1a;
+  --input-border: #2a2a2a;
+  --input-border-focus: #3b82f6;
+  --input-placeholder: #6b7280;
+  --card-background: #1a1a1a;
+  --card-border: #2a2a2a;
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.3);
+  --card-shadow-hover: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+}
+
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+body {
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  line-height: 1.6;
+}
+
+/* Enhanced scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  border: 1px solid var(--background);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border: 1px solid var(--background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Enhanced form focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  ring-color: var(--input-border-focus);
+  border-color: var(--input-border-focus);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--input-border-focus)40;
+}
+
+/* Enhanced button styles */
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  border: 1px solid var(--primary);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px 0 rgb(59 130 246 / 0.3);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-hover);
+  border-color: var(--muted);
+  transform: translateY(-1px);
+}
+
+/* Enhanced card styles */
+.card {
+  background-color: var(--card-background);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--border);
+}
+
+.card-elevated {
+  background-color: var(--surface-elevated);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.dark .card-elevated {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Enhanced gradient backgrounds for light mode */
+.gradient-light {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+.gradient-light-blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.gradient-light-green {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.gradient-light-purple {
+  background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
+}
+
+/* Enhanced utilities using CSS custom properties */
+@layer utilities {
+  .text-theme-primary {
+    color: var(--foreground);
+  }
+  
+  .text-theme-secondary {
+    color: var(--muted-foreground);
+  }
+  
+  .text-theme-muted {
+    color: var(--muted);
+  }
+  
+  .bg-theme-surface {
+    background-color: var(--surface);
+  }
+  
+  .bg-theme-elevated {
+    background-color: var(--surface-elevated);
+  }
+  
+  .bg-theme-hover {
+    background-color: var(--surface-hover);
+  }
+  
+  .border-theme {
+    border-color: var(--border);
+  }
+  
+  .border-theme-light {
+    border-color: var(--border-light);
+  }
+  
+  /* Enhanced input utilities */
+  .input-theme {
+    background-color: var(--input-background);
+    border-color: var(--input-border);
+    color: var(--foreground);
+  }
+  
+  .input-theme::placeholder {
+    color: var(--input-placeholder);
+  }
+  
+  .input-theme:focus {
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 2px var(--input-border-focus)40;
+  }
+  
+  /* Enhanced status colors */
+  .text-success {
+    color: var(--success);
+  }
+  
+  .text-warning {
+    color: var(--warning);
+  }
+  
+  .text-destructive {
+    color: var(--destructive);
+  }
+  
+  .text-info {
+    color: var(--info);
+  }
+  
+  .bg-success {
+    background-color: var(--success);
+    color: var(--success-foreground);
+  }
+  
+  .bg-warning {
+    background-color: var(--warning);
+    color: var(--warning-foreground);
+  }
+  
+  .bg-destructive {
+    background-color: var(--destructive);
+    color: var(--destructive-foreground);
+  }
+  
+  .bg-info {
+    background-color: var(--info);
+    color: var(--info-foreground);
+  }
+  
+  /* Enhanced contrast text utilities for light mode */
+  .text-contrast-high {
+    color: #0f172a; /* slate-900 - highest contrast for light mode */
+  }
+  
+  .text-contrast-medium {
+    color: #1e293b; /* slate-800 - medium-high contrast */
+  }
+  
+  .text-contrast-readable {
+    color: #334155; /* slate-700 - good readable contrast */
+  }
+  
+  .text-contrast-muted {
+    color: #475569; /* slate-600 - muted but still readable */
+  }
+  
+  /* Dark mode overrides for contrast utilities */
+  .dark .text-contrast-high {
+    color: #f8fafc; /* slate-50 */
+  }
+  
+  .dark .text-contrast-medium {
+    color: #e2e8f0; /* slate-200 */
+  }
+  
+  .dark .text-contrast-readable {
+    color: #cbd5e1; /* slate-300 */
+  }
+  
+  .dark .text-contrast-muted {
+    color: #94a3b8; /* slate-400 */
+  }
+}
