@@ -16,6 +16,12 @@ export const predefinedFuelCompanies = [
   'Costco',
   'Circle K',
   'ARCO',
+  // Japanese fuel companies
+  'ENEOS',
+  'Idemitsu',
+  'Cosmo Oil',
+  'Showa Shell',
+  'Apollostation',
 ];
 
 // Predefined fuel types that will be available to all users
