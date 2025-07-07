@@ -7,7 +7,6 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { GlobalLanguageSelector } from '../../components/GlobalLanguageSelector';
 import { SimpleThemeToggle } from '../../components/ThemeToggle';
-import PageContainer from '../../components/PageContainer';
 import translations from '../../translations';
 
 export default function Register() {
@@ -47,13 +46,13 @@ export default function Register() {
   };
 
   return (
-    <PageContainer className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 p-4 transition-colors">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 transition-colors dark:bg-gray-800">
       <div className="absolute top-4 right-4 flex items-center gap-3">
         <SimpleThemeToggle />
         <GlobalLanguageSelector />
       </div>
 
-      <div className="w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-8 shadow-lg dark:shadow-gray-900/20 border dark:border-gray-700 transition-colors">
+      <div className="w-full max-w-md rounded-lg p-8 transition-colors">
         <h1 className="mb-6 text-center text-2xl font-bold text-gray-800 dark:text-gray-100">{t._('auth.register.title')}</h1>
 
         {(error || validationError) && (
@@ -162,6 +161,6 @@ export default function Register() {
           </Link>
         </div>
       </div>
-    </PageContainer>
+    </div>
   );
 }
