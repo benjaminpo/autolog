@@ -148,7 +148,7 @@ export function Navigation({ onTabChange, activeTab, showTabs = true, t }: Navig
           </div>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center p-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="flex items-center p-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-white dark:hover:bg-gray-700 rounded transition-colors"
             aria-label="Toggle menu"
             title="Toggle navigation menu"
           >

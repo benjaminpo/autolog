@@ -22,7 +22,7 @@ export default function HomePage() {
 
   // Show loading spinner while redirecting
   return (
-    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900 transition-colors">
+    <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-800 transition-colors">
       <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 dark:border-blue-400"></div>
     </div>
   );

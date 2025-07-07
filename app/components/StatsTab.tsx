@@ -1557,7 +1557,7 @@ export default function StatsTab({
                              currencies[0];
 
               return (
-                <div key={`stats-car-${carId || index}`} className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm border dark:border-gray-600 transition-colors">
+                <div key={`stats-car-${carId || index}`} className="mb-4 p-3 bg-white dark:bg-gray-700 rounded-lg text-sm border dark:border-gray-600 transition-colors">
                   <h3 className="font-medium text-lg text-gray-900 dark:text-gray-100 mb-2">{car.name}</h3>
 
                   {/* Overall Statistics */}

@@ -301,9 +301,9 @@ My Car,2024-01-25,Mileage Reimbursement,300,HKD,Business trip reimbursement`;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
       {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
+      <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
         <PageContainer>
           <div className="flex justify-between items-center">
             <h1 className="text-lg font-bold">{(t as any)?.export?.export || 'Export Data'}</h1>

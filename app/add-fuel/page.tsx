@@ -293,9 +293,9 @@ export default function AddFuelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
       {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
+      <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
         <PageContainer>
           <div className="flex justify-between items-center">
             <h1 className="text-lg font-bold">{getText('fuel.labels.addEntry', 'Add Fuel')}</h1>
@@ -333,7 +333,7 @@ export default function AddFuelPage() {
                   <button
                     type="button"
                     onClick={() => setShowBasicInfo(!showBasicInfo)}
-                    className="w-full text-left text-lg font-medium flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition-colors"
+                    className="w-full text-left text-lg font-medium flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-white dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition-colors"
                   >
                     {getText('sections.basicInfo', 'Basic Info')}
                     <span className="text-blue-600">{showBasicInfo ? '▼' : '▶'}</span>
@@ -421,7 +421,7 @@ export default function AddFuelPage() {
                   <button
                     type="button"
                     onClick={() => setShowFuelDetailsSection(!showFuelDetailsSection)}
-                    className="w-full text-left text-lg font-medium flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition-colors"
+                    className="w-full text-left text-lg font-medium flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-white dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition-colors"
                   >
                     {getText('sections.fuelDetails', 'Fuel Details')}
                     <span className="text-blue-600">{showFuelDetailsSection ? '▼' : '▶'}</span>
@@ -548,7 +548,7 @@ export default function AddFuelPage() {
                   <button
                     type="button"
                     onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
-                    className="w-full text-left text-lg font-medium flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition-colors"
+                    className="w-full text-left text-lg font-medium flex justify-between items-center mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hover:bg-white dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100 transition-colors"
                   >
                     {getText('sections.additionalInfo', 'Additional Info')}
                     <span className="text-blue-600">{showAdditionalInfo ? '▼' : '▶'}</span>

@@ -26,7 +26,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 transition-colors dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 transition-colors dark:bg-gray-800">
       <div className="absolute top-4 right-4 flex items-center gap-3">
         <SimpleThemeToggle />
         <GlobalLanguageSelector />

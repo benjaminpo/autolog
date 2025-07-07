@@ -74,7 +74,7 @@ describe('HomePage', () => {
         'justify-center',
         'min-h-screen',
         'bg-white',
-        'dark:bg-gray-900',
+        'dark:bg-gray-800',
         'transition-colors'
       );
     });

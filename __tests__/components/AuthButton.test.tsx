@@ -58,7 +58,7 @@ describe('AuthButton', () => {
       const registerLink = screen.getByText('Register');
       
       expect(loginLink.closest('a')).toHaveClass('bg-blue-600');
-      expect(registerLink.closest('a')).toHaveClass('bg-gray-100');
+      expect(registerLink.closest('a')).toHaveClass('bg-white');
     });
   });
 

@@ -45,7 +45,7 @@ export function AuthButton() {
             <div className="py-1">
               <Link
                 href="/profile"
-                className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-white dark:hover:bg-gray-700 transition-colors"
                 onClick={() => setDropdownOpen(false)}
               >
                 Profile
@@ -55,7 +55,7 @@ export function AuthButton() {
                   setDropdownOpen(false);
                   logout();
                 }}
-                className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-white dark:hover:bg-gray-700 transition-colors"
               >
                 Logout
               </button>
@@ -76,7 +76,7 @@ export function AuthButton() {
       </Link>
       <Link
         href="/auth/register"
-        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-600 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-gray-400 transition-colors"
+        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 rounded-md hover:bg-gray-200 dark:hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-gray-400 transition-colors"
       >
         Register
       </Link>

@@ -49,7 +49,7 @@ describe('HomePage', () => {
       render(<HomePage />);
 
       const container = document.querySelector('.min-h-screen');
-      expect(container).toHaveClass('min-h-screen', 'bg-white', 'dark:bg-gray-900');
+      expect(container).toHaveClass('min-h-screen', 'bg-white', 'dark:bg-gray-800');
       
       const spinner = document.querySelector('.animate-spin');
       expect(spinner).toHaveClass('h-16', 'w-16', 'border-t-2', 'border-b-2', 'border-blue-600');

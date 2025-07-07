@@ -40,7 +40,7 @@ export function PageContainer({
   };
 
   const backgroundClasses = {
-    default: 'bg-gray-50 dark:bg-gray-900',
+    default: 'bg-white dark:bg-gray-800',
     elevated: 'bg-white dark:bg-gray-800',
     gradient: 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900',
     none: ''
