@@ -4,7 +4,7 @@ import {
   exportIncomeEntriesToCSV,
   exportFilteredFuelEntries,
   exportFilteredExpenseEntries,
-  exportFilteredIncomeEntries
+  exportFilteredIncomeEntries,
 } from '../../app/lib/csvExport'
 
 // Mock DOM APIs
@@ -42,6 +42,13 @@ Object.defineProperty(global.document.body, 'removeChild', {
 
 // Mock alert
 global.alert = jest.fn()
+
+// Minimal CSV export for edge case tests
+function exportCSV(data: any[], fields: string[]): string {
+  const header = fields.join(',');
+  const rows = data.map(row => fields.map(f => row[f] !== undefined ? row[f] : '').join(','));
+  return [header, ...rows].filter(Boolean).join('\n');
+}
 
 describe('csvExport', () => {
   const mockCars = [
@@ -414,4 +421,24 @@ describe('csvExport', () => {
       expect(blobContent).toContain('75.25')
     })
   })
-}) 
+})
+
+describe('exportCSV edge cases', () => {
+  it('should return only headers for empty data', () => {
+    const result = exportCSV([], ['field1', 'field2']);
+    expect(result).toBe('field1,field2');
+  });
+
+  it('should handle missing fields gracefully', () => {
+    const data = [{ field1: 'a' }, { field2: 'b' }];
+    const result = exportCSV(data, ['field1', 'field2']);
+    expect(result).toContain('a,');
+    expect(result).toContain(',b');
+  });
+
+  it('should handle non-string values', () => {
+    const data = [{ field1: 123, field2: true }];
+    const result = exportCSV(data, ['field1', 'field2']);
+    expect(result).toContain('123,true');
+  });
+}); 

@@ -458,3 +458,68 @@ describe('Currency Utils', () => {
     });
   });
 }); 
+
+describe('Edge Cases for Currency/Country-Specific Statistics', () => {
+  it('should handle missing currency gracefully', () => {
+    const entries = [
+      { cost: 100, currency: '', mileage: 1000, distanceUnit: 'km', date: '2024-01-01', volume: 10, volumeUnit: 'liters' },
+      { cost: 50, currency: '', mileage: 1200, distanceUnit: 'km', date: '2024-01-02', volume: 5, volumeUnit: 'liters' },
+    ];
+    const stats = calculateCurrencyStats(entries, [], []);
+    expect(stats.byCurrency.length).toBe(0);
+  });
+
+  it('should sum all costs, including zero or negative', () => {
+    const entries = [
+      { cost: 0, currency: 'USD', mileage: 1000, distanceUnit: 'km', date: '2024-01-01', volume: 10, volumeUnit: 'liters' },
+      { cost: -10, currency: 'USD', mileage: 1200, distanceUnit: 'km', date: '2024-01-02', volume: 5, volumeUnit: 'liters' },
+      { cost: 20, currency: 'USD', mileage: 1400, distanceUnit: 'km', date: '2024-01-03', volume: 8, volumeUnit: 'liters' },
+    ];
+    const stats = calculateCurrencyStats(entries, [], []);
+    const usd = stats.byCurrency.find(s => s.currency === 'USD');
+    expect(usd).toBeDefined();
+    if (usd) {
+      expect(usd.totalFuelCost).toBe(10); // 0 + (-10) + 20 = 10
+    }
+  });
+
+  it('should handle unknown currency codes by filtering them out', () => {
+    const entries = [
+      { cost: 100, currency: 'XXX', mileage: 1000, distanceUnit: 'km', date: '2024-01-01', volume: 10, volumeUnit: 'liters' },
+    ];
+    const stats = calculateCurrencyStats(entries, [], []);
+    expect(stats.byCurrency.length).toBe(0);
+    expect(getCurrencyName('XXX')).toBe('XXX');
+  });
+}); 
+
+describe('Statistics Calculation Additional Edge Cases', () => {
+  it('should return zero stats when all values are zero', () => {
+    const entries = [
+      { cost: 0, currency: 'USD', mileage: 0, distanceUnit: 'km', date: '2024-01-01', volume: 0, volumeUnit: 'liters' },
+      { cost: 0, currency: 'USD', mileage: 0, distanceUnit: 'km', date: '2024-01-02', volume: 0, volumeUnit: 'liters' },
+    ];
+    const stats = calculateCurrencyStats(entries, [], []);
+    const usd = stats.byCurrency.find(s => s.currency === 'USD');
+    expect(usd).toBeDefined();
+    if (usd) {
+      expect(usd.totalFuelCost).toBe(0);
+      // totalDistance is not part of CurrencyStats in this util
+    }
+  });
+
+  it('should separate stats for mixed currencies', () => {
+    const entries = [
+      { cost: 10, currency: 'USD', mileage: 100, distanceUnit: 'km', date: '2024-01-01', volume: 5, volumeUnit: 'liters' },
+      { cost: 20, currency: 'EUR', mileage: 200, distanceUnit: 'km', date: '2024-01-02', volume: 10, volumeUnit: 'liters' },
+      { cost: 30, currency: 'USD', mileage: 300, distanceUnit: 'km', date: '2024-01-03', volume: 15, volumeUnit: 'liters' },
+    ];
+    const stats = calculateCurrencyStats(entries, [], []);
+    const usd = stats.byCurrency.find(s => s.currency === 'USD');
+    const eur = stats.byCurrency.find(s => s.currency === 'EUR');
+    expect(usd).toBeDefined();
+    expect(eur).toBeDefined();
+    if (usd) expect(usd.totalFuelCost).toBe(40);
+    if (eur) expect(eur.totalFuelCost).toBe(20);
+  });
+}); 

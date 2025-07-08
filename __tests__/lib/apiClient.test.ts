@@ -592,3 +592,80 @@ describe('apiClient', () => {
     });
   });
 }); 
+
+describe('apiClient edge cases', () => {
+  it('should handle network timeout', async () => {
+    global.fetch = jest.fn().mockImplementation(() => 
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Network timeout')), 100)
+      )
+    );
+
+    const result = await apiClient.getVehicles();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Network timeout');
+  });
+
+  it('should handle malformed JSON response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new Error('Invalid JSON')),
+      text: () => Promise.resolve('invalid json string')
+    });
+
+    const result = await apiClient.getVehicles();
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid JSON');
+  });
+
+  it('should handle empty response body', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true, vehicles: [] }),
+      text: () => Promise.resolve('')
+    });
+
+    const result = await apiClient.getVehicles();
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ success: true, vehicles: [] });
+  });
+
+  it('should handle very large response', async () => {
+    const largeData = { success: true, vehicles: [{ id: '1', name: 'x'.repeat(1000000) }] };
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(largeData)
+    });
+
+    const result = await apiClient.getVehicles();
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(largeData);
+  });
+
+  it('should handle concurrent requests', async () => {
+    let requestCount = 0;
+    global.fetch = jest.fn().mockImplementation(() => {
+      requestCount++;
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ success: true, count: requestCount })
+      });
+    });
+
+    const promises = [
+      apiClient.getVehicles(),
+      apiClient.getExpenseEntries(),
+      apiClient.getFuelEntries()
+    ];
+
+    const results = await Promise.all(promises);
+    expect(results).toHaveLength(3);
+    expect(results[0].success).toBe(true);
+    expect(results[1].success).toBe(true);
+    expect(results[2].success).toBe(true);
+  });
+}); 

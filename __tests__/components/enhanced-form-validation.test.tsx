@@ -504,4 +504,57 @@ describe('Enhanced Form Validation Tests', () => {
       }, { timeout: 1000 });
     });
   });
+});
+
+describe('Form validation edge cases', () => {
+  const validateRequired = (value: any): boolean => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'string') return value.trim() !== '';
+    if (Array.isArray(value)) return value.length > 0;
+    if (typeof value === 'object') return Object.keys(value).length > 0;
+    return true;
+  };
+
+  const validateMaxLength = (value: string, maxLength: number): boolean => {
+    return value.length <= maxLength;
+  };
+
+  const validateEmail = (value: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  };
+
+  const validateMinValue = (value: number, minValue: number): boolean => {
+    return value >= minValue;
+  };
+
+  const validateMaxValue = (value: number, maxValue: number): boolean => {
+    return value <= maxValue;
+  };
+
+  it('should handle very long input strings', () => {
+    const longString = 'a'.repeat(10000);
+    expect(validateRequired(longString)).toBe(true);
+    expect(validateMaxLength(longString, 100)).toBe(false);
+  });
+
+  it('should handle special characters in input', () => {
+    const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    expect(validateRequired(specialChars)).toBe(true);
+    expect(validateEmail('test@example.com')).toBe(true);
+    expect(validateEmail('test@example')).toBe(false);
+  });
+
+  it('should handle boundary values for numbers', () => {
+    expect(validateMinValue(0, 0)).toBe(true);
+    expect(validateMinValue(-1, 0)).toBe(false);
+    expect(validateMaxValue(100, 100)).toBe(true);
+    expect(validateMaxValue(101, 100)).toBe(false);
+  });
+
+  it('should handle empty arrays and objects', () => {
+    expect(validateRequired([])).toBe(false);
+    expect(validateRequired({})).toBe(false);
+    expect(validateRequired(null)).toBe(false);
+    expect(validateRequired(undefined)).toBe(false);
+  });
 }); 

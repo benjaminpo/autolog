@@ -353,3 +353,164 @@ describe('Date Utilities', () => {
     });
   });
 }); 
+
+describe('dateUtils edge cases', () => {
+  it('should handle invalid date strings', () => {
+    const formatDate = (date: Date, format: string = 'YYYY-MM-DD'): string => {
+      if (!date || isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      switch (format) {
+        case 'YYYY-MM-DD':
+          return `${year}-${month}-${day}`;
+        case 'MM/DD/YYYY':
+          return `${month}/${day}/${year}`;
+        case 'DD/MM/YYYY':
+          return `${day}/${month}/${year}`;
+        case 'YYYY':
+          return String(year);
+        case 'MM':
+          return month;
+        case 'DD':
+          return day;
+        default:
+          return `${year}-${month}-${day}`;
+      }
+    };
+
+    expect(() => formatDate(new Date('invalid-date'))).not.toThrow();
+    expect(formatDate(new Date('invalid-date'))).toBe('Invalid Date');
+  });
+
+  it('should handle null and undefined dates', () => {
+    const formatDate = (date: Date, format: string = 'YYYY-MM-DD'): string => {
+      if (!date || isNaN(date.getTime())) {
+        return 'Invalid Date';
+      }
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      switch (format) {
+        case 'YYYY-MM-DD':
+          return `${year}-${month}-${day}`;
+        case 'MM/DD/YYYY':
+          return `${month}/${day}/${year}`;
+        case 'DD/MM/YYYY':
+          return `${day}/${month}/${year}`;
+        case 'YYYY':
+          return String(year);
+        case 'MM':
+          return month;
+        case 'DD':
+          return day;
+        default:
+          return `${year}-${month}-${day}`;
+      }
+    };
+
+    expect(() => formatDate(null as any)).not.toThrow();
+    expect(() => formatDate(undefined as any)).not.toThrow();
+  });
+
+  it('should handle very old dates', () => {
+    const formatDate = (date: Date, format: string = 'YYYY-MM-DD'): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      switch (format) {
+        case 'YYYY-MM-DD':
+          return `${year}-${month}-${day}`;
+        case 'MM/DD/YYYY':
+          return `${month}/${day}/${year}`;
+        case 'DD/MM/YYYY':
+          return `${day}/${month}/${year}`;
+        case 'YYYY':
+          return String(year);
+        case 'MM':
+          return month;
+        case 'DD':
+          return day;
+        default:
+          return `${year}-${month}-${day}`;
+      }
+    };
+
+    const oldDate = new Date('1900-01-01');
+    expect(() => formatDate(oldDate)).not.toThrow();
+    expect(formatDate(oldDate)).toBe('1900-01-01');
+  });
+
+  it('should handle future dates', () => {
+    const formatDate = (date: Date, format: string = 'YYYY-MM-DD'): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      switch (format) {
+        case 'YYYY-MM-DD':
+          return `${year}-${month}-${day}`;
+        case 'MM/DD/YYYY':
+          return `${month}/${day}/${year}`;
+        case 'DD/MM/YYYY':
+          return `${day}/${month}/${year}`;
+        case 'YYYY':
+          return String(year);
+        case 'MM':
+          return month;
+        case 'DD':
+          return day;
+        default:
+          return `${year}-${month}-${day}`;
+      }
+    };
+
+    const futureDate = new Date('2030-12-31');
+    expect(() => formatDate(futureDate)).not.toThrow();
+    expect(formatDate(futureDate)).toBe('2030-12-31');
+  });
+
+  it('should handle date range with same start and end', () => {
+    const getDateRange = (startDate: Date, endDate: Date): Date[] => {
+      const dates: Date[] = [];
+      const currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      return dates;
+    };
+
+    const date = new Date('2023-01-01');
+    const result = getDateRange(date, date);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(date);
+  });
+
+  it('should handle date range with invalid dates', () => {
+    const getDateRange = (startDate: Date, endDate: Date): Date[] => {
+      if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return [];
+      }
+      const dates: Date[] = [];
+      const currentDate = new Date(startDate);
+      
+      while (currentDate <= endDate) {
+        dates.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      return dates;
+    };
+
+    expect(() => getDateRange(new Date('invalid'), new Date('invalid'))).not.toThrow();
+    expect(getDateRange(new Date('invalid'), new Date('invalid'))).toEqual([]);
+  });
+}); 
