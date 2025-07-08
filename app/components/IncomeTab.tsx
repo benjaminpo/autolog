@@ -339,7 +339,7 @@ export default function IncomeTab({
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 border dark:border-gray-700 transition-colors">
+    <div>
       {/* Data Table Controls */}
       <DataTableControls
         t={t as any}

@@ -50,7 +50,6 @@ interface ExpenseCategoryItem {
 
 export default function ExpenseHistoryPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
   const { t } = useTranslation();
 
   const [cars, setCars] = useState<Car[]>([]);

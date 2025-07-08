@@ -55,7 +55,7 @@ export default function DataTableControls({
     if (t && typeof t[key] === 'string') {
       return t[key];
     }
-    
+
     // Try nested access for common translation patterns
     const paths = [
       key,
@@ -64,12 +64,12 @@ export default function DataTableControls({
       `search.${key}`,
       `filter.${key}`,
     ];
-    
+
     for (const path of paths) {
       const value = path.split('.').reduce((obj: any, prop: string) => obj?.[prop], t);
       if (typeof value === 'string') return value;
     }
-    
+
     return fallback || key;
   };
 
@@ -127,11 +127,10 @@ export default function DataTableControls({
         {/* Filter Toggle Button */}
         <button
           onClick={onToggleFilters}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            showFilters || filters.some(f => f.value !== undefined && f.value !== null && f.value !== '')
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${showFilters || filters.some(f => f.value !== undefined && f.value !== null && f.value !== '')
               ? 'bg-blue-600 text-white hover:bg-blue-700'
               : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
-          }`}
+            }`}
         >
           <svg className="w-5 h-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707v4.586a1 1 0 01-.293.707l-2 2A1 1 0 0111 22v-6.586a1 1 0 00-.293-.707L4.293 7.293A1 1 0 014 6.586V4z" />
@@ -149,7 +148,7 @@ export default function DataTableControls({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {filter.label}
                 </label>
-                
+
                 {filter.type === 'select' && filter.options && (
                   <select
                     value={typeof filter.value === 'string' ? filter.value : ''}
@@ -170,9 +169,9 @@ export default function DataTableControls({
                     <input
                       type="date"
                       value={typeof filter.value === 'object' && filter.value?.startDate || ''}
-                      onChange={(e) => onFilterChange(filter.key, { 
-                        ...(typeof filter.value === 'object' ? filter.value : {}), 
-                        startDate: e.target.value 
+                      onChange={(e) => onFilterChange(filter.key, {
+                        ...(typeof filter.value === 'object' ? filter.value : {}),
+                        startDate: e.target.value
                       })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder={getText('startDate', 'Start Date')}
@@ -180,9 +179,9 @@ export default function DataTableControls({
                     <input
                       type="date"
                       value={typeof filter.value === 'object' && filter.value?.endDate || ''}
-                      onChange={(e) => onFilterChange(filter.key, { 
-                        ...(typeof filter.value === 'object' ? filter.value : {}), 
-                        endDate: e.target.value 
+                      onChange={(e) => onFilterChange(filter.key, {
+                        ...(typeof filter.value === 'object' ? filter.value : {}),
+                        endDate: e.target.value
                       })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder={getText('endDate', 'End Date')}
@@ -192,12 +191,12 @@ export default function DataTableControls({
               </div>
             ))}
           </div>
-          
+
           {/* Reset Filters Button */}
           <div className="flex justify-between items-center">
             <button
               onClick={onResetFilters}
-                              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+              className="px-4 py-2 text-sm text-gray-700 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
             >
               {getText('resetFilters', 'Reset Filters')}
             </button>
@@ -206,7 +205,7 @@ export default function DataTableControls({
       )}
 
       {/* Results Count */}
-                    <div className="text-sm text-gray-700 dark:text-gray-400 mt-4">
+      <div className="text-sm text-gray-700 dark:text-gray-400 mt-4">
         {searchTerm || filters.some(f => f.value !== undefined && f.value !== null && f.value !== '') ? (
           <span>
             {getText('showingResults', 'Showing')} {resultCount} {getText('of', 'of')} {totalCount} {getText('entries', 'entries')}
