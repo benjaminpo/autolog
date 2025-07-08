@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from './context/AuthContext';
 import { useLanguage } from './context/LanguageContext';
-import { ThemeToggle } from './components/ThemeToggle';
+import { SimpleThemeToggle } from './components/ThemeToggle';
 import { LanguageSelector } from './components/LanguageSelector';
 
 export default function HomePage() {
@@ -55,7 +55,7 @@ export default function HomePage() {
                 language={language}
                 onChange={setLanguage}
               />
-              <ThemeToggle />
+              <SimpleThemeToggle />
               <button
                 onClick={() => router.push('/auth/login')}
                 className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors"

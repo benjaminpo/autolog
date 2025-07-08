@@ -22,7 +22,7 @@ jest.mock('../../app/context/LanguageContext', () => ({
 
 // Mock ThemeToggle component
 jest.mock('../../app/components/ThemeToggle', () => ({
-  ThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>,
+  SimpleThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>,
 }));
 
 // Mock LanguageSelector component
