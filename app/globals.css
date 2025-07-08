@@ -1,6 +1,112 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Custom colors from the old config */
+  --color-light-bg: #ffffff;
+  --color-light-bg-secondary: #f8fafc;
+  --color-light-bg-tertiary: #f1f5f9;
+  --color-light-surface: #ffffff;
+  --color-light-surface-elevated: #ffffff;
+  --color-light-surface-hover: #f1f5f9;
+  --color-light-border: #e2e8f0;
+  --color-light-border-light: #f1f5f9;
+  --color-light-text: #0f172a;
+  --color-light-text-secondary: #1e293b;
+  --color-light-text-muted: #334155;
+  --color-light-text-light: #475569;
+
+  --color-dark-bg: #0a0a0a;
+  --color-dark-bg-secondary: #111111;
+  --color-dark-bg-tertiary: #1a1a1a;
+  --color-dark-surface: #111111;
+  --color-dark-surface-elevated: #1a1a1a;
+  --color-dark-surface-hover: #2a2a2a;
+  --color-dark-card: #1a1a1a;
+  --color-dark-border: #2a2a2a;
+  --color-dark-border-light: #1a1a1a;
+  --color-dark-text: #ededed;
+  --color-dark-text-secondary: #a1a1a1;
+  --color-dark-text-muted: #6b7280;
+  --color-dark-text-light: #4b5563;
+
+  /* Theme-aware colors using CSS variables */
+  --color-theme-bg: var(--background);
+  --color-theme-bg-secondary: var(--surface);
+  --color-theme-bg-elevated: var(--surface-elevated);
+  --color-theme-bg-hover: var(--surface-hover);
+  --color-theme-text: var(--foreground);
+  --color-theme-text-secondary: var(--muted-foreground);
+  --color-theme-text-muted: var(--muted);
+  --color-theme-border: var(--border);
+  --color-theme-border-light: var(--border-light);
+  --color-theme-primary: var(--primary);
+  --color-theme-primary-foreground: var(--primary-foreground);
+  --color-theme-secondary: var(--secondary);
+  --color-theme-secondary-foreground: var(--secondary-foreground);
+  --color-theme-accent: var(--accent);
+  --color-theme-accent-foreground: var(--accent-foreground);
+  --color-theme-destructive: var(--destructive);
+  --color-theme-destructive-foreground: var(--destructive-foreground);
+  --color-theme-success: var(--success);
+  --color-theme-success-foreground: var(--success-foreground);
+  --color-theme-warning: var(--warning);
+  --color-theme-warning-foreground: var(--warning-foreground);
+  --color-theme-info: var(--info);
+  --color-theme-info-foreground: var(--info-foreground);
+  --color-theme-card: var(--card-background);
+  --color-theme-card-border: var(--card-border);
+  --color-theme-input: var(--input-background);
+  --color-theme-input-border: var(--input-border);
+  --color-theme-input-border-focus: var(--input-border-focus);
+  --color-theme-input-placeholder: var(--input-placeholder);
+
+  /* Custom box shadows */
+  --shadow-light-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-light: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-light-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-light-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-light-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-theme-card: var(--card-shadow);
+  --shadow-theme-card-hover: var(--card-shadow-hover);
+
+  /* Custom animations */
+  --animate-fade-in: fadeIn 0.3s ease-in-out;
+  --animate-slide-up: slideUp 0.3s ease-out;
+  --animate-slide-down: slideDown 0.3s ease-out;
+  --animate-scale-in: scaleIn 0.2s ease-out;
+
+  /* Custom spacing */
+  --spacing-18: 4.5rem;
+  --spacing-88: 22rem;
+
+  /* Custom border radius */
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
+
+  /* Custom font family */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+
+  /* Custom keyframes */
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    0% { transform: translateY(10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes slideDown {
+    0% { transform: translateY(-10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+}
 
 :root {
   /* Enhanced light mode colors for better contrast and visual hierarchy */
@@ -198,19 +304,16 @@ select:focus {
 
 .card:hover {
   box-shadow: var(--card-shadow-hover);
-  border-color: var(--border);
 }
 
 .card-elevated {
-  background-color: var(--surface-elevated);
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: var(--card-shadow-hover);
 }
 
 .dark .card-elevated {
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
 }
 
-/* Loading spinner animation */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -221,141 +324,139 @@ select:focus {
   animation: spin 1s linear infinite;
 }
 
-/* Enhanced gradient backgrounds for light mode */
 .gradient-light {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .gradient-light-blue {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
 }
 
 .gradient-light-green {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
 }
 
 .gradient-light-purple {
-  background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
+  background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
 }
 
-/* Enhanced utilities using CSS custom properties */
+/* Theme-aware utility classes */
 @layer utilities {
   .text-theme-primary {
-    color: var(--foreground);
+    color: var(--primary);
   }
-  
+
   .text-theme-secondary {
+    color: var(--secondary-foreground);
+  }
+
+  .text-theme-muted {
     color: var(--muted-foreground);
   }
-  
-  .text-theme-muted {
-    color: var(--muted);
-  }
-  
+
   .bg-theme-surface {
     background-color: var(--surface);
   }
-  
+
   .bg-theme-elevated {
     background-color: var(--surface-elevated);
   }
-  
+
   .bg-theme-hover {
     background-color: var(--surface-hover);
   }
-  
+
   .border-theme {
     border-color: var(--border);
   }
-  
+
   .border-theme-light {
     border-color: var(--border-light);
   }
-  
-  /* Enhanced input utilities */
+
+  /* Enhanced input styling */
   .input-theme {
     background-color: var(--input-background);
     border-color: var(--input-border);
     color: var(--foreground);
   }
-  
+
   .input-theme::placeholder {
     color: var(--input-placeholder);
   }
-  
+
   .input-theme:focus {
     border-color: var(--input-border-focus);
-    box-shadow: 0 0 0 2px var(--input-border-focus)40;
+    box-shadow: 0 0 0 3px var(--input-border-focus)20;
   }
-  
-  /* Enhanced status colors */
+
+  /* Status colors */
   .text-success {
     color: var(--success);
   }
-  
+
   .text-warning {
     color: var(--warning);
   }
-  
+
   .text-destructive {
     color: var(--destructive);
   }
-  
+
   .text-info {
     color: var(--info);
   }
-  
+
   .bg-success {
     background-color: var(--success);
     color: var(--success-foreground);
   }
-  
+
   .bg-warning {
     background-color: var(--warning);
     color: var(--warning-foreground);
   }
-  
+
   .bg-destructive {
     background-color: var(--destructive);
     color: var(--destructive-foreground);
   }
-  
+
   .bg-info {
     background-color: var(--info);
     color: var(--info-foreground);
   }
-  
-  /* Enhanced contrast text utilities for light mode */
+
+  /* Enhanced contrast utilities */
   .text-contrast-high {
-    color: #0f172a; /* slate-900 - highest contrast for light mode */
+    color: #0f172a;
   }
-  
+
   .text-contrast-medium {
-    color: #1e293b; /* slate-800 - medium-high contrast */
+    color: #1e293b;
   }
-  
+
   .text-contrast-readable {
-    color: #334155; /* slate-700 - good readable contrast */
+    color: #334155;
   }
-  
+
   .text-contrast-muted {
-    color: #475569; /* slate-600 - muted but still readable */
+    color: #475569;
   }
-  
-  /* Dark mode overrides for contrast utilities */
+
   .dark .text-contrast-high {
-    color: #f8fafc; /* slate-50 */
+    color: #ededed;
   }
-  
+
   .dark .text-contrast-medium {
-    color: #e2e8f0; /* slate-200 */
+    color: #a1a1a1;
   }
-  
+
   .dark .text-contrast-readable {
-    color: #cbd5e1; /* slate-300 */
+    color: #9ca3af;
   }
-  
+
   .dark .text-contrast-muted {
-    color: #94a3b8; /* slate-400 */
+    color: #6b7280;
   }
 }
