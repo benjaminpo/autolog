@@ -849,6 +849,74 @@ const en = {
   profile: 'Profile',
   menu: 'Menu',
 
+  homepage: {
+    header: {
+      login: 'Login',
+      getStarted: 'Get Started',
+    },
+    hero: {
+      title: 'Track Your Vehicle Expenses',
+      subtitle: 'Like Never Before',
+      description: 'Take control of your vehicle finances with AutoLog. Monitor fuel consumption, track expenses, manage income, and get insights that help you save money.',
+      startTrackingFree: 'Start Tracking Free',
+      signIn: 'Sign In',
+    },
+    features: {
+      title: 'Everything You Need to Manage Your Vehicle',
+      description: 'Comprehensive tools to track, analyze, and optimize your vehicle expenses',
+      fuelTracking: {
+        title: 'Fuel Tracking',
+        description: 'Monitor fuel consumption, track prices, and analyze your vehicle\'s efficiency with detailed fuel history and consumption statistics.',
+      },
+      expenseManagement: {
+        title: 'Expense Management',
+        description: 'Track maintenance costs, repairs, insurance, and all vehicle-related expenses with categorized entries and detailed reporting.',
+      },
+      financialAnalytics: {
+        title: 'Financial Analytics',
+        description: 'Get insights into your spending patterns, fuel efficiency trends, and comprehensive financial analysis to make informed decisions.',
+      },
+      multiVehicleSupport: {
+        title: 'Multi-Vehicle Support',
+        description: 'Manage multiple vehicles with separate tracking for cars, motorcycles, trucks, and other vehicle types with customizable settings.',
+      },
+      mobileReady: {
+        title: 'Mobile Ready',
+        description: 'Access your data anywhere with our responsive web app that works perfectly on desktop, tablet, and mobile devices.',
+      },
+      incomeTracking: {
+        title: 'Income Tracking',
+        description: 'Track vehicle-related income for rideshare, delivery, or business use with detailed categorization and tax-ready reports.',
+      },
+    },
+    benefits: {
+      title: 'Why Choose AutoLog?',
+      saveMoney: {
+        title: 'Save Money',
+        description: 'Identify spending patterns and optimize your vehicle expenses to save hundreds of dollars annually.',
+      },
+      stayOrganized: {
+        title: 'Stay Organized',
+        description: 'Keep all your vehicle records in one place with easy-to-use categorization and search features.',
+      },
+      makeInformedDecisions: {
+        title: 'Make Informed Decisions',
+        description: 'Use detailed analytics and reports to make smart decisions about maintenance, fuel, and vehicle purchases.',
+      },
+      cta: {
+        title: 'Ready to Get Started?',
+        description: 'Join thousands of users who are already saving money and staying organized with AutoLog.',
+        createAccount: 'Create Your Free Account',
+      },
+    },
+    footer: {
+      description: 'Your complete vehicle expense tracking solution',
+      login: 'Login',
+      register: 'Register',
+      copyright: '© 2025 AutoLog. Built for vehicle owners who care about their finances.',
+    },
+  },
+
   // Import CSV Data translations
   import: {
     title: 'Import CSV Data',

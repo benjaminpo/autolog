@@ -905,6 +905,74 @@ const zh = {
     step6: '點擊「匯入」將有效條目添加到您的數據庫',
     noteVehiclesExist: '注意：在匯入燃料記錄、費用或收入之前，請確保您的車輛在系統中存在。',
   },
+
+  homepage: {
+    header: {
+      login: '登入',
+      getStarted: '開始使用',
+    },
+    hero: {
+      title: '追蹤您的車輛支出',
+      subtitle: '前所未有的方式',
+      description: '使用 AutoLog 掌控您的車輛財務。監控燃料消耗、追蹤支出、管理收入，並獲得幫助您省錢的洞察。',
+      startTrackingFree: '免費開始追蹤',
+      signIn: '登入',
+    },
+    features: {
+      title: '管理您車輛所需的一切',
+      description: '全面的工具來追蹤、分析和優化您的車輛支出',
+      fuelTracking: {
+        title: '燃料追蹤',
+        description: '監控燃料消耗、追蹤價格，並通過詳細的燃料記錄和消耗統計分析您車輛的效率。',
+      },
+      expenseManagement: {
+        title: '支出管理',
+        description: '追蹤維護成本、維修、保險和所有車輛相關支出，並提供分類條目和詳細報告。',
+      },
+      financialAnalytics: {
+        title: '財務分析',
+        description: '深入了解您的支出模式、燃料效率趨勢和全面的財務分析，以做出明智的決策。',
+      },
+      multiVehicleSupport: {
+        title: '多車輛支援',
+        description: '管理多輛車輛，分別追蹤汽車、摩托車、卡車和其他車輛類型，並提供可自定義的設置。',
+      },
+      mobileReady: {
+        title: '移動端就緒',
+        description: '使用我們的響應式網頁應用程式隨時隨地訪問您的數據，在桌面、平板和移動設備上都能完美運行。',
+      },
+      incomeTracking: {
+        title: '收入追蹤',
+        description: '追蹤與車輛相關的收入，用於共享出行、外送或商業用途，並提供詳細的分類和稅務就緒報告。',
+      },
+    },
+    benefits: {
+      title: '為什麼選擇 AutoLog？',
+      saveMoney: {
+        title: '省錢',
+        description: '識別支出模式並優化您的車輛支出，每年節省數百美元。',
+      },
+      stayOrganized: {
+        title: '保持井然有序',
+        description: '將所有車輛記錄保存在一個地方，具有易於使用的分類和搜索功能。',
+      },
+      makeInformedDecisions: {
+        title: '做出明智決策',
+        description: '使用詳細的分析和報告，就維護、燃料和車輛購買做出明智的決策。',
+      },
+      cta: {
+        title: '準備好開始了嗎？',
+        description: '加入數千名用戶，他們已經在使用 AutoLog 省錢並保持井然有序。',
+        createAccount: '創建您的免費帳戶',
+      },
+    },
+    footer: {
+      description: '您完整的車輛支出追蹤解決方案',
+      login: '登入',
+      register: '註冊',
+      copyright: '© 2025 AutoLog。為關心財務的車主而建。',
+    },
+  },
 };
 
 export default zh;
