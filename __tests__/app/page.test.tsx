@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { useRouter } from 'next/navigation';
 import HomePage from '../../app/page';
 import { useAuth } from '../../app/context/AuthContext';
@@ -10,6 +10,11 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('../../app/context/AuthContext', () => ({
   useAuth: jest.fn()
+}));
+
+// Mock ThemeToggle component
+jest.mock('../../app/components/ThemeToggle', () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle">Theme Toggle</div>,
 }));
 
 describe('HomePage', () => {
@@ -81,7 +86,7 @@ describe('HomePage', () => {
   });
 
   describe('Authenticated User Redirect', () => {
-    it('should redirect authenticated user to fuel-history page', () => {
+    it('should redirect authenticated user to fuel-history page', async () => {
       const mockUser = { id: '123', email: 'test@example.com' };
       (useAuth as jest.Mock).mockReturnValue({
         user: mockUser,
@@ -90,11 +95,13 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
-      expect(mockReplace).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+        expect(mockReplace).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('should handle user with different properties', () => {
+    it('should handle user with different properties', async () => {
       const mockUser = { 
         id: 'user456', 
         email: 'another@test.com',
@@ -107,10 +114,12 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+      });
     });
 
-    it('should redirect even with minimal user object', () => {
+    it('should redirect even with minimal user object', async () => {
       const mockUser = { id: 'minimal-user' };
       (useAuth as jest.Mock).mockReturnValue({
         user: mockUser,
@@ -119,12 +128,14 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+      });
     });
   });
 
-  describe('Unauthenticated User Redirect', () => {
-    it('should redirect unauthenticated user to login page when user is null', () => {
+  describe('Unauthenticated User Landing Page', () => {
+    it('should show landing page for unauthenticated user when user is null', async () => {
       (useAuth as jest.Mock).mockReturnValue({
         user: null,
         loading: false
@@ -132,11 +143,16 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/auth/login');
-      expect(mockReplace).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(screen.getByText('Track Your Vehicle Expenses')).toBeInTheDocument();
+        expect(screen.getByText('Like Never Before')).toBeInTheDocument();
+      });
+
+      // Should not redirect to login
+      expect(mockReplace).not.toHaveBeenCalledWith('/auth/login');
     });
 
-    it('should redirect unauthenticated user to login page when user is undefined', () => {
+    it('should show landing page for unauthenticated user when user is undefined', async () => {
       (useAuth as jest.Mock).mockReturnValue({
         user: undefined,
         loading: false
@@ -144,10 +160,15 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/auth/login');
+      await waitFor(() => {
+        expect(screen.getByText('Track Your Vehicle Expenses')).toBeInTheDocument();
+      });
+
+      // Should not redirect to login
+      expect(mockReplace).not.toHaveBeenCalledWith('/auth/login');
     });
 
-    it('should redirect when user is false', () => {
+    it('should show landing page when user is false', async () => {
       (useAuth as jest.Mock).mockReturnValue({
         user: false,
         loading: false
@@ -155,10 +176,15 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/auth/login');
+      await waitFor(() => {
+        expect(screen.getByText('Track Your Vehicle Expenses')).toBeInTheDocument();
+      });
+
+      // Should not redirect to login
+      expect(mockReplace).not.toHaveBeenCalledWith('/auth/login');
     });
 
-    it('should redirect when user is empty string', () => {
+    it('should show landing page when user is empty string', async () => {
       (useAuth as jest.Mock).mockReturnValue({
         user: '',
         loading: false
@@ -166,7 +192,12 @@ describe('HomePage', () => {
 
       render(<HomePage />);
 
-      expect(mockReplace).toHaveBeenCalledWith('/auth/login');
+      await waitFor(() => {
+        expect(screen.getByText('Track Your Vehicle Expenses')).toBeInTheDocument();
+      });
+
+      // Should not redirect to login
+      expect(mockReplace).not.toHaveBeenCalledWith('/auth/login');
     });
   });
 
@@ -182,7 +213,7 @@ describe('HomePage', () => {
       expect(mockReplace).not.toHaveBeenCalled();
     });
 
-    it('should redirect after loading becomes false', () => {
+    it('should redirect after loading becomes false', async () => {
       const { rerender } = render(<HomePage />);
 
       // Initially loading
@@ -201,7 +232,10 @@ describe('HomePage', () => {
       });
 
       rerender(<HomePage />);
-      expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+      
+      await waitFor(() => {
+        expect(mockReplace).toHaveBeenCalledWith('/fuel-history');
+      });
     });
   });
 
@@ -227,8 +261,8 @@ describe('HomePage', () => {
       expect(container.querySelector('.animate-spin')).toBeInTheDocument();
     });
 
-    it('should always render the same structure regardless of auth state', () => {
-      // Test with authenticated user
+    it('should render different content based on auth state', async () => {
+      // Test with authenticated user (should redirect, so no content)
       (useAuth as jest.Mock).mockReturnValue({
         user: { id: '123' },
         loading: false
@@ -236,7 +270,7 @@ describe('HomePage', () => {
 
       const { container: container1 } = render(<HomePage />);
 
-      // Test with unauthenticated user
+      // Test with unauthenticated user (should show landing page)
       (useAuth as jest.Mock).mockReturnValue({
         user: null,
         loading: false
@@ -244,8 +278,13 @@ describe('HomePage', () => {
 
       const { container: container2 } = render(<HomePage />);
 
-      // Both should have the same structure (loading spinner)
-      expect(container1.innerHTML).toBe(container2.innerHTML);
+      await waitFor(() => {
+        // Authenticated user gets null (redirected)
+        expect(container1.innerHTML).toBe('');
+        
+        // Unauthenticated user gets landing page
+        expect(container2.innerHTML).toContain('Track Your Vehicle Expenses');
+      });
     });
   });
 

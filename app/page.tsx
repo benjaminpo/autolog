@@ -40,13 +40,13 @@ export default function HomePage() {
       <header className="relative z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  🚗 AutoLog
-                </h1>
+                          <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    🚗 AutoLog
+                  </div>
+                </div>
               </div>
-            </div>
             <div className="flex items-center space-x-4">
               <ThemeToggle />
               <button
@@ -260,7 +260,7 @@ export default function HomePage() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h3 className="text-2xl font-bold text-blue-400 mb-4">🚗 AutoLog</h3>
+            <div className="text-2xl font-bold text-blue-400 mb-4">🚗 AutoLog</div>
             <p className="text-gray-400 mb-8">
               Your complete vehicle expense tracking solution
             </p>
