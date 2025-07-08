@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (.dark &);
+
 @theme {
   /* Custom colors from the old config */
   --color-light-bg: #ffffff;
