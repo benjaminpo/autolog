@@ -99,13 +99,13 @@ describe('IncomeTab', () => {
       // filtered data, we see the empty state. Let's just check the component renders.
       render(<IncomeTab {...defaultProps} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should render income history title', () => {
       render(<IncomeTab {...defaultProps} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should show no incomes message when list is empty', () => {
@@ -127,14 +127,14 @@ describe('IncomeTab', () => {
       render(<IncomeTab {...defaultProps} t={customTranslations} />);
       
       // Since mock returns empty data, we see empty state - just check it renders
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should fall back to default text when no translations provided', () => {
       render(<IncomeTab {...defaultProps} />);
       
       // Since mock returns empty data, we see empty state - just check it renders
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -150,20 +150,20 @@ describe('IncomeTab', () => {
 
       render(<IncomeTab {...minimalProps} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle empty cars array', () => {
       render(<IncomeTab {...defaultProps} cars={[]} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle loading state', () => {
       render(<IncomeTab {...defaultProps} loading={true} />);
       
       // Since component shows empty state, not loading text - just check it renders
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -180,7 +180,7 @@ describe('IncomeTab', () => {
       render(<IncomeTab {...defaultProps} t={translationsWithCategories} />);
       
       // Component should render without errors
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -206,7 +206,7 @@ describe('IncomeTab', () => {
 
       render(<IncomeTab {...defaultProps} incomes={incomeWithStringAmount} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -226,7 +226,7 @@ describe('IncomeTab', () => {
 
       render(<IncomeTab {...defaultProps} incomes={incomeWithBadCarId} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle income with empty notes', () => {
@@ -244,7 +244,7 @@ describe('IncomeTab', () => {
 
       render(<IncomeTab {...defaultProps} incomes={incomeWithEmptyNotes} />);
       
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 }); 

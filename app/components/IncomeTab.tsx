@@ -340,10 +340,6 @@ export default function IncomeTab({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 border dark:border-gray-700 transition-colors">
-      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-        {(t as any)?.incomeHistory || (t as any)?.navigation?.incomeHistory || 'Income History'}
-      </h2>
-
       {/* Data Table Controls */}
       <DataTableControls
         t={t as any}

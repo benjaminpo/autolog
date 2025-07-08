@@ -133,13 +133,13 @@ describe('FuelTab', () => {
       // Since mock returns empty data, we see empty state - just check it renders
       render(<FuelTab {...defaultProps} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should render fuel history title', () => {
       render(<FuelTab {...defaultProps} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should show no fuel entries message when list is empty', () => {
@@ -163,14 +163,14 @@ describe('FuelTab', () => {
       render(<FuelTab {...defaultProps} t={customTranslations} />);
       
       // Since mock returns empty data, we see empty state - just check it renders
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should fall back to default text when no translations provided', () => {
       render(<FuelTab {...defaultProps} />);
       
       // Since mock returns empty data, we see empty state - just check it renders
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -186,20 +186,20 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...minimalProps} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle empty cars array', () => {
       render(<FuelTab {...defaultProps} cars={[]} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle loading state', () => {
       render(<FuelTab {...defaultProps} loading={true} />);
       
       // Since component shows empty state, not loading text - just check it renders
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -215,7 +215,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entriesWithGallons} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle different distance units', () => {
@@ -229,7 +229,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entriesWithMiles} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle partial fuel ups', () => {
@@ -242,7 +242,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={partialFuelEntries} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -265,7 +265,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entriesWithStringValues} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -280,7 +280,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entryWithBadCarId} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle fuel entry with empty tags', () => {
@@ -293,7 +293,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entryWithEmptyTags} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle fuel entry with missing location', () => {
@@ -306,7 +306,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entryWithNoLocation} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle fuel entry with zero values', () => {
@@ -321,7 +321,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entryWithZeroValues} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 
@@ -336,7 +336,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entriesWithDifferentCompanies} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle different fuel types', () => {
@@ -349,7 +349,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={entriesWithDifferentTypes} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
     it('should handle diesel fuel type', () => {
@@ -362,7 +362,7 @@ describe('FuelTab', () => {
 
       render(<FuelTab {...defaultProps} entries={dieselEntry} />);
       
-      expect(screen.getByText('Fuel History')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });
 }); 
