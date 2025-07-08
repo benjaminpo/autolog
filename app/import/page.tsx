@@ -616,7 +616,7 @@ export default function ImportPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
-      <main className="flex-grow overflow-auto bg-gray-50 dark:bg-gray-800 transition-colors">
+      <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700 transition-colors">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t?.import?.title || 'Import CSV Data'}</h2>

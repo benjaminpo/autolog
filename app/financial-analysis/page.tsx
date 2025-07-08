@@ -318,7 +318,7 @@ export default function FinancialAnalysisPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
-      <main className="flex-grow overflow-auto bg-gray-50 dark:bg-gray-800 transition-colors">
+      <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>

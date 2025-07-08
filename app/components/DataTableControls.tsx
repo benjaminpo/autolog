@@ -83,7 +83,7 @@ export default function DataTableControls({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-4 border dark:border-gray-700 transition-colors">
+    <div>
       {/* Search and Sort Row */}
       <div className="flex flex-col sm:flex-row gap-4 mb-4">
         {/* Search Input */}

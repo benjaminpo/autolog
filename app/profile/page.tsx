@@ -78,7 +78,7 @@ export default function ProfilePage() {
         {/* Navigation Component */}
         <TranslatedNavigation showTabs={false} />
 
-        <main className="flex-grow overflow-auto bg-gray-50 dark:bg-gray-800 transition-colors">
+        <main className="flex-grow overflow-auto transition-colors">
           <PageContainer className="p-3 md:p-6">
             {message.text && (
               <div className={`mb-4 p-3 rounded transition-colors ${

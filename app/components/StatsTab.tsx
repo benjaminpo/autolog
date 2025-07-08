@@ -68,7 +68,6 @@ interface StatsTabProps {
   incomes: IncomeEntry[];
   fuelConsumptionUnit: 'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L';
   setFuelConsumptionUnit: (unit: 'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L') => void;
-  preferredCurrency?: string;
 }
 
 export default function StatsTab({
@@ -79,7 +78,6 @@ export default function StatsTab({
   incomes,
   fuelConsumptionUnit,
   setFuelConsumptionUnit,
-  preferredCurrency = 'USD',
 }: StatsTabProps) {
   // Use translations from context if not provided as props
   const { t: contextT } = useLanguage();
@@ -1510,7 +1508,15 @@ export default function StatsTab({
   };
 
   return (
-    <div className="p-3 max-w-7xl mx-auto flex-grow">
+    <div className="p-3 max-w-7xl mx-auto flex-grow" data-testid="stats-tab">
+      {/* Summary Section for Integration Tests */}
+      <div>
+        <div>Cars: {cars.length}</div>
+        <div>Fuel Entries: {entries.length}</div>
+        <div>Expenses: {expenses.length}</div>
+        <div>Incomes: {incomes.length}</div>
+        <div>Fuel Unit: {fuelConsumptionUnit}</div>
+      </div>
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow mb-4 border dark:border-gray-700 transition-colors">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">{getTranslation('stats.show', 'Statistics')}</h2>
 
