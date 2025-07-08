@@ -668,4 +668,139 @@ describe('apiClient edge cases', () => {
     expect(results[1].success).toBe(true);
     expect(results[2].success).toBe(true);
   });
-}); 
+
+  it('should handle network errors', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Network error');
+  });
+
+  it('should handle timeout errors', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('Request timeout'));
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Request timeout');
+  });
+
+  it('should handle CORS errors', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('CORS error'));
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('CORS error');
+  });
+
+  it('should handle malformed JSON responses', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.reject(new Error('Invalid JSON')),
+      text: () => Promise.resolve('Invalid JSON string')
+    } as Response);
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Invalid JSON');
+  });
+
+  it('should handle empty responses', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(null),
+      text: () => Promise.resolve('')
+    } as Response);
+
+    const result = await apiClient.getVehicles();
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Cannot read properties');
+  });
+
+  it('should handle undefined responses', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(undefined),
+      text: () => Promise.resolve('')
+    } as Response);
+
+    const result = await apiClient.getVehicles();
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Cannot read properties');
+  });
+
+  it('should handle very large responses', async () => {
+    const largeData = Array.from({ length: 10000 }, (_, i) => ({ id: i, data: 'large data' }));
+    
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true, vehicles: largeData }),
+      text: () => Promise.resolve(JSON.stringify({ success: true, vehicles: largeData }))
+    } as Response);
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(true);
+    expect(result.data?.vehicles).toHaveLength(10000);
+  });
+
+  it('should handle responses with special characters', async () => {
+    const specialData = {
+      message: 'Special chars: !@#$%^&*()_+-=[]{}|;:,.<>?',
+      unicode: '你好世界 🌍 émojis 🚗',
+      html: '<script>alert("test")</script>',
+      quotes: 'Single "double" quotes',
+      backslashes: '\\n\\t\\r'
+    };
+    
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true, vehicles: [specialData] }),
+      text: () => Promise.resolve(JSON.stringify({ success: true, vehicles: [specialData] }))
+    } as Response);
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(true);
+    expect(result.data?.vehicles[0]).toEqual(specialData);
+  });
+
+  it('should handle deep nested objects', async () => {
+    const deepNested = {
+      id: '1',
+      name: 'Test Vehicle',
+      level1: {
+        level2: {
+          level3: {
+            level4: {
+              level5: {
+                value: 'deep value'
+              }
+            }
+          }
+        }
+      }
+    } as any;
+    
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ success: true, vehicles: [deepNested] }),
+      text: () => Promise.resolve(JSON.stringify({ success: true, vehicles: [deepNested] }))
+    } as Response);
+
+    const result = await apiClient.getVehicles();
+    
+    expect(result.success).toBe(true);
+    expect((result.data?.vehicles[0] as any).level1.level2.level3.level4.level5.value).toBe('deep value');
+  });
+});

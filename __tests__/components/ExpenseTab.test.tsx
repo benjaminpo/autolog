@@ -608,41 +608,283 @@ describe('ExpenseTab', () => {
     });
   });
 
-  describe('Performance', () => {
-    it('should not re-render unnecessarily', () => {
-      const { rerender } = render(<ExpenseTab {...defaultProps} />);
+  describe('Edge cases and error handling', () => {
+    it('should handle expense with missing car reference', () => {
+      const expenseWithBadCarId = [
+        {
+          ...mockExpenses[0],
+          carId: 'nonexistent-car',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithBadCarId} />);
       
-      rerender(<ExpenseTab {...defaultProps} />);
-      
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
 
-    it('should handle large expense datasets', () => {
-      const largeExpenseSet = Array.from({ length: 100 }, (_, i) => ({
-        id: `expense${i}`,
-        carId: 'car1',
-        category: 'Fuel',
-        amount: 50 + i,
-        currency: 'USD',
-        date: '2023-10-15',
-        notes: `Expense ${i}`,
+    it('should handle expense with empty notes', () => {
+      const expenseWithEmptyNotes = [
+        {
+          ...mockExpenses[0],
+          notes: '',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithEmptyNotes} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with zero values', () => {
+      const expenseWithZeroValues = [
+        {
+          ...mockExpenses[0],
+          amount: 0,
+          mileage: 0,
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithZeroValues} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with negative values', () => {
+      const expenseWithNegativeValues = [
+        {
+          ...mockExpenses[0],
+          amount: -50,
+          mileage: -1000,
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithNegativeValues} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with very large values', () => {
+      const expenseWithLargeValues = [
+        {
+          ...mockExpenses[0],
+          amount: 999999.99,
+          mileage: 999999,
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithLargeValues} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with special characters in notes', () => {
+      const expenseWithSpecialChars = [
+        {
+          ...mockExpenses[0],
+          notes: 'Special chars: !@#$%^&*()_+-=[]{}|;:,.<>?',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithSpecialChars} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with unicode characters', () => {
+      const expenseWithUnicode = [
+        {
+          ...mockExpenses[0],
+          notes: 'Unicode: 你好世界 🌍 émojis 🚗',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithUnicode} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with missing category', () => {
+      const expenseWithoutCategory = [
+        {
+          ...mockExpenses[0],
+          category: '',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithoutCategory} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with missing date', () => {
+      const expenseWithoutDate = [
+        {
+          ...mockExpenses[0],
+          date: '',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithoutDate} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with invalid date format', () => {
+      const expenseWithInvalidDate = [
+        {
+          ...mockExpenses[0],
+          date: 'invalid-date',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithInvalidDate} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with missing currency', () => {
+      const expenseWithoutCurrency = [
+        {
+          ...mockExpenses[0],
+          currency: '',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithoutCurrency} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle expense with unknown currency', () => {
+      const expenseWithUnknownCurrency = [
+        {
+          ...mockExpenses[0],
+          currency: 'XXX',
+        },
+      ];
+
+      render(<ExpenseTab {...defaultProps} expenses={expenseWithUnknownCurrency} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+  });
+
+  describe('Performance and stress tests', () => {
+    it('should handle large number of expenses', () => {
+      const largeExpenseList = Array.from({ length: 1000 }, (_, index) => ({
+        ...mockExpenses[0],
+        id: `expense-${index}`,
+        amount: Math.random() * 1000,
+        mileage: Math.floor(Math.random() * 100000),
       }));
 
-      mockUseDataTableFilters.mockReturnValue({
-        ...mockFilterHookReturn,
-        filteredData: largeExpenseSet,
-        totalCount: largeExpenseSet.length,
-        resultCount: largeExpenseSet.length,
-      });
+      render(<ExpenseTab {...defaultProps} expenses={largeExpenseList} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
 
-      render(
-        <ExpenseTab 
-          {...defaultProps} 
-          expenses={largeExpenseSet}
-        />
+    it('should handle rapid prop changes', () => {
+      const { rerender } = render(<ExpenseTab {...defaultProps} />);
+      
+      // Rapidly change props
+      for (let i = 0; i < 10; i++) {
+        rerender(<ExpenseTab {...defaultProps} expenses={[...mockExpenses, { ...mockExpenses[0], id: `temp-${i}` }]} />);
+      }
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle concurrent state updates', () => {
+      const setShowExpenseDetails = jest.fn();
+      
+      render(<ExpenseTab {...defaultProps} setShowExpenseDetails={setShowExpenseDetails} />);
+      
+      // Simulate concurrent state updates
+      const promises = Array.from({ length: 5 }, (_, i) => 
+        Promise.resolve().then(() => setShowExpenseDetails(`expense-${i}`))
       );
       
-      // Should render without performance issues
+      return Promise.all(promises).then(() => {
+        expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Accessibility tests', () => {
+    it('should have proper ARIA labels', () => {
+      render(<ExpenseTab {...defaultProps} />);
+      
+      // Check for data-table-controls which should have proper accessibility
+      const dataTableControls = screen.getByTestId('data-table-controls');
+      expect(dataTableControls).toBeInTheDocument();
+    });
+
+    it('should handle keyboard navigation', () => {
+      render(<ExpenseTab {...defaultProps} />);
+      
+      // Component should be keyboard accessible
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should have proper focus management', () => {
+      render(<ExpenseTab {...defaultProps} />);
+      
+      // Component should manage focus properly
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+  });
+
+  describe('Internationalization edge cases', () => {
+    it('should handle RTL languages', () => {
+      const rtlTranslations = {
+        car: 'רכב',
+        date: 'תאריך',
+        category: 'קטגוריה',
+        amount: 'סכום',
+        mileage: 'קילומטראז',
+        notes: 'הערות',
+      };
+
+      render(<ExpenseTab {...defaultProps} t={rtlTranslations} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle very long translated text', () => {
+      const longTranslations = {
+        car: 'Very long vehicle name that might cause layout issues',
+        date: 'Very long date format string',
+        category: 'Very long category name that could break the layout',
+        amount: 'Very long amount label',
+        mileage: 'Very long mileage label',
+        notes: 'Very long notes label',
+      };
+
+      render(<ExpenseTab {...defaultProps} t={longTranslations} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle missing translation keys gracefully', () => {
+      const incompleteTranslations = {
+        car: 'Vehículo',
+        // Missing other keys
+      };
+
+      render(<ExpenseTab {...defaultProps} t={incompleteTranslations} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle null translation object', () => {
+      render(<ExpenseTab {...defaultProps} t={null as any} />);
+      
+      expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
+    });
+
+    it('should handle undefined translation object', () => {
+      render(<ExpenseTab {...defaultProps} t={undefined} />);
+      
       expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
     });
   });

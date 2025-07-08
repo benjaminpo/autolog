@@ -1507,14 +1507,20 @@ export default function StatsTab({
     return { monthlyTrends, monthlyTrendsByCurrency, fuelPrices, fuelPricesByCurrency, consumptionTrends, carComparison };
   };
 
+  // Default arrays to empty if null/undefined
+  cars = cars ?? [];
+  entries = entries ?? [];
+  expenses = expenses ?? [];
+  incomes = incomes ?? [];
+
   return (
     <div className="p-3 max-w-7xl mx-auto flex-grow" data-testid="stats-tab">
       {/* Summary Section for Integration Tests */}
       <div>
-        <div>Cars: {cars.length}</div>
-        <div>Fuel Entries: {entries.length}</div>
-        <div>Expenses: {expenses.length}</div>
-        <div>Incomes: {incomes.length}</div>
+        <div>Cars: {cars?.length || 0}</div>
+        <div>Fuel Entries: {entries?.length || 0}</div>
+        <div>Expenses: {expenses?.length || 0}</div>
+        <div>Incomes: {incomes?.length || 0}</div>
         <div>Fuel Unit: {fuelConsumptionUnit}</div>
       </div>
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow mb-4 border dark:border-gray-700 transition-colors">
