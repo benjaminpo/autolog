@@ -11,6 +11,7 @@ import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../hooks/useTranslation';
 import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
+import { getCurrencyName } from '../lib/currencyUtils';
 
 
 // Wrap component with translations HOC
@@ -79,6 +80,7 @@ export default function StatisticsPage() {
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
   const [fuelConsumptionUnit, setFuelConsumptionUnit] = useState<'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L'>('L/100km');
+  const [preferredCurrency, setPreferredCurrency] = useState<string>('USD');
 
   // Load data
   useEffect(() => {
@@ -153,12 +155,17 @@ export default function StatisticsPage() {
         console.error('Error fetching income entries:', error);
       });
 
-    // Load user preferences for fuel consumption unit
+    // Load user preferences for fuel consumption unit and default currency
     fetch('/api/user-preferences')
       .then(response => response.json())
       .then(data => {
-        if (data.preferences && data.preferences.fuelConsumptionUnit) {
-          setFuelConsumptionUnit(data.preferences.fuelConsumptionUnit);
+        if (data.preferences) {
+          if (data.preferences.fuelConsumptionUnit) {
+            setFuelConsumptionUnit(data.preferences.fuelConsumptionUnit);
+          }
+          if (data.preferences.defaultCurrency) {
+            setPreferredCurrency(data.preferences.defaultCurrency);
+          }
         }
       });
   }, [user]);
@@ -192,6 +199,24 @@ export default function StatisticsPage() {
           <div className="flex justify-between items-center">
             <h1 className="text-lg font-bold">{t?.navigation?.statistics || 'Statistics'}</h1>
             <div className="flex items-center gap-2">
+              {/* Currency Selector */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="currency-select" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t?.payment?.currency || 'Currency'}:
+                </label>
+                <select
+                  id="currency-select"
+                  value={preferredCurrency}
+                  onChange={(e) => setPreferredCurrency(e.target.value)}
+                  className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
+                >
+                  {currencies.map((currency) => (
+                    <option key={currency} value={currency}>
+                      {currency} - {getCurrencyName(currency)}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <SimpleThemeToggle />
               <GlobalLanguageSelector darkMode={false} />
               <AuthButton />
@@ -213,6 +238,7 @@ export default function StatisticsPage() {
               incomes={incomes}
               fuelConsumptionUnit={fuelConsumptionUnit}
               setFuelConsumptionUnit={setFuelConsumptionUnit}
+              preferredCurrency={preferredCurrency}
             />
           </div>
         </PageContainer>

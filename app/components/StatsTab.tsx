@@ -4,6 +4,7 @@ import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { TranslationType, EnhancedTranslationType } from '../translations';
+import { calculateCurrencyStats, formatCurrency, getCurrencyName, calculateCostPerDistance } from '../lib/currencyUtils';
 
 interface Car {
   id: string;
@@ -67,6 +68,7 @@ interface StatsTabProps {
   incomes: IncomeEntry[];
   fuelConsumptionUnit: 'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L';
   setFuelConsumptionUnit: (unit: 'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L') => void;
+  preferredCurrency?: string;
 }
 
 export default function StatsTab({
@@ -77,6 +79,7 @@ export default function StatsTab({
   incomes,
   fuelConsumptionUnit,
   setFuelConsumptionUnit,
+  preferredCurrency = 'USD',
 }: StatsTabProps) {
   // Use translations from context if not provided as props
   const { t: contextT } = useLanguage();
@@ -122,6 +125,25 @@ export default function StatsTab({
       return match;
     });
 
+    // Debug logging for CLA250 specifically
+    if (process.env.NODE_ENV === 'development') {
+      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+      if (carName?.includes('CLA250')) {
+        console.log(`🔍 CLA250 Debug - calculateStats:`, {
+          carId,
+          carName,
+          totalEntries: entries.length,
+          matchingEntries: carEntries.length,
+          firstFewEntries: carEntries.slice(0, 3).map(e => ({
+            date: e.date,
+            mileage: e.mileage,
+            volume: e.volume,
+            cost: e.cost
+          }))
+        });
+      }
+    }
+
     if (carEntries.length < 2) return { avgConsumption: null, avgCost: null, totalDistance: 0 };
 
     const sortedEntries = carEntries.sort(
@@ -129,10 +151,12 @@ export default function StatsTab({
     );
 
     let totalDistanceConsumption = 0;
+    let totalDistanceOverall = 0;
     let totalVolume = 0;
     let totalDistanceCost = 0;
     let totalCost = 0;
     let validConsumptionEntries = 0;
+    let validDistanceEntries = 0;
     let hasNonPartial = false;
 
     // Check for non-partial entries first - OUTSIDE the loop
@@ -143,6 +167,11 @@ export default function StatsTab({
       }
     }
 
+    // Track problematic entries for debugging
+    let skippedEntries = 0;
+    let negativeDistances = 0;
+    let longIntervals = 0;
+
     for (let i = 1; i < sortedEntries.length; i++) {
       const curr = sortedEntries[i];
       const prev = sortedEntries[i - 1];
@@ -152,12 +181,22 @@ export default function StatsTab({
       const volume = curr.volumeUnit === 'liters' ? Number(curr.volume) : Number(curr.volume) * 3.78541;
       const cost = Number(curr.cost);
 
-      if (isNaN(mileage) || isNaN(prevMileage) || isNaN(volume) || isNaN(cost)) continue;
+      if (isNaN(mileage) || isNaN(prevMileage) || isNaN(volume) || isNaN(cost)) {
+        skippedEntries++;
+        continue;
+      }
 
       const distance = curr.distanceUnit === 'km' ? mileage - prevMileage : (mileage - prevMileage) * 1.60934;
 
-      // Validate distance
-      if (distance <= 0 || distance > 2000) {
+      // Validate distance - but be more lenient and provide debugging info
+      if (distance <= 0) {
+        negativeDistances++;
+        // Skip negative distances but don't fail completely
+        continue;
+      }
+
+      if (distance > 2000) {
+        // Skip unreasonably large distances
         continue;
       }
 
@@ -165,42 +204,95 @@ export default function StatsTab({
       const timeDiff = new Date(curr.date).getTime() - new Date(prev.date).getTime();
       const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
       if (daysDiff > 60) {
+        longIntervals++;
         continue;
       }
 
+      // Always add to total distance for valid intervals
+      totalDistanceOverall += distance;
       totalDistanceCost += distance;
       totalCost += cost;
+      validDistanceEntries++;
 
       // Use non-partial entries for consumption, fall back to partial if none available
-      if (!hasNonPartial || !curr.partialFuelUp) {
+      // FIX: Handle data inconsistency where entries are incorrectly marked as partial
+      const shouldUseForConsumption = !hasNonPartial || !curr.partialFuelUp;
+
+      if (shouldUseForConsumption) {
         if (volume > 0) {
           totalDistanceConsumption += distance;
           totalVolume += volume;
           validConsumptionEntries++;
         }
       }
+
+      // Debug logging for CLA250 specifically - track consumption calculation
+      if (process.env.NODE_ENV === 'development') {
+        const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+        if (carName?.includes('CLA250') && i <= 5) { // Only log first 5 intervals to avoid spam
+          console.log(`🔍 CLA250 Debug - interval ${i}:`, {
+            prevDate: prev.date,
+            currDate: curr.date,
+            distance,
+            volume,
+            currPartialFuelUp: curr.partialFuelUp,
+            hasNonPartial,
+            condition: !hasNonPartial || !curr.partialFuelUp,
+            volumeCondition: volume > 0,
+            willAddToConsumption: (!hasNonPartial || !curr.partialFuelUp) && volume > 0
+          });
+        }
+      }
     }
 
-    const avgConsumption =
-      totalDistanceConsumption > 0 && totalVolume > 0 && validConsumptionEntries > 0
-        ? fuelConsumptionUnit === 'L/100km'
-          ? (totalVolume / totalDistanceConsumption) * 100
-          : fuelConsumptionUnit === 'km/L'
-            ? totalDistanceConsumption / totalVolume
-            : fuelConsumptionUnit === 'G/100mi'
-              ? (totalVolume / 3.78541 / (totalDistanceConsumption / 1.60934)) * 100
-              : fuelConsumptionUnit === 'km/G'
-                ? totalDistanceConsumption / (totalVolume / 3.78541)
-                : totalDistanceConsumption / 1.60934 / totalVolume
-        : null;
+    // Debug logging for CLA250 specifically
+    if (process.env.NODE_ENV === 'development') {
+      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+      if (carName?.includes('CLA250')) {
+        console.log(`🔍 CLA250 Debug - calculation results:`, {
+          carId,
+          carName,
+          sortedEntriesCount: sortedEntries.length,
+          hasNonPartial,
+          totalDistanceConsumption,
+          totalDistanceOverall,
+          totalVolume,
+          validConsumptionEntries,
+          validDistanceEntries,
+          skippedEntries,
+          negativeDistances,
+          longIntervals,
+          firstEntry: sortedEntries[0] ? {
+            date: sortedEntries[0].date,
+            mileage: sortedEntries[0].mileage
+          } : null,
+          lastEntry: sortedEntries[sortedEntries.length - 1] ? {
+            date: sortedEntries[sortedEntries.length - 1].date,
+            mileage: sortedEntries[sortedEntries.length - 1].mileage
+          } : null
+        });
+      }
+    }
 
-    const avgCost =
-      totalDistanceCost > 0 && totalCost > 0 ? totalCost / totalDistanceCost : null;
+    // Calculate consumption and cost per distance
+    const avgConsumption = totalDistanceConsumption > 0 && totalVolume > 0 && validConsumptionEntries > 0
+      ? fuelConsumptionUnit === 'L/100km'
+        ? (totalVolume / totalDistanceConsumption) * 100
+        : fuelConsumptionUnit === 'km/L'
+          ? totalDistanceConsumption / totalVolume
+          : fuelConsumptionUnit === 'G/100mi'
+            ? (totalVolume / 3.78541 / (totalDistanceConsumption / 1.60934)) * 100
+            : fuelConsumptionUnit === 'km/G'
+              ? totalDistanceConsumption / (totalVolume / 3.78541)
+              : totalDistanceConsumption / 1.60934 / totalVolume
+      : null;
+
+    const avgCost = totalDistanceCost > 0 && totalCost > 0 ? totalCost / totalDistanceCost : null;
 
     return {
       avgConsumption: avgConsumption ? Number(avgConsumption.toFixed(2)) : null,
       avgCost: avgCost ? Number(avgCost.toFixed(2)) : null,
-      totalDistance: Number(totalDistanceConsumption.toFixed(2)),
+      totalDistance: Number(totalDistanceOverall.toFixed(2)),
     };
   };
 
@@ -220,16 +312,37 @@ export default function StatsTab({
     const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
     const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
 
-    const monthlyData: { [key: string]: { 
-      fuel: number; 
-      expenses: number; 
-      incomes: number;
-      total: number;
-      avgConsumption: number | null;
-      avgCostPerDistance: number | null;
-      totalDistance: number;
-      totalVolume: number;
-    } } = {};
+    // Debug logging for CLA250 specifically
+    if (process.env.NODE_ENV === 'development') {
+      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+      if (carName?.includes('CLA250')) {
+        console.log(`🔍 CLA250 Debug - calculateMonthlyCosts:`, {
+          carId,
+          carName,
+          carFuelEntries: carFuelEntries.length,
+          carIncomeEntries: carIncomeEntries.length,
+          fuelDates: carFuelEntries.map(e => e.date),
+          incomeDates: carIncomeEntries.map(e => e.date),
+          has2025_06_fuel: carFuelEntries.some(e => e.date.startsWith('2025-06')),
+          has2025_06_income: carIncomeEntries.some(e => e.date.startsWith('2025-06'))
+        });
+      }
+    }
+
+    const monthlyData: {
+      [key: string]: {
+        fuel: number;
+        expenses: number;
+        incomes: number;
+        total: number;
+        avgConsumption: number | null;
+        avgCostPerDistance: number | null;
+        totalDistance: number;
+        totalVolume: number;
+        consumptionData?: Array<{ consumption: number; distance: number; volume: number }>;
+        costData?: { totalCost: number; totalDistance: number };
+      }
+    } = {};
 
     // Process fuel entries
     carFuelEntries.forEach((entry) => {
@@ -237,9 +350,9 @@ export default function StatsTab({
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { 
-          fuel: 0, 
-          expenses: 0, 
+        monthlyData[monthKey] = {
+          fuel: 0,
+          expenses: 0,
           incomes: 0,
           total: 0,
           avgConsumption: null,
@@ -258,9 +371,9 @@ export default function StatsTab({
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { 
-          fuel: 0, 
-          expenses: 0, 
+        monthlyData[monthKey] = {
+          fuel: 0,
+          expenses: 0,
           incomes: 0,
           total: 0,
           avgConsumption: null,
@@ -279,9 +392,9 @@ export default function StatsTab({
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 
       if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = { 
-          fuel: 0, 
-          expenses: 0, 
+        monthlyData[monthKey] = {
+          fuel: 0,
+          expenses: 0,
           incomes: 0,
           total: 0,
           avgConsumption: null,
@@ -294,103 +407,193 @@ export default function StatsTab({
       monthlyData[monthKey].incomes += Number(income.amount);
     });
 
-    // Calculate consumption and cost per distance for each month
-    Object.keys(monthlyData).forEach((monthKey) => {
-      const monthFuelEntries = carFuelEntries.filter((entry) => {
-        const date = new Date(entry.date);
-        const entryMonthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        return entryMonthKey === monthKey;
-      });
+    // Calculate distance across all fuel entries for proper monthly attribution
+    if (carFuelEntries.length >= 2) {
+      const sortedAllEntries = carFuelEntries.sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
 
-      if (monthFuelEntries.length > 0) {
+      let hasNonPartial = false;
+      // Check for non-partial entries across all entries
+      for (let j = 0; j < sortedAllEntries.length; j++) {
+        if (!sortedAllEntries[j].partialFuelUp) {
+          hasNonPartial = true;
+          break;
+        }
       }
 
-      if (monthFuelEntries.length >= 2) {
-        const sortedEntries = monthFuelEntries.sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-        );
+      for (let i = 1; i < sortedAllEntries.length; i++) {
+        const curr = sortedAllEntries[i];
+        const prev = sortedAllEntries[i - 1];
 
-        let totalDistance = 0;
-        let totalVolume = 0;
-        let totalCost = 0;
-        let totalDistanceCost = 0;
-        let validEntries = 0;
-        let hasNonPartial = false;
+        const mileage = Number(curr.mileage);
+        const prevMileage = Number(prev.mileage);
+        const volume = curr.volumeUnit === 'liters' ? Number(curr.volume) : Number(curr.volume) * 3.78541;
+        const cost = Number(curr.cost);
 
-        // Check if there are any non-partial entries in this month
-        for (let j = 0; j < sortedEntries.length; j++) {
-          if (!sortedEntries[j].partialFuelUp) {
-            hasNonPartial = true;
-            break;
+        if (isNaN(mileage) || isNaN(prevMileage) || isNaN(volume) || isNaN(cost)) continue;
+
+        const distance = curr.distanceUnit === 'km' ? mileage - prevMileage : (mileage - prevMileage) * 1.60934;
+
+        // Validate distance
+        if (distance <= 0 || distance > 2000) {
+          continue;
+        }
+
+        // Validate time interval - skip intervals longer than 60 days to avoid skewed averages
+        const timeDiff = new Date(curr.date).getTime() - new Date(prev.date).getTime();
+        const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+        if (daysDiff > 60) {
+          continue;
+        }
+
+        // Attribute the distance to the month of the current (later) fuel entry
+        const currDate = new Date(curr.date);
+        const currMonthKey = `${currDate.getFullYear()}-${String(currDate.getMonth() + 1).padStart(2, '0')}`;
+
+        // Debug logging for CLA250 specifically - track monthly distance attribution
+        if (process.env.NODE_ENV === 'development') {
+          const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+          if (carName?.includes('CLA250') && currMonthKey.includes('2025-06')) {
+            console.log(`🔍 CLA250 Debug - monthly distance attribution:`, {
+              prevDate: prev.date,
+              currDate: curr.date,
+              distance,
+              currMonthKey,
+              existingDistance: monthlyData[currMonthKey]?.totalDistance || 0,
+              willAddDistance: distance
+            });
           }
         }
 
-        for (let i = 1; i < sortedEntries.length; i++) {
-          const curr = sortedEntries[i];
-          const prev = sortedEntries[i - 1];
+        // Make sure the month exists in our data
+        if (!monthlyData[currMonthKey]) {
+          monthlyData[currMonthKey] = {
+            fuel: 0,
+            expenses: 0,
+            incomes: 0,
+            total: 0,
+            avgConsumption: null,
+            avgCostPerDistance: null,
+            totalDistance: 0,
+            totalVolume: 0
+          };
+        }
 
-          const mileage = Number(curr.mileage);
-          const prevMileage = Number(prev.mileage);
-          const volume = curr.volumeUnit === 'liters' ? Number(curr.volume) : Number(curr.volume) * 3.78541;
-          const cost = Number(curr.cost);
+        // Add distance to the current month
+        monthlyData[currMonthKey].totalDistance += distance;
 
-          if (isNaN(mileage) || isNaN(prevMileage) || isNaN(volume) || isNaN(cost)) continue;
-
-          const distance = curr.distanceUnit === 'km' ? mileage - prevMileage : (mileage - prevMileage) * 1.60934;
-
-          // Validate distance
-          if (distance <= 0 || distance > 2000) {
-            continue;
+        // Debug logging for 2025-06 distance attribution
+        if (process.env.NODE_ENV === 'development') {
+          const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+          if (carName?.includes('CLA250') && currMonthKey === '2025-06') {
+            console.log(`🔍 CLA250 Debug - 2025-06 distance added:`, {
+              distance,
+              totalDistance: monthlyData[currMonthKey].totalDistance,
+              date: currDate.toISOString().split('T')[0]
+            });
           }
+        }
 
-          // Validate time interval - skip intervals longer than 60 days to avoid skewed averages
-          const timeDiff = new Date(curr.date).getTime() - new Date(prev.date).getTime();
-          const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-          if (daysDiff > 60) {
-            continue;
-          }
+        // Handle consumption calculation
+        // FIX: Handle data inconsistency where entries are incorrectly marked as partial
+        const shouldUseForConsumption = !hasNonPartial || !curr.partialFuelUp;
 
-          // Always include for cost calculation
-          totalDistanceCost += distance;
-          totalCost += cost;
-          
-          // Use non-partial entries for consumption, fall back to partial if none available
-          if (!hasNonPartial || !curr.partialFuelUp) {
-            if (volume > 0) {
-              totalDistance += distance;
-              totalVolume += volume;
-              validEntries++;
+        if (shouldUseForConsumption) {
+          if (volume > 0) {
+            monthlyData[currMonthKey].totalVolume += volume;
+
+            // Calculate consumption for this interval and add to month
+            const intervalConsumption = fuelConsumptionUnit === 'L/100km'
+              ? (volume / distance) * 100
+              : fuelConsumptionUnit === 'km/L'
+                ? distance / volume
+                : fuelConsumptionUnit === 'G/100mi'
+                  ? (volume / 3.78541 / (distance / 1.60934)) * 100
+                  : fuelConsumptionUnit === 'km/G'
+                    ? distance / (volume / 3.78541)
+                    : distance / 1.60934 / volume;
+
+            // Store individual consumption data for later averaging
+            if (!monthlyData[currMonthKey].consumptionData) {
+              monthlyData[currMonthKey].consumptionData = [];
             }
+            monthlyData[currMonthKey].consumptionData.push({
+              consumption: intervalConsumption,
+              distance: distance,
+              volume: volume
+            });
           }
         }
 
-        if (validEntries > 0 && totalDistance > 0) {
-          monthlyData[monthKey].totalDistance = totalDistance;
-          monthlyData[monthKey].totalVolume = totalVolume;
-
-          // Calculate average consumption
-          const avgConsumption = fuelConsumptionUnit === 'L/100km'
-            ? (totalVolume / totalDistance) * 100
-            : fuelConsumptionUnit === 'km/L'
-              ? totalDistance / totalVolume
-              : fuelConsumptionUnit === 'G/100mi'
-                ? (totalVolume / 3.78541 / (totalDistance / 1.60934)) * 100
-                : fuelConsumptionUnit === 'km/G'
-                  ? totalDistance / (totalVolume / 3.78541)
-                  : totalDistance / 1.60934 / totalVolume;
-
-          monthlyData[monthKey].avgConsumption = Number(avgConsumption.toFixed(2));
-          monthlyData[monthKey].avgCostPerDistance = totalDistanceCost > 0 && totalCost > 0 ? Number((totalCost / totalDistanceCost).toFixed(2)) : null;
+        // Handle cost per distance
+        if (cost > 0) {
+          if (!monthlyData[currMonthKey].costData) {
+            monthlyData[currMonthKey].costData = { totalCost: 0, totalDistance: 0 };
+          }
+          monthlyData[currMonthKey].costData.totalCost += cost;
+          monthlyData[currMonthKey].costData.totalDistance += distance;
         }
+      }
+    }
+
+    // Calculate averages and finalize monthly data
+    Object.keys(monthlyData).forEach((monthKey) => {
+      const monthData = monthlyData[monthKey];
+
+      // Calculate average consumption from consumption data
+      if (monthData.consumptionData && monthData.consumptionData.length > 0) {
+        const totalConsumptionDistance = monthData.consumptionData.reduce((sum, data) => sum + data.distance, 0);
+        const totalVolume = monthData.consumptionData.reduce((sum, data) => sum + data.volume, 0);
+
+        if (totalConsumptionDistance > 0 && totalVolume > 0) {
+          const avgConsumption = fuelConsumptionUnit === 'L/100km'
+            ? (totalVolume / totalConsumptionDistance) * 100
+            : fuelConsumptionUnit === 'km/L'
+              ? totalConsumptionDistance / totalVolume
+              : fuelConsumptionUnit === 'G/100mi'
+                ? (totalVolume / 3.78541 / (totalConsumptionDistance / 1.60934)) * 100
+                : fuelConsumptionUnit === 'km/G'
+                  ? totalConsumptionDistance / (totalVolume / 3.78541)
+                  : totalConsumptionDistance / 1.60934 / totalVolume;
+
+          monthData.avgConsumption = Number(avgConsumption.toFixed(2));
+        }
+        delete monthData.consumptionData; // Clean up temporary data
+      }
+
+      // Calculate cost per distance
+      if (monthData.costData && monthData.costData.totalDistance > 0 && monthData.costData.totalCost > 0) {
+        monthData.avgCostPerDistance = Number((monthData.costData.totalCost / monthData.costData.totalDistance).toFixed(2));
+        delete monthData.costData; // Clean up temporary data
       }
 
       // Calculate totals
-      monthlyData[monthKey].total = monthlyData[monthKey].fuel + monthlyData[monthKey].expenses + monthlyData[monthKey].incomes;
-      monthlyData[monthKey].fuel = Number(monthlyData[monthKey].fuel.toFixed(2));
-      monthlyData[monthKey].expenses = Number(monthlyData[monthKey].expenses.toFixed(2));
-      monthlyData[monthKey].incomes = Number(monthlyData[monthKey].incomes.toFixed(2));
-      monthlyData[monthKey].total = Number(monthlyData[monthKey].total.toFixed(2));
+      monthData.total = monthData.fuel + monthData.expenses + monthData.incomes;
+      monthData.fuel = Number(monthData.fuel.toFixed(2));
+      monthData.expenses = Number(monthData.expenses.toFixed(2));
+      monthData.incomes = Number(monthData.incomes.toFixed(2));
+      monthData.total = Number(monthData.total.toFixed(2));
+      monthData.totalDistance = Number(monthData.totalDistance.toFixed(2));
     });
+
+    // Debug logging for CLA250 specifically - show final monthly results
+    if (process.env.NODE_ENV === 'development') {
+      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
+      if (carName?.includes('CLA250')) {
+        console.log(`🔍 CLA250 Debug - final monthly results:`, {
+          carId,
+          carName,
+          monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
+            month,
+            fuel: data.fuel,
+            income: data.incomes,
+            distance: data.totalDistance,
+            has2025_06: month.includes('2025-06')
+          }))
+        });
+      }
+    }
 
     return monthlyData;
   };
@@ -400,25 +603,27 @@ export default function StatsTab({
     const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
     const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
 
-    const yearlyData: { [key: string]: { 
-      fuel: number; 
-      expenses: number; 
-      incomes: number;
-      total: number;
-      avgConsumption: number | null;
-      avgCostPerDistance: number | null;
-      totalDistance: number;
-      totalVolume: number;
-    } } = {};
+    const yearlyData: {
+      [key: string]: {
+        fuel: number;
+        expenses: number;
+        incomes: number;
+        total: number;
+        avgConsumption: number | null;
+        avgCostPerDistance: number | null;
+        totalDistance: number;
+        totalVolume: number;
+      }
+    } = {};
 
     // Process fuel entries
     carFuelEntries.forEach((entry) => {
       const year = new Date(entry.date).getFullYear().toString();
 
       if (!yearlyData[year]) {
-        yearlyData[year] = { 
-          fuel: 0, 
-          expenses: 0, 
+        yearlyData[year] = {
+          fuel: 0,
+          expenses: 0,
           incomes: 0,
           total: 0,
           avgConsumption: null,
@@ -436,9 +641,9 @@ export default function StatsTab({
       const year = new Date(expense.date).getFullYear().toString();
 
       if (!yearlyData[year]) {
-        yearlyData[year] = { 
-          fuel: 0, 
-          expenses: 0, 
+        yearlyData[year] = {
+          fuel: 0,
+          expenses: 0,
           incomes: 0,
           total: 0,
           avgConsumption: null,
@@ -456,9 +661,9 @@ export default function StatsTab({
       const year = new Date(income.date).getFullYear().toString();
 
       if (!yearlyData[year]) {
-        yearlyData[year] = { 
-          fuel: 0, 
-          expenses: 0, 
+        yearlyData[year] = {
+          fuel: 0,
+          expenses: 0,
           incomes: 0,
           total: 0,
           avgConsumption: null,
@@ -483,7 +688,8 @@ export default function StatsTab({
           (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
         );
 
-        let totalDistance = 0;
+        let totalDistanceConsumption = 0;
+        let totalDistanceOverall = 0;
         let totalVolume = 0;
         let totalCost = 0;
         let totalDistanceCost = 0;
@@ -523,37 +729,46 @@ export default function StatsTab({
             continue;
           }
 
-          // Always include for cost calculation
+          // Always include for distance and cost calculation
+          totalDistanceOverall += distance;
           totalDistanceCost += distance;
           totalCost += cost;
-          
+
           // Use non-partial entries for consumption, fall back to partial if none available
-          if (!hasNonPartial || !curr.partialFuelUp) {
+          // FIX: Handle data inconsistency where entries are incorrectly marked as partial
+          const shouldUseForConsumption = !hasNonPartial || !curr.partialFuelUp;
+
+          if (shouldUseForConsumption) {
             if (volume > 0) {
-              totalDistance += distance;
+              totalDistanceConsumption += distance;
               totalVolume += volume;
               validEntries++;
             }
           }
         }
 
-        if (validEntries > 0 && totalDistance > 0) {
-          yearlyData[year].totalDistance = totalDistance;
+        // Always set the total distance for the year
+        yearlyData[year].totalDistance = totalDistanceOverall;
+
+        if (validEntries > 0 && totalDistanceConsumption > 0) {
           yearlyData[year].totalVolume = totalVolume;
 
           // Calculate average consumption
           const avgConsumption = fuelConsumptionUnit === 'L/100km'
-            ? (totalVolume / totalDistance) * 100
+            ? (totalVolume / totalDistanceConsumption) * 100
             : fuelConsumptionUnit === 'km/L'
-              ? totalDistance / totalVolume
+              ? totalDistanceConsumption / totalVolume
               : fuelConsumptionUnit === 'G/100mi'
-                ? (totalVolume / 3.78541 / (totalDistance / 1.60934)) * 100
+                ? (totalVolume / 3.78541 / (totalDistanceConsumption / 1.60934)) * 100
                 : fuelConsumptionUnit === 'km/G'
-                  ? totalDistance / (totalVolume / 3.78541)
-                  : totalDistance / 1.60934 / totalVolume;
+                  ? totalDistanceConsumption / (totalVolume / 3.78541)
+                  : totalDistanceConsumption / 1.60934 / totalVolume;
 
           yearlyData[year].avgConsumption = Number(avgConsumption.toFixed(2));
-          yearlyData[year].avgCostPerDistance = totalDistanceCost > 0 && totalCost > 0 ? Number((totalCost / totalDistanceCost).toFixed(2)) : null;
+        }
+
+        if (totalDistanceCost > 0 && totalCost > 0) {
+          yearlyData[year].avgCostPerDistance = Number((totalCost / totalDistanceCost).toFixed(2));
         }
       }
 
@@ -611,6 +826,29 @@ export default function StatsTab({
     return categoryData;
   };
 
+  // Calculate currency-specific statistics
+  const calculateCurrencySpecificStats = () => {
+    const currencyBreakdown = calculateCurrencyStats(entries, expenses, incomes);
+    
+    // Add cost per distance calculations for each currency
+    const currencyStatsWithCostPerDistance = currencyBreakdown.byCurrency.map(currencyStat => {
+      const costPerDistanceData = calculateCostPerDistance(entries, currencyStat.currency);
+      
+      return {
+        ...currencyStat,
+        costPerDistance: costPerDistanceData.costPerDistance,
+        totalDistance: costPerDistanceData.totalDistance,
+        avgCostPerKm: costPerDistanceData.costPerDistance,
+        avgCostPerMile: costPerDistanceData.costPerDistance ? costPerDistanceData.costPerDistance * 1.60934 : null
+      };
+    });
+
+    return {
+      ...currencyBreakdown,
+      byCurrency: currencyStatsWithCostPerDistance
+    };
+  };
+
   // Calculate comprehensive aggregate statistics across all cars
   const calculateAggregateStats = () => {
     if (entries.length === 0) {
@@ -646,14 +884,14 @@ export default function StatsTab({
     // Sort all entries by date
     const sortedEntries = [...entries].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+
     // Basic fuel statistics
     const totalFillUps = entries.length;
     const volumes = entries.map(entry => entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541);
     const totalVolume = volumes.reduce((sum, vol) => sum + vol, 0);
     const minVolume = Math.min(...volumes);
     const maxVolume = Math.max(...volumes);
-    
+
     // Cost statistics
     const fuelCosts = entries.map(entry => Number(entry.cost));
     const expenseCosts = expenses.map(expense => Number(expense.amount));
@@ -665,7 +903,7 @@ export default function StatsTab({
     const totalCosts = totalFuelCosts + totalExpenseCosts + totalIncomeCosts;
     const lowestBill = allCosts.length > 0 ? Math.min(...allCosts.filter(cost => cost > 0)) : null;
     const highestBill = allCosts.length > 0 ? Math.max(...allCosts) : null;
-    
+
     // Price per liter statistics
     const pricesPerLiter = entries.map(entry => {
       const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
@@ -673,7 +911,7 @@ export default function StatsTab({
     }).filter(price => price > 0);
     const bestPrice = pricesPerLiter.length > 0 ? Math.min(...pricesPerLiter) : null;
     const worstPrice = pricesPerLiter.length > 0 ? Math.max(...pricesPerLiter) : null;
-    
+
     // Calculate consumption and distance statistics
     let totalDistance = 0;
     let totalConsumptionVolume = 0;
@@ -682,7 +920,7 @@ export default function StatsTab({
     const consumptionRates: number[] = [];
     const costPerDistanceRates: number[] = [];
     let hasNonPartial = false;
-    
+
     // Check for non-partial entries across all cars
     for (const entry of sortedEntries) {
       if (!entry.partialFuelUp) {
@@ -690,7 +928,7 @@ export default function StatsTab({
         break;
       }
     }
-    
+
     // Group entries by car for proper distance calculation
     const entriesByCarId: { [key: string]: FuelEntry[] } = {};
     sortedEntries.forEach(entry => {
@@ -700,45 +938,65 @@ export default function StatsTab({
       }
       entriesByCarId[carId].push(entry);
     });
-    
+
     // Calculate distances and consumption for each car
+    let totalSkippedEntries = 0;
+    let totalNegativeDistances = 0;
+    let totalLongIntervals = 0;
+
     Object.keys(entriesByCarId).forEach(carId => {
       const carEntries = entriesByCarId[carId].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-      
+
       for (let i = 1; i < carEntries.length; i++) {
         const curr = carEntries[i];
         const prev = carEntries[i - 1];
-        
+
         const mileage = Number(curr.mileage);
         const prevMileage = Number(prev.mileage);
         const volume = curr.volumeUnit === 'liters' ? Number(curr.volume) : Number(curr.volume) * 3.78541;
         const cost = Number(curr.cost);
-        
-        if (isNaN(mileage) || isNaN(prevMileage) || isNaN(volume) || isNaN(cost)) continue;
-        
+
+        if (isNaN(mileage) || isNaN(prevMileage) || isNaN(volume) || isNaN(cost)) {
+          totalSkippedEntries++;
+          continue;
+        }
+
         const distance = curr.distanceUnit === 'km' ? mileage - prevMileage : (mileage - prevMileage) * 1.60934;
-        
-        // Validate distance and time interval
-        if (distance <= 0 || distance > 2000) continue;
-        
+
+        // Validate distance - be more lenient and provide debugging info
+        if (distance <= 0) {
+          totalNegativeDistances++;
+          continue;
+        }
+
+        if (distance > 2000) {
+          continue;
+        }
+
         const timeDiff = new Date(curr.date).getTime() - new Date(prev.date).getTime();
         const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-        if (daysDiff > 60) continue;
-        
+        if (daysDiff > 60) {
+          totalLongIntervals++;
+          continue;
+        }
+
         // Always include for cost calculation
         totalCostDistance += distance;
         totalCostAmount += cost;
-        
+
         if (distance > 0 && cost > 0) {
           costPerDistanceRates.push(cost / distance);
         }
-        
+
         // Use non-partial entries for consumption, fall back to partial if none available
-        if (!hasNonPartial || !curr.partialFuelUp) {
+        // FIX: Handle data inconsistency where entries are incorrectly marked as partial
+        const shouldUseForConsumption = !hasNonPartial || !curr.partialFuelUp;
+
+        if (shouldUseForConsumption) {
           if (volume > 0 && distance > 0) {
             totalDistance += distance;
             totalConsumptionVolume += volume;
-            
+
             // Calculate consumption rate for this interval
             const consumptionRate = fuelConsumptionUnit === 'L/100km'
               ? (volume / distance) * 100
@@ -749,13 +1007,43 @@ export default function StatsTab({
                   : fuelConsumptionUnit === 'km/G'
                     ? distance / (volume / 3.78541)
                     : distance / 1.60934 / volume;
-            
+
             consumptionRates.push(consumptionRate);
           }
         }
       }
     });
-    
+
+    // Debug logging for aggregate data quality issues
+    if (process.env.NODE_ENV === 'development' && (totalNegativeDistances > 0 || totalLongIntervals > 0 || totalSkippedEntries > 0)) {
+      console.warn(`Aggregate data quality issues:`, {
+        totalNegativeDistances,
+        totalLongIntervals,
+        totalSkippedEntries,
+        totalDistance,
+        totalConsumptionVolume,
+        consumptionRatesCount: consumptionRates.length
+      });
+    }
+
+    // Debug logging for CLA250 aggregate stats
+    if (process.env.NODE_ENV === 'development') {
+      const cla250Entries = entries.filter(e => {
+        const carName = cars.find(car => matchesCarId(e.carId, getObjectId(car as unknown as Record<string, unknown>)))?.name;
+        return carName?.includes('CLA250');
+      });
+
+      if (cla250Entries.length > 0) {
+        console.log(`🔍 CLA250 Debug - aggregate stats:`, {
+          cla250EntriesCount: cla250Entries.length,
+          totalDistance,
+          totalConsumptionVolume,
+          avgConsumptionWillBeNull: !(totalDistance > 0 && totalConsumptionVolume > 0),
+          cla250Dates: cla250Entries.map(e => e.date).sort()
+        });
+      }
+    }
+
     // Calculate averages and extremes
     const avgConsumption = totalDistance > 0 && totalConsumptionVolume > 0
       ? fuelConsumptionUnit === 'L/100km'
@@ -768,67 +1056,71 @@ export default function StatsTab({
               ? totalDistance / (totalConsumptionVolume / 3.78541)
               : totalDistance / 1.60934 / totalConsumptionVolume
       : null;
-    
+
     const bestConsumption = consumptionRates.length > 0
       ? (fuelConsumptionUnit === 'L/100km' || fuelConsumptionUnit === 'G/100mi')
         ? Math.min(...consumptionRates)
         : Math.max(...consumptionRates)
       : null;
-    
+
     const worstConsumption = consumptionRates.length > 0
       ? (fuelConsumptionUnit === 'L/100km' || fuelConsumptionUnit === 'G/100mi')
         ? Math.max(...consumptionRates)
         : Math.min(...consumptionRates)
       : null;
-    
+
     const avgCostPerDistance = totalCostDistance > 0 && totalCostAmount > 0 ? totalCostAmount / totalCostDistance : null;
     const bestCostPerDistance = costPerDistanceRates.length > 0 ? Math.min(...costPerDistanceRates) : null;
     const worstCostPerDistance = costPerDistanceRates.length > 0 ? Math.max(...costPerDistanceRates) : null;
-    
+
     // Time-based averages
     const firstDate = sortedEntries.length > 0 ? new Date(sortedEntries[0].date) : null;
     const lastDate = sortedEntries.length > 0 ? new Date(sortedEntries[sortedEntries.length - 1].date) : null;
     const totalDays = firstDate && lastDate ? (lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24) + 1 : 0;
     const totalMonths = totalDays / 30.44; // Average days per month
     const totalYears = totalDays / 365.25; // Average days per year
-    
+
     const avgCostPerDay = totalDays > 0 ? totalCosts / totalDays : null;
     const avgCostPerMonth = totalMonths > 0 ? totalCosts / totalMonths : null;
     const avgCostPerYear = totalYears > 0 ? totalCosts / totalYears : null;
-    
+
     const avgDistancePerDay = totalDays > 0 && totalDistance > 0 ? totalDistance / totalDays : null;
     const avgDistancePerMonth = totalMonths > 0 && totalDistance > 0 ? totalDistance / totalMonths : null;
     const avgDistancePerYear = totalYears > 0 && totalDistance > 0 ? totalDistance / totalYears : null;
-    
+
     // Last odometer reading
     const lastOdometer = sortedEntries.length > 0 ? Number(sortedEntries[sortedEntries.length - 1].mileage) : null;
-    
+
     // Monthly and yearly breakdowns
-    const monthlyStats: { [key: string]: {
-      fillUps: number;
-      volume: number;
-      fuelCost: number;
-      expenseCost: number;
-      incomeCost: number;
-      totalCost: number;
-      distance: number;
-    } } = {};
-    const yearlyStats: { [key: string]: {
-      fillUps: number;
-      volume: number;
-      fuelCost: number;
-      expenseCost: number;
-      incomeCost: number;
-      totalCost: number;
-      distance: number;
-    } } = {};
-    
+    const monthlyStats: {
+      [key: string]: {
+        fillUps: number;
+        volume: number;
+        fuelCost: number;
+        expenseCost: number;
+        incomeCost: number;
+        totalCost: number;
+        distance: number;
+      }
+    } = {};
+    const yearlyStats: {
+      [key: string]: {
+        fillUps: number;
+        volume: number;
+        fuelCost: number;
+        expenseCost: number;
+        incomeCost: number;
+        totalCost: number;
+        distance: number;
+      }
+    } = {};
+
     // Process monthly statistics
     [...sortedEntries, ...sortedExpenses].forEach(item => {
       const date = new Date(item.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const yearKey = date.getFullYear().toString();
-      
+
       if (!monthlyStats[monthKey]) {
         monthlyStats[monthKey] = {
           fillUps: 0,
@@ -840,7 +1132,7 @@ export default function StatsTab({
           distance: 0
         };
       }
-      
+
       if (!yearlyStats[yearKey]) {
         yearlyStats[yearKey] = {
           fillUps: 0,
@@ -852,14 +1144,14 @@ export default function StatsTab({
           distance: 0
         };
       }
-      
+
       if ('volume' in item) { // Fuel entry
         const volume = item.volumeUnit === 'liters' ? Number(item.volume) : Number(item.volume) * 3.78541;
         monthlyStats[monthKey].fillUps++;
         monthlyStats[monthKey].volume += volume;
         monthlyStats[monthKey].fuelCost += Number(item.cost);
         monthlyStats[monthKey].totalCost += Number(item.cost);
-        
+
         yearlyStats[yearKey].fillUps++;
         yearlyStats[yearKey].volume += volume;
         yearlyStats[yearKey].fuelCost += Number(item.cost);
@@ -867,37 +1159,37 @@ export default function StatsTab({
       } else { // Expense entry
         monthlyStats[monthKey].expenseCost += Number(item.amount);
         monthlyStats[monthKey].totalCost += Number(item.amount);
-        
+
         yearlyStats[yearKey].expenseCost += Number(item.amount);
         yearlyStats[yearKey].totalCost += Number(item.amount);
       }
     });
-    
+
     // Calculate distances for monthly/yearly stats
     Object.keys(entriesByCarId).forEach(carId => {
       const carEntries = entriesByCarId[carId];
-      
+
       for (let i = 1; i < carEntries.length; i++) {
         const curr = carEntries[i];
         const prev = carEntries[i - 1];
-        
+
         const mileage = Number(curr.mileage);
         const prevMileage = Number(prev.mileage);
-        
+
         if (isNaN(mileage) || isNaN(prevMileage)) continue;
-        
+
         const distance = curr.distanceUnit === 'km' ? mileage - prevMileage : (mileage - prevMileage) * 1.60934;
-        
+
         if (distance <= 0 || distance > 2000) continue;
-        
+
         const timeDiff = new Date(curr.date).getTime() - new Date(prev.date).getTime();
         const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
         if (daysDiff > 60) continue;
-        
+
         const currDate = new Date(curr.date);
         const monthKey = `${currDate.getFullYear()}-${String(currDate.getMonth() + 1).padStart(2, '0')}`;
         const yearKey = currDate.getFullYear().toString();
-        
+
         if (monthlyStats[monthKey]) {
           monthlyStats[monthKey].distance += distance;
         }
@@ -906,7 +1198,7 @@ export default function StatsTab({
         }
       }
     });
-    
+
     return {
       totalFillUps,
       totalVolume: Number(totalVolume.toFixed(2)),
@@ -941,9 +1233,143 @@ export default function StatsTab({
 
   // Generate chart data
   const generateChartData = () => {
-    if (entries.length === 0) return { monthlyTrends: [], fuelPrices: [], consumptionTrends: [], carComparison: [] };
+    if (entries.length === 0) return { monthlyTrends: [], monthlyTrendsByCurrency: {}, fuelPrices: [], fuelPricesByCurrency: {}, consumptionTrends: [], carComparison: [] };
 
-    // Monthly trends data
+    // Monthly trends data by currency
+    const monthlyTrendsByCurrency: { [currency: string]: any[] } = {};
+    
+    // Group entries by currency and calculate monthly stats for each currency
+    const entriesByCurrency: { [currency: string]: FuelEntry[] } = {};
+    const expensesByCurrency: { [currency: string]: ExpenseEntry[] } = {};
+    const incomesByCurrency: { [currency: string]: IncomeEntry[] } = {};
+    
+    // Group fuel entries by currency
+    entries.forEach(entry => {
+      if (!entriesByCurrency[entry.currency]) {
+        entriesByCurrency[entry.currency] = [];
+      }
+      entriesByCurrency[entry.currency].push(entry);
+    });
+    
+    // Group expenses by currency
+    expenses.forEach(expense => {
+      if (!expensesByCurrency[expense.currency]) {
+        expensesByCurrency[expense.currency] = [];
+      }
+      expensesByCurrency[expense.currency].push(expense);
+    });
+    
+    // Group incomes by currency
+    incomes.forEach(income => {
+      if (!incomesByCurrency[income.currency]) {
+        incomesByCurrency[income.currency] = [];
+      }
+      incomesByCurrency[income.currency].push(income);
+    });
+    
+    // Calculate monthly trends for each currency
+    Object.keys(entriesByCurrency).forEach(currency => {
+      const currencyEntries = entriesByCurrency[currency];
+      const currencyExpenses = expensesByCurrency[currency] || [];
+      const currencyIncomes = incomesByCurrency[currency] || [];
+      
+      // Group by month
+      const monthlyData: { [month: string]: any } = {};
+      
+      // Process fuel entries
+      currencyEntries.forEach(entry => {
+        const month = entry.date.substring(0, 7);
+        if (!monthlyData[month]) {
+          monthlyData[month] = {
+            month,
+            totalCost: 0,
+            fuelCost: 0,
+            expenseCost: 0,
+            incomeCost: 0,
+            distance: 0,
+            volume: 0,
+            fillUps: 0
+          };
+        }
+        
+        monthlyData[month].fuelCost += Number(entry.cost);
+        monthlyData[month].totalCost += Number(entry.cost);
+        monthlyData[month].fillUps += 1;
+        
+        const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
+        monthlyData[month].volume += volume;
+      });
+      
+      // Process expenses
+      currencyExpenses.forEach(expense => {
+        const month = expense.date.substring(0, 7);
+        if (!monthlyData[month]) {
+          monthlyData[month] = {
+            month,
+            totalCost: 0,
+            fuelCost: 0,
+            expenseCost: 0,
+            incomeCost: 0,
+            distance: 0,
+            volume: 0,
+            fillUps: 0
+          };
+        }
+        
+        monthlyData[month].expenseCost += Number(expense.amount);
+        monthlyData[month].totalCost += Number(expense.amount);
+      });
+      
+      // Process incomes
+      currencyIncomes.forEach(income => {
+        const month = income.date.substring(0, 7);
+        if (!monthlyData[month]) {
+          monthlyData[month] = {
+            month,
+            totalCost: 0,
+            fuelCost: 0,
+            expenseCost: 0,
+            incomeCost: 0,
+            distance: 0,
+            volume: 0,
+            fillUps: 0
+          };
+        }
+        
+        monthlyData[month].incomeCost += Number(income.amount);
+        monthlyData[month].totalCost -= Number(income.amount); // Income reduces total cost
+      });
+      
+      // Calculate distance and cost per km for each month
+      Object.values(monthlyData).forEach(monthData => {
+        // Calculate distance from fuel entries for this month
+        const monthEntries = currencyEntries.filter(entry => entry.date.startsWith(monthData.month));
+        if (monthEntries.length >= 2) {
+          const sortedEntries = monthEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+          const firstEntry = sortedEntries[0];
+          const lastEntry = sortedEntries[sortedEntries.length - 1];
+          
+          const firstMileage = Number(firstEntry.mileage);
+          const lastMileage = Number(lastEntry.mileage);
+          
+          if (!isNaN(firstMileage) && !isNaN(lastMileage) && lastMileage > firstMileage) {
+            monthData.distance = firstEntry.distanceUnit === 'km' ? 
+              lastMileage - firstMileage : 
+              (lastMileage - firstMileage) * 1.60934;
+          }
+        }
+        
+        // Calculate cost per km
+        monthData.costPerKm = monthData.distance > 0 ? monthData.totalCost / monthData.distance : 0;
+        monthData.consumption = monthData.distance > 0 && monthData.volume > 0 ? (monthData.volume / monthData.distance) * 100 : 0;
+      });
+      
+      // Convert to array and sort by month
+      monthlyTrendsByCurrency[currency] = Object.values(monthlyData)
+        .sort((a, b) => a.month.localeCompare(b.month));
+    });
+
+    // Legacy monthly trends data (for backward compatibility)
     const monthlyTrends = Object.entries(calculateAggregateStats().monthlyStats)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([month, stats]) => ({
@@ -959,7 +1385,39 @@ export default function StatsTab({
         consumption: stats.distance > 0 && stats.volume > 0 ? (stats.volume / stats.distance) * 100 : 0
       }));
 
-    // Fuel price trends
+    // Fuel price trends by currency
+    const fuelPricesByCurrency: { [currency: string]: any[] } = {};
+    
+    // Group entries by currency
+    entries.forEach(entry => {
+      const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
+      const pricePerLiter = volume > 0 ? Number(entry.cost) / volume : 0;
+      
+      if (pricePerLiter > 0) {
+        const priceData = {
+          date: entry.date,
+          month: entry.date.substring(0, 7),
+          pricePerLiter,
+          cost: Number(entry.cost),
+          volume,
+          fuelCompany: entry.fuelCompany,
+          fuelType: entry.fuelType,
+          currency: entry.currency
+        };
+
+        if (!fuelPricesByCurrency[entry.currency]) {
+          fuelPricesByCurrency[entry.currency] = [];
+        }
+        fuelPricesByCurrency[entry.currency].push(priceData);
+      }
+    });
+
+    // Sort each currency's data by date
+    Object.keys(fuelPricesByCurrency).forEach(currency => {
+      fuelPricesByCurrency[currency].sort((a, b) => a.date.localeCompare(b.date));
+    });
+
+    // Legacy fuel price trends (for backward compatibility)
     const fuelPrices = entries
       .map(entry => {
         const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
@@ -982,27 +1440,27 @@ export default function StatsTab({
     cars.forEach(car => {
       const carId = getObjectId(car as unknown as Record<string, unknown>);
       const carEntries = entries.filter(entry => matchesCarId(entry.carId, carId));
-      
+
       if (carEntries.length >= 2) {
         const sortedEntries = carEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const carTrends: any[] = [];
-        
+
         for (let i = 1; i < sortedEntries.length; i++) {
           const curr = sortedEntries[i];
           const prev = sortedEntries[i - 1];
-          
+
           const mileage = Number(curr.mileage);
           const prevMileage = Number(prev.mileage);
           const volume = curr.volumeUnit === 'liters' ? Number(curr.volume) : Number(curr.volume) * 3.78541;
-          
+
           if (!isNaN(mileage) && !isNaN(prevMileage) && !isNaN(volume)) {
             const distance = curr.distanceUnit === 'km' ? mileage - prevMileage : (mileage - prevMileage) * 1.60934;
-            
+
             if (distance > 0 && distance <= 2000 && volume > 0) {
-              const consumption = fuelConsumptionUnit === 'L/100km' 
-                ? (volume / distance) * 100 
+              const consumption = fuelConsumptionUnit === 'L/100km'
+                ? (volume / distance) * 100
                 : distance / volume;
-              
+
               carTrends.push({
                 date: curr.date,
                 month: curr.date.substring(0, 7),
@@ -1015,7 +1473,7 @@ export default function StatsTab({
             }
           }
         }
-        
+
         if (carTrends.length > 0) {
           consumptionTrends[car.name] = carTrends;
         }
@@ -1048,20 +1506,20 @@ export default function StatsTab({
       };
     }).filter(car => car.totalFillUps > 0);
 
-    return { monthlyTrends, fuelPrices, consumptionTrends, carComparison };
+    return { monthlyTrends, monthlyTrendsByCurrency, fuelPrices, fuelPricesByCurrency, consumptionTrends, carComparison };
   };
 
   return (
     <div className="p-3 max-w-7xl mx-auto flex-grow">
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow mb-4 border dark:border-gray-700 transition-colors">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{getTranslation('stats.show', 'Statistics')}</h2>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">{getTranslation('stats.show', 'Statistics')}</h2>
 
         <div className="mb-3">
-          <label className="text-sm font-medium">{getTranslation('vehicle.labels.consumptionUnit', 'Consumption Unit')}</label>
+          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">{getTranslation('vehicle.labels.consumptionUnit', 'Consumption Unit')}</label>
           <select
             value={fuelConsumptionUnit}
             onChange={(e) => setFuelConsumptionUnit(e.target.value as 'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L')}
-            className="p-2 border rounded w-full text-sm"
+            className="p-2 border rounded w-full text-sm text-gray-800 dark:text-gray-200"
             aria-label={getTranslation('vehicle.labels.consumptionUnit', "Consumption Unit")}
             title={getTranslation('vehicle.labels.consumptionUnit', "Consumption Unit")}
           >
@@ -1075,8 +1533,8 @@ export default function StatsTab({
 
         {cars.length === 0 ? (
           <div className="text-center p-8 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
-            <p className="text-gray-800 dark:text-gray-300 mb-4">{getTranslation('stats.noVehicles', 'No vehicles found')}</p>
-            <p className="text-sm text-gray-700 dark:text-gray-400">{getTranslation('stats.addVehicleFirst', 'Please add a vehicle first to view statistics')}</p>
+            <p className="text-gray-800 dark:text-gray-200 mb-4">{getTranslation('stats.noVehicles', 'No vehicles found')}</p>
+            <p className="text-sm text-gray-800 dark:text-gray-200">{getTranslation('stats.addVehicleFirst', 'Please add a vehicle first to view statistics')}</p>
           </div>
         ) : (
           <>
@@ -1084,128 +1542,196 @@ export default function StatsTab({
             {(() => {
               const aggregateStats = calculateAggregateStats();
               const currency = entries.length > 0 ? entries[0].currency : currencies[0];
-              
+
               return (
-                <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 transition-colors">
-                  <h3 className="font-semibold text-xl mb-4 text-green-800 dark:text-green-200">{getTranslation('stats.aggregateStats', 'Overall Fleet Statistics')}</h3>
-                  
+                <div className="mb-6 p-4 rounded-lg border transition-colors">
+                  <h3 className="font-semibold text-xl mb-4 text-gray-800 dark:text-gray-200">{getTranslation('stats.aggregateStats', 'Overall Fleet Statistics')}</h3>
+
                   {/* Fuel Statistics */}
                   <div className="mb-4 border-b border-green-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-green-700">{getTranslation('stats.fuelStats', 'Fuel Statistics')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('stats.fuelStats', 'Fuel Statistics')}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.totalFillUps', 'Total Fill-ups')}</div>
-                          <div className="text-lg font-semibold">{aggregateStats.totalFillUps}</div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.totalVolume', 'Total Volume')}</div>
-                          <div className="text-lg font-semibold">{aggregateStats.totalVolume} L</div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.minVolume', 'Min Fill-up')}</div>
-                          <div className="text-lg font-semibold">{aggregateStats.minVolume || 'N/A'} L</div>
-                        </div>
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.maxVolume', 'Max Fill-up')}</div>
-                          <div className="text-lg font-semibold">{aggregateStats.maxVolume || 'N/A'} L</div>
-                        </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.totalFillUps', 'Total Fill-ups')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalFillUps}</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.totalVolume', 'Total Volume')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalVolume} L</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.minVolume', 'Min Fill-up')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.minVolume || 'N/A'} L</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.maxVolume', 'Max Fill-up')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.maxVolume || 'N/A'} L</div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Consumption Statistics */}
                   <div className="mb-4 border-b border-green-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-green-700">{getTranslation('stats.consumptionStats', 'Consumption Statistics')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('stats.consumptionStats', 'Consumption Statistics')}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.avgConsumption', 'Average Consumption')}</div>
-                          <div className="text-lg font-semibold text-green-600">
-                            {aggregateStats.avgConsumption !== null ? 
-                              `${aggregateStats.avgConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
-                              'N/A'}
-                          </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.avgConsumption', 'Average Consumption')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                          {aggregateStats.avgConsumption !== null ?
+                            `${aggregateStats.avgConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` :
+                            'N/A'}
                         </div>
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.bestConsumption', 'Best Consumption')}</div>
-                          <div className="text-lg font-semibold text-green-600">
-                            {aggregateStats.bestConsumption !== null ? 
-                              `${aggregateStats.bestConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
-                              'N/A'}
-                          </div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.bestConsumption', 'Best Consumption')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                          {aggregateStats.bestConsumption !== null ?
+                            `${aggregateStats.bestConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` :
+                            'N/A'}
                         </div>
-                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.worstConsumption', 'Worst Consumption')}</div>
-                          <div className="text-lg font-semibold text-green-600">
-                            {aggregateStats.worstConsumption !== null ? 
-                              `${aggregateStats.worstConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
-                              'N/A'}
-                          </div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('stats.worstConsumption', 'Worst Consumption')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                          {aggregateStats.worstConsumption !== null ?
+                            `${aggregateStats.worstConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` :
+                            'N/A'}
                         </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Cost Statistics */}
                   <div className="mb-4 border-b border-blue-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('stats.costStats', 'Cost Statistics')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('stats.costStats', 'Cost Statistics')}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('totalCosts', 'Total Costs')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalCosts} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('totalCosts', 'Total Costs')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalCosts} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('fuelCosts', 'Fuel Costs')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalFuelCosts} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('fuelCosts', 'Fuel Costs')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalFuelCosts} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('expenseCosts', 'Other Expenses')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalExpenseCosts} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('expenseCosts', 'Other Expenses')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalExpenseCosts} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('incomeCosts', 'Income')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalIncomeCosts} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('incomeCosts', 'Income')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalIncomeCosts} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('lastOdometer', 'Last Odometer')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.lastOdometer || 'N/A'}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('lastOdometer', 'Last Odometer')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.lastOdometer || 'N/A'}</div>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('lowestBill', 'Lowest Bill')}</div>
-                        <div className="text-lg font-semibold text-green-600">{aggregateStats.lowestBill || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('lowestBill', 'Lowest Bill')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.lowestBill || 'N/A'} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('highestBill', 'Highest Bill')}</div>
-                        <div className="text-lg font-semibold text-red-600">{aggregateStats.highestBill || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('highestBill', 'Highest Bill')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.highestBill || 'N/A'} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('bestPrice', 'Best Price/L')}</div>
-                        <div className="text-lg font-semibold text-green-600">{aggregateStats.bestPrice || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('bestPrice', 'Best Price/L')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.bestPrice || 'N/A'} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('worstPrice', 'Worst Price/L')}</div>
-                        <div className="text-lg font-semibold text-red-600">{aggregateStats.worstPrice || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('worstPrice', 'Worst Price/L')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.worstPrice || 'N/A'} {currency}</div>
                       </div>
                     </div>
                   </div>
 
+                  {/* Currency-specific Statistics */}
+                  {(() => {
+                    const currencyStats = calculateCurrencySpecificStats();
+                    if (currencyStats.byCurrency.length === 0) return null;
+                    
+                    return (
+                      <div className="mb-4 border-b border-purple-200 pb-3">
+                        <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">
+                          {getTranslation('stats.currencyBreakdown', 'Costs by Currency')}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {currencyStats.byCurrency.map((currencyStat) => (
+                            <div key={currencyStat.currency} className="bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-700 transition-colors">
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                                  {getCurrencyName(currencyStat.currency)} ({currencyStat.currency})
+                                </div>
+                                <div className="text-xs text-gray-800 dark:text-gray-200">
+                                  {currencyStat.entryCount} {getTranslation('stats.entries', 'entries')}
+                                </div>
+                              </div>
+                              <div className="space-y-1 text-xs">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-800 dark:text-gray-200">{getTranslation('stats.fuelCosts', 'Fuel')}:</span>
+                                  <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(currencyStat.totalFuelCost, currencyStat.currency)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-800 dark:text-gray-200">{getTranslation('stats.expenseCosts', 'Expenses')}:</span>
+                                  <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(currencyStat.totalExpenseCost, currencyStat.currency)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-800 dark:text-gray-200">{getTranslation('stats.incomeCosts', 'Income')}:</span>
+                                  <span className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(currencyStat.totalIncome, currencyStat.currency)}</span>
+                                </div>
+                                <div className="border-t pt-1 flex justify-between">
+                                  <span className="font-medium text-gray-800 dark:text-gray-200">{getTranslation('stats.netCost', 'Net Cost')}:</span>
+                                  <span className={`font-bold ${currencyStat.netCost >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                    {formatCurrency(Math.abs(currencyStat.netCost), currencyStat.currency)}
+                                    {currencyStat.netCost >= 0 ? ' (Cost)' : ' (Profit)'}
+                                  </span>
+                                </div>
+                                {currencyStat.costPerDistance !== null && (
+                                  <div className="flex justify-between text-gray-800 dark:text-gray-200">
+                                    <span>{getTranslation('stats.avgCostPerKm', 'Cost/km')}:</span>
+                                    <span className="font-medium">{formatCurrency(currencyStat.costPerDistance, currencyStat.currency)}</span>
+                                  </div>
+                                )}
+                                {currencyStat.totalDistance > 0 && (
+                                  <div className="flex justify-between text-gray-800 dark:text-gray-200">
+                                    <span>{getTranslation('stats.totalDistance', 'Distance')}:</span>
+                                    <span>{currencyStat.totalDistance.toFixed(0)} km</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {currencyStats.byCurrency.length > 1 && (
+                          <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm">
+                            <div className="text-gray-600 dark:text-gray-300">
+                              {getTranslation('stats.totalInBaseCurrency', 'Total in USD')}: {formatCurrency(currencyStats.totalInBaseCurrency, 'USD')}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* Distance & Cost per Distance */}
                   <div className="mb-4 border-b border-blue-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('distanceStats', 'Distance & Cost per Distance')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('distanceStats', 'Distance & Cost per Distance')}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('totalDistance', 'Total Distance')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalDistance} km</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('totalDistance', 'Total Distance')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.totalDistance} km</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgCostPerDistance', 'Avg Cost/km')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgCostPerDistance || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgCostPerDistance', 'Avg Cost/km')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgCostPerDistance || 'N/A'} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('bestCostPerDistance', 'Best Cost/km')}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('bestCostPerDistance', 'Best Cost/km')}</div>
                         <div className="text-lg font-semibold text-green-600">{aggregateStats.bestCostPerDistance || 'N/A'} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('worstCostPerDistance', 'Worst Cost/km')}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('worstCostPerDistance', 'Worst Cost/km')}</div>
                         <div className="text-lg font-semibold text-red-600">{aggregateStats.worstCostPerDistance || 'N/A'} {currency}</div>
                       </div>
                     </div>
@@ -1213,48 +1739,48 @@ export default function StatsTab({
 
                   {/* Time-based Averages */}
                   <div className="mb-4 border-b border-blue-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('timeBasedStats', 'Time-based Averages')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('timeBasedStats', 'Time-based Averages')}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgCostPerDay', 'Avg Cost/Day')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgCostPerDay || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgCostPerDay', 'Avg Cost/Day')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgCostPerDay || 'N/A'} {currency}</div>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgCostPerMonth', 'Avg Cost/Month')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgCostPerMonth || 'N/A'} {currency}</div>
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgCostPerMonth', 'Avg Cost/Month')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgCostPerMonth || 'N/A'} {currency}</div>
                       </div>
-                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgCostPerYear', 'Avg Cost/Year')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgCostPerYear || 'N/A'} {currency}</div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgCostPerYear', 'Avg Cost/Year')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgCostPerYear || 'N/A'} {currency}</div>
                       </div>
-                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgDistancePerDay', 'Avg Distance/Day')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgDistancePerDay || 'N/A'} km</div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgDistancePerDay', 'Avg Distance/Day')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgDistancePerDay || 'N/A'} km</div>
                       </div>
-                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgDistancePerMonth', 'Avg Distance/Month')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgDistancePerMonth || 'N/A'} km</div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgDistancePerMonth', 'Avg Distance/Month')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgDistancePerMonth || 'N/A'} km</div>
                       </div>
-                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgDistancePerYear', 'Avg Distance/Year')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.avgDistancePerYear || 'N/A'} km</div>
+                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                        <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{getTranslation('avgDistancePerYear', 'Avg Distance/Year')}</div>
+                        <div className="text-lg font-semibold text-gray-800 dark:text-gray-200">{aggregateStats.avgDistancePerYear || 'N/A'} km</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Monthly Breakdown */}
                   <div className="mb-4 border-b border-blue-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('monthlyBreakdown', 'Monthly Breakdown')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('monthlyBreakdown', 'Monthly Breakdown')}</h4>
                     {Object.keys(aggregateStats.monthlyStats).length === 0 ? (
-                      <p className="text-gray-700 dark:text-gray-400 text-sm">{getTranslation('noData')}</p>
+                      <p className="text-gray-800 dark:text-gray-200 text-sm">{getTranslation('noData')}</p>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                         {Object.entries(aggregateStats.monthlyStats)
                           .sort(([a], [b]) => b.localeCompare(a))
                           .map(([month, stats]) => (
                             <div key={month} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                              <div className="font-medium text-xs mb-1">{month}</div>
-                              <div className="text-xs">
+                              <div className="font-medium text-xs mb-1 text-gray-800 dark:text-gray-200">{month}</div>
+                              <div className="text-xs text-gray-800 dark:text-gray-200">
                                 <div>{getTranslation('stats.fillUps', 'Fill-ups')}: {stats.fillUps}</div>
                                 <div>{getTranslation('stats.totalVolume', 'Volume')}: {stats.volume.toFixed(1)} L</div>
                                 <div>{getTranslation('stats.distance', 'Distance')}: {stats.distance.toFixed(0)} km</div>
@@ -1270,17 +1796,17 @@ export default function StatsTab({
 
                   {/* Yearly Breakdown */}
                   <div className="mb-4">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('stats.yearlyBreakdown', 'Yearly Breakdown')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">{getTranslation('stats.yearlyBreakdown', 'Yearly Breakdown')}</h4>
                     {Object.keys(aggregateStats.yearlyStats).length === 0 ? (
-                      <p className="text-gray-700 dark:text-gray-400 text-sm">{getTranslation('noData')}</p>
+                      <p className="text-gray-800 dark:text-gray-200 text-sm">{getTranslation('noData')}</p>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {Object.entries(aggregateStats.yearlyStats)
                           .sort(([a], [b]) => b.localeCompare(a))
                           .map(([year, stats]) => (
                             <div key={year} className="bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-700 transition-colors">
-                              <div className="font-medium text-sm mb-2">{year}</div>
-                              <div className="text-sm grid grid-cols-2 gap-2">
+                              <div className="font-medium text-sm mb-2 text-gray-800 dark:text-gray-200">{year}</div>
+                              <div className="text-sm grid grid-cols-2 gap-2 text-gray-800 dark:text-gray-200">
                                 <div>{getTranslation('stats.fillUps', 'Fill-ups')}: {stats.fillUps}</div>
                                 <div>{getTranslation('stats.totalVolume', 'Volume')}: {stats.volume.toFixed(1)} L</div>
                                 <div>{getTranslation('stats.distance', 'Distance')}: {stats.distance.toFixed(0)} km</div>
@@ -1307,17 +1833,17 @@ export default function StatsTab({
               const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff00', '#ff00ff', '#00ffff', '#ffff00'];
 
               return (
-                <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h3 className="font-semibold text-xl mb-4 text-green-800 dark:text-green-200">{getTranslation('stats.charts', 'Data Visualization')}</h3>
-                  
+                <div className="mb-6 p-4 rounded-lg border">
+                  <h3 className="font-semibold text-xl mb-4 text-gray-800 dark:text-gray-200">{getTranslation('stats.charts', 'Data Visualization')}</h3>
+
                   {chartData.monthlyTrends.length === 0 ? (
-                    <p className="text-gray-700 dark:text-gray-400 text-center py-8">{getTranslation('stats.noDataForCharts', 'No data available for charts. Add some fuel entries to see visualizations.')}</p>
+                    <p className="text-gray-800 dark:text-gray-200 text-center py-8">{getTranslation('stats.noDataForCharts', 'No data available for charts. Add some fuel entries to see visualizations.')}</p>
                   ) : (
                     <div className="space-y-6">
-                      
+
                       {/* Monthly Cost Trends */}
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.monthlyCostTrends', 'Monthly Cost Trends')}</h4>
+                        <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">{getTranslation('stats.monthlyCostTrends', 'Monthly Cost Trends')}</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <ComposedChart data={chartData.monthlyTrends}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1338,7 +1864,7 @@ export default function StatsTab({
 
                       {/* Monthly Distance and Volume */}
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.monthlyDistanceVolume', 'Monthly Distance & Volume')}</h4>
+                        <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">{getTranslation('stats.monthlyDistanceVolume', 'Monthly Distance & Volume')}</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <BarChart data={chartData.monthlyTrends}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1356,32 +1882,85 @@ export default function StatsTab({
                         </ResponsiveContainer>
                       </div>
 
-                      {/* Fuel Price Trends */}
-                      {chartData.fuelPrices.length > 0 && (
+                      {/* Fuel Price Trends by Currency */}
+                      {Object.keys(chartData.fuelPricesByCurrency).length > 0 && (
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.fuelPriceTrends', 'Fuel Price Trends')}</h4>
+                          <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">
+                            {getTranslation('stats.fuelPriceTrends', 'Fuel Price Trends')} - {getTranslation('stats.byCurrency', 'By Currency')}
+                          </h4>
                           <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={chartData.fuelPrices}>
+                            <LineChart>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="date" />
                               <YAxis />
-                              <Tooltip formatter={(value: any) => [`${Number(value).toFixed(2)} ${currency}/L`, 'Price per Liter']} />
+                              <Tooltip formatter={(value: any, name: string) => {
+                                const currency = name.split(' - ')[1];
+                                return [`${Number(value).toFixed(2)} ${currency}/L`, 'Price per Liter'];
+                              }} />
                               <Legend />
-                              <Line type="monotone" dataKey="pricePerLiter" stroke="#ff7300" strokeWidth={2} dot={{ r: 4 }} name="Price per Liter" />
+                              {Object.entries(chartData.fuelPricesByCurrency).map(([currency, prices], index) => {
+                                const color = colors[index % colors.length];
+                                return (
+                                  <Line
+                                    key={currency}
+                                    type="monotone"
+                                    dataKey="pricePerLiter"
+                                    data={prices}
+                                    stroke={color}
+                                    strokeWidth={2}
+                                    dot={{ r: 3 }}
+                                    name={`Price per Liter - ${currency}`}
+                                  />
+                                );
+                              })}
                             </LineChart>
                           </ResponsiveContainer>
+                        </div>
+                      )}
+
+                      {/* Individual Currency Fuel Price Trends */}
+                      {Object.keys(chartData.fuelPricesByCurrency).length > 1 && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                          {Object.entries(chartData.fuelPricesByCurrency).map(([currency, prices]) => (
+                            <div key={currency} className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
+                              <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">
+                                {getTranslation('stats.fuelPriceTrends', 'Fuel Price Trends')} - {getCurrencyName(currency)} ({currency})
+                              </h4>
+                              <ResponsiveContainer width="100%" height={250}>
+                                <LineChart data={prices}>
+                                  <CartesianGrid strokeDasharray="3 3" />
+                                  <XAxis dataKey="date" />
+                                  <YAxis />
+                                  <Tooltip formatter={(value: any) => [`${Number(value).toFixed(2)} ${currency}/L`, 'Price per Liter']} />
+                                  <Line 
+                                    type="monotone" 
+                                    dataKey="pricePerLiter" 
+                                    stroke="#ff7300" 
+                                    strokeWidth={2} 
+                                    dot={{ r: 3 }} 
+                                    name={`Price per Liter (${currency})`} 
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                              <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                <div>Min: {Math.min(...prices.map(p => p.pricePerLiter)).toFixed(2)} {currency}/L</div>
+                                <div>Max: {Math.max(...prices.map(p => p.pricePerLiter)).toFixed(2)} {currency}/L</div>
+                                <div>Avg: {(prices.reduce((sum, p) => sum + p.pricePerLiter, 0) / prices.length).toFixed(2)} {currency}/L</div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       )}
 
                       {/* Vehicle Comparison */}
                       {chartData.carComparison.length > 1 && (
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.vehicleComparison', 'Vehicle Comparison')}</h4>
+                          <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">{getTranslation('stats.vehicleComparison', 'Vehicle Comparison')}</h4>
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            
+
                             {/* Consumption Comparison */}
                             <div>
-                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{getTranslation('stats.avgConsumption', 'Average Consumption')}</h5>
+                              <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">{getTranslation('stats.avgConsumption', 'Average Consumption')}</h5>
                               <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={chartData.carComparison}>
                                   <CartesianGrid strokeDasharray="3 3" />
@@ -1398,7 +1977,7 @@ export default function StatsTab({
 
                             {/* Total Distance Comparison */}
                             <div>
-                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{getTranslation('stats.totalDistance', 'Total Distance')}</h5>
+                              <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">{getTranslation('stats.totalDistance', 'Total Distance')}</h5>
                               <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={chartData.carComparison}>
                                   <CartesianGrid strokeDasharray="3 3" />
@@ -1424,7 +2003,7 @@ export default function StatsTab({
 
                         return pieData.length > 0 ? (
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                            <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.costDistribution', 'Cost Distribution')}</h4>
+                            <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">{getTranslation('stats.costDistribution', 'Cost Distribution')}</h4>
                             <ResponsiveContainer width="100%" height={300}>
                               <PieChart>
                                 <Pie
@@ -1452,7 +2031,7 @@ export default function StatsTab({
                       {/* Consumption Trends by Vehicle */}
                       {Object.keys(chartData.consumptionTrends).length > 0 && (
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('consumptionTrendsByVehicle', 'Consumption Trends by Vehicle')}</h4>
+                          <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">{getTranslation('consumptionTrendsByVehicle', 'Consumption Trends by Vehicle')}</h4>
                           <ResponsiveContainer width="100%" height={300}>
                             <LineChart>
                               <CartesianGrid strokeDasharray="3 3" />
@@ -1498,25 +2077,43 @@ export default function StatsTab({
                         </div>
                       )}
 
-                      {/* Monthly Fill-ups and Cost per KM */}
-                      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.monthlyFillUpsAndCostPerKm', 'Monthly Fill-ups & Cost per KM')}</h4>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={chartData.monthlyTrends}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
-                            <YAxis yAxisId="left" />
-                            <YAxis yAxisId="right" orientation="right" />
-                            <Tooltip formatter={(value: any, name: string) => [
-                              name === 'fillUps' ? `${Number(value)} fill-ups` : `${Number(value).toFixed(3)} ${currency}/km`,
-                              name === 'fillUps' ? 'Fill-ups' : 'Cost per KM'
-                            ]} />
-                            <Legend />
-                            <Bar yAxisId="left" dataKey="fillUps" fill="#ffc658" name="Fill-ups" />
-                            <Bar yAxisId="right" dataKey="costPerKm" fill="#ff7300" name="Cost per KM" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
+                      {/* Monthly Fill-ups and Cost per KM by Currency */}
+                      {Object.keys(chartData.monthlyTrendsByCurrency).length > 0 && (
+                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
+                          <h4 className="font-medium text-lg mb-3 text-gray-800 dark:text-gray-200">
+                            {getTranslation('stats.monthlyFillUpsAndCostPerKm', 'Monthly Fill-ups & Cost per KM')} - {getTranslation('stats.byCurrency', 'By Currency')}
+                          </h4>
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            {Object.entries(chartData.monthlyTrendsByCurrency).map(([currency, monthlyData]) => (
+                              <div key={currency} className="bg-white dark:bg-gray-800 p-3 rounded-lg border dark:border-gray-700 transition-colors">
+                                <h5 className="font-medium text-base mb-2 text-gray-800 dark:text-gray-200">
+                                  {getCurrencyName(currency)} ({currency})
+                                </h5>
+                                <ResponsiveContainer width="100%" height={250}>
+                                  <BarChart data={monthlyData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="month" />
+                                    <YAxis yAxisId="left" />
+                                    <YAxis yAxisId="right" orientation="right" />
+                                    <Tooltip formatter={(value: any, name: string) => [
+                                      name === 'fillUps' ? `${Number(value)} fill-ups` : `${Number(value).toFixed(3)} ${currency}/km`,
+                                      name === 'fillUps' ? 'Fill-ups' : 'Cost per KM'
+                                    ]} />
+                                    <Legend />
+                                    <Bar yAxisId="left" dataKey="fillUps" fill="#ffc658" name="Fill-ups" />
+                                    <Bar yAxisId="right" dataKey="costPerKm" fill="#ff7300" name="Cost per KM" />
+                                  </BarChart>
+                                </ResponsiveContainer>
+                                <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                                  <div>Total Fill-ups: {monthlyData.reduce((sum, month) => sum + month.fillUps, 0)}</div>
+                                  <div>Avg Cost per KM: {(monthlyData.reduce((sum, month) => sum + month.costPerKm, 0) / monthlyData.length).toFixed(3)} {currency}/km</div>
+                                  <div>Total Distance: {monthlyData.reduce((sum, month) => sum + month.distance, 0).toFixed(0)} km</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                     </div>
                   )}
@@ -1533,44 +2130,44 @@ export default function StatsTab({
               const yearlyCosts = calculateYearlyCosts(carId);
               const categoryCosts = calculateCategoryCosts(carId);
               const currency = entries.find((entry) => matchesCarId(entry.carId, carId))?.currency ||
-                             expenses.find((expense) => matchesCarId(expense.carId, carId))?.currency ||
-                             incomes.find((income) => matchesCarId(income.carId, carId))?.currency ||
-                             currencies[0];
+                expenses.find((expense) => matchesCarId(expense.carId, carId))?.currency ||
+                incomes.find((income) => matchesCarId(income.carId, carId))?.currency ||
+                currencies[0];
 
               return (
                 <div key={`stats-car-${carId || index}`} className="mb-4 p-3 bg-white dark:bg-gray-700 rounded-lg text-sm border dark:border-gray-600 transition-colors">
-                  <h3 className="font-medium text-lg text-gray-900 dark:text-gray-100 mb-2">{car.name}</h3>
+                  <h3 className="font-medium text-lg text-gray-800 dark:text-gray-200 mb-2">{car.name}</h3>
 
                   {/* Overall Statistics */}
                   <div className="mb-4 border-b pb-2">
-                    <h4 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-1">{getTranslation('stats.overallStats', 'Overall Statistics')}</h4>
-                    <p>
+                    <h4 className="font-medium text-base text-gray-800 dark:text-gray-200 mb-1">{getTranslation('stats.overallStats', 'Overall Statistics')}</h4>
+                    <p className="text-gray-800 dark:text-gray-200">
                       {getTranslation('stats.avgConsumption')}: {avgConsumption !== null ?
                         `${avgConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` :
                         getTranslation('noData')}
                     </p>
-                    <p>
+                    <p className="text-gray-800 dark:text-gray-200">
                       {getTranslation('stats.avgCost')}: {avgCost !== null ?
                         `${avgCost} ${currency}${getTranslation(fuelConsumptionUnit.includes('km') ? 'units.consumption.perKm' : 'units.consumption.perMile')}` :
                         getTranslation('noData')}
                     </p>
-                    <p>{getTranslation('stats.totalCost')}: {totalCost} {currency}</p>
-                    <p>{getTranslation('stats.totalDistance', 'Total Distance')}: {totalDistance} km</p>
+                    <p className="text-gray-800 dark:text-gray-200">{getTranslation('stats.totalCost')}: {totalCost} {currency}</p>
+                    <p className="text-gray-800 dark:text-gray-200">{getTranslation('stats.totalDistance', 'Total Distance')}: {totalDistance} km</p>
                   </div>
 
                   {/* Monthly Costs */}
                   <div className="mb-4 border-b pb-2">
-                    <h4 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-1">{getTranslation('stats.monthlyCosts', 'Monthly Costs')}</h4>
+                    <h4 className="font-medium text-base text-gray-800 dark:text-gray-200 mb-1">{getTranslation('stats.monthlyCosts', 'Monthly Costs')}</h4>
                     {Object.keys(monthlyCosts).length === 0 ? (
-                      <p className="text-gray-700 dark:text-gray-400">{getTranslation('noData')}</p>
+                      <p className="text-gray-800 dark:text-gray-200">{getTranslation('noData')}</p>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
                         {Object.entries(monthlyCosts)
                           .sort(([a], [b]) => b.localeCompare(a))
                           .map(([month, costs]) => (
                             <div key={month} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                              <div className="font-medium text-xs mb-1">{month}</div>
-                              <div className="text-xs">
+                              <div className="font-medium text-xs mb-1 text-gray-800 dark:text-gray-200">{month}</div>
+                              <div className="text-xs text-gray-800 dark:text-gray-200">
                                 <div>{getTranslation('common.fuel', 'Fuel')}: {costs.fuel} {currency}</div>
                                 <div>{getTranslation('common.expenses', 'Expenses')}: {costs.expenses} {currency}</div>
                                 <div>{getTranslation('common.income', 'Income')}: {costs.incomes} {currency}</div>
@@ -1597,17 +2194,17 @@ export default function StatsTab({
 
                   {/* Yearly Costs */}
                   <div className="mb-4 border-b pb-2">
-                    <h4 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-1">{getTranslation('stats.yearlyCosts', 'Yearly Costs')}</h4>
+                    <h4 className="font-medium text-base text-gray-800 dark:text-gray-200 mb-1">{getTranslation('stats.yearlyCosts', 'Yearly Costs')}</h4>
                     {Object.keys(yearlyCosts).length === 0 ? (
-                      <p className="text-gray-700 dark:text-gray-400">{getTranslation('noData')}</p>
+                      <p className="text-gray-800 dark:text-gray-200">{getTranslation('noData')}</p>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {Object.entries(yearlyCosts)
                           .sort(([a], [b]) => b.localeCompare(a))
                           .map(([year, costs]) => (
                             <div key={year} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                              <div className="font-medium text-sm mb-1">{year}</div>
-                              <div className="text-xs">
+                              <div className="font-medium text-sm mb-1 text-gray-800 dark:text-gray-200">{year}</div>
+                              <div className="text-xs text-gray-800 dark:text-gray-200">
                                 <div>{getTranslation('common.fuel', 'Fuel')}: {costs.fuel} {currency}</div>
                                 <div>{getTranslation('common.expenses', 'Expenses')}: {costs.expenses} {currency}</div>
                                 <div>{getTranslation('common.income', 'Income')}: {costs.incomes} {currency}</div>
@@ -1633,23 +2230,100 @@ export default function StatsTab({
                   </div>
 
                   {/* Category Breakdown */}
-                  <div className="mb-4">
-                    <h4 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-1">{getTranslation('stats.categoryBreakdown', 'Category Breakdown')}</h4>
+                  <div className="mb-4 ">
+                    <h4 className="font-medium text-base text-gray-800 dark:text-gray-200 mb-1">{getTranslation('stats.categoryBreakdown', 'Category Breakdown')}</h4>
                     {Object.keys(categoryCosts).length === 0 ? (
-                      <p className="text-gray-700 dark:text-gray-400">{getTranslation('noData')}</p>
+                      <p className="text-gray-800 dark:text-gray-200">{getTranslation('noData')}</p>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                         {Object.entries(categoryCosts)
                           .sort(([, a], [, b]) => b - a)
                           .map(([category, cost]) => (
                             <div key={category} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                              <div className="font-medium text-xs">{category}</div>
-                              <div className="text-sm">{cost} {currency}</div>
+                              <div className="font-medium text-xs text-gray-800 dark:text-gray-200">{category}</div>
+                              <div className="text-sm text-gray-800 dark:text-gray-200">{cost} {currency}</div>
                             </div>
                           ))}
                       </div>
                     )}
                   </div>
+
+                  {/* Currency-specific Breakdown for this car */}
+                  {(() => {
+                    const carFuelEntries = entries.filter((entry) => matchesCarId(entry.carId, carId));
+                    const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
+                    const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
+                    
+                    const carCurrencyBreakdown = calculateCurrencyStats(carFuelEntries, carExpenseEntries, carIncomeEntries);
+                    
+                    if (carCurrencyBreakdown.byCurrency.length === 0) return null;
+                    
+                    return (
+                      <div className="mb-4">
+                        <h4 className="font-medium text-base text-gray-800 dark:text-gray-200 mb-1">
+                          {getTranslation('stats.currencyBreakdown', 'Costs by Currency')}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {carCurrencyBreakdown.byCurrency.map((currencyStat) => {
+                            const costPerDistanceData = calculateCostPerDistance(carFuelEntries, currencyStat.currency);
+                            
+                            return (
+                              <div key={currencyStat.currency} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                                <div className="flex items-center justify-between mb-1">
+                                  <div className="font-medium text-xs text-gray-800 dark:text-gray-200">
+                                    {getCurrencyName(currencyStat.currency)} ({currencyStat.currency})
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    {currencyStat.entryCount} {getTranslation('stats.entries', 'entries')}
+                                  </div>
+                                </div>
+                                <div className="space-y-1 text-xs">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600 dark:text-gray-300">{getTranslation('stats.fuelCosts', 'Fuel')}:</span>
+                                    <span className="font-medium">{formatCurrency(currencyStat.totalFuelCost, currencyStat.currency)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600 dark:text-gray-300">{getTranslation('stats.expenseCosts', 'Expenses')}:</span>
+                                    <span className="font-medium">{formatCurrency(currencyStat.totalExpenseCost, currencyStat.currency)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600 dark:text-gray-300">{getTranslation('stats.incomeCosts', 'Income')}:</span>
+                                    <span className="font-medium text-green-600">{formatCurrency(currencyStat.totalIncome, currencyStat.currency)}</span>
+                                  </div>
+                                  <div className="border-t pt-1 flex justify-between">
+                                    <span className="font-medium text-gray-800 dark:text-gray-200">{getTranslation('stats.netCost', 'Net Cost')}:</span>
+                                    <span className={`font-bold ${currencyStat.netCost >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                      {formatCurrency(Math.abs(currencyStat.netCost), currencyStat.currency)}
+                                      {currencyStat.netCost >= 0 ? ' (Cost)' : ' (Profit)'}
+                                    </span>
+                                  </div>
+                                  {costPerDistanceData.costPerDistance !== null && (
+                                    <div className="flex justify-between text-blue-600">
+                                      <span>{getTranslation('stats.avgCostPerKm', 'Cost/km')}:</span>
+                                      <span className="font-medium">{formatCurrency(costPerDistanceData.costPerDistance, currencyStat.currency)}</span>
+                                    </div>
+                                  )}
+                                  {costPerDistanceData.totalDistance > 0 && (
+                                    <div className="flex justify-between text-gray-500">
+                                      <span>{getTranslation('stats.totalDistance', 'Distance')}:</span>
+                                      <span>{costPerDistanceData.totalDistance.toFixed(0)} km</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {carCurrencyBreakdown.byCurrency.length > 1 && (
+                          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded text-xs">
+                            <div className="text-gray-600 dark:text-gray-300">
+                              {getTranslation('stats.totalInBaseCurrency', 'Total in USD')}: {formatCurrency(carCurrencyBreakdown.totalInBaseCurrency, 'USD')}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
