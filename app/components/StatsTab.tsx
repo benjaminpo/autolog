@@ -3,7 +3,7 @@ import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, X
 import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { useLanguage } from '../context/LanguageContext';
-import { TranslationType } from '../translations';
+import { TranslationType, EnhancedTranslationType } from '../translations';
 
 interface Car {
   id: string;
@@ -60,7 +60,7 @@ interface IncomeEntry {
 }
 
 interface StatsTabProps {
-  t?: TranslationType;
+  t?: EnhancedTranslationType;
   cars: Car[];
   entries: FuelEntry[];
   expenses: ExpenseEntry[];
@@ -83,43 +83,24 @@ export default function StatsTab({
   const t = propT || contextT;
 
   // Helper function to safely access translations including nested keys
-  const getTranslation = (key: keyof TranslationType | string, fallback: string = key): string => {
-    if (t) {
-      // Handle nested keys like 'stats.monthlyCosts'
-      if (key.includes('.')) {
-        const keys = key.split('.');
-        let value: unknown = t;
-        for (const k of keys) {
-          if (value && typeof value === 'object' && k in value) {
-            value = (value as Record<string, unknown>)[k];
-          } else {
-            value = null;
-            break;
-          }
-        }
-        if (typeof value === 'string') {
-          return value;
-        }
-      } else {
-        // First try to access as a direct key in the translations
-        const directKey = key as keyof TranslationType;
-        if (directKey in t) {
-          const value = t[directKey];
-          if (typeof value === 'string') {
-            return value;
-          }
-        }
+  const getTranslation = (key: string, fallback: string = key): string => {
+    if (t && typeof t._ === 'function') {
+      // Use the built-in translation function that handles nested keys properly
+      const translation = t._(key);
+      // If the translation function returns the key itself, it means the key wasn't found
+      if (translation !== key) {
+        return translation;
       }
     }
     return fallback;
   };
 
   const consumptionUnitTranslations: { [key: string]: string } = {
-    'L/100km': 'per100km',
-    'km/L': 'kmPerLiter',
-    'G/100mi': 'per100miles',
-    'km/G': 'kmPerGallon',
-    'mi/L': 'miPerLiter',
+    'L/100km': 'units.consumption.per100km',
+    'km/L': 'units.consumption.kmPerLiter',
+    'G/100mi': 'units.consumption.per100miles',
+    'km/G': 'units.consumption.kmPerGallon',
+    'mi/L': 'units.consumption.miPerLiter',
   };
 
   // Helper function to match car IDs with entries - handles string vs ObjectId comparison
@@ -1073,29 +1054,29 @@ export default function StatsTab({
   return (
     <div className="p-3 max-w-7xl mx-auto flex-grow">
       <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow mb-4 border dark:border-gray-700 transition-colors">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{getTranslation('showStats')}</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{getTranslation('stats.show', 'Statistics')}</h2>
 
         <div className="mb-3">
-          <label className="text-sm font-medium">{getTranslation('consumptionUnit')}</label>
+          <label className="text-sm font-medium">{getTranslation('vehicle.labels.consumptionUnit', 'Consumption Unit')}</label>
           <select
             value={fuelConsumptionUnit}
             onChange={(e) => setFuelConsumptionUnit(e.target.value as 'L/100km' | 'km/L' | 'G/100mi' | 'km/G' | 'mi/L')}
             className="p-2 border rounded w-full text-sm"
-            aria-label={getTranslation('consumptionUnit', "Consumption Unit")}
-            title={getTranslation('consumptionUnit', "Consumption Unit")}
+            aria-label={getTranslation('vehicle.labels.consumptionUnit', "Consumption Unit")}
+            title={getTranslation('vehicle.labels.consumptionUnit', "Consumption Unit")}
           >
-            <option key="consumption-l100km" value="L/100km">{getTranslation('per100km')}</option>
-            <option key="consumption-kml" value="km/L">{getTranslation('kmPerLiter')}</option>
-            <option key="consumption-g100mi" value="G/100mi">{getTranslation('per100miles')}</option>
-            <option key="consumption-kmg" value="km/G">{getTranslation('kmPerGallon')}</option>
-            <option key="consumption-mil" value="mi/L">{getTranslation('miPerLiter')}</option>
+            <option key="consumption-l100km" value="L/100km">{getTranslation('units.consumption.per100km', 'L/100km')}</option>
+            <option key="consumption-kml" value="km/L">{getTranslation('units.consumption.kmPerLiter', 'km/L')}</option>
+            <option key="consumption-g100mi" value="G/100mi">{getTranslation('units.consumption.per100miles', 'G/100mi')}</option>
+            <option key="consumption-kmg" value="km/G">{getTranslation('units.consumption.kmPerGallon', 'km/G')}</option>
+            <option key="consumption-mil" value="mi/L">{getTranslation('units.consumption.miPerLiter', 'mi/L')}</option>
           </select>
         </div>
 
         {cars.length === 0 ? (
           <div className="text-center p-8 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
-            <p className="text-gray-800 dark:text-gray-300 mb-4">{getTranslation('noVehicles', 'No vehicles found')}</p>
-            <p className="text-sm text-gray-700 dark:text-gray-400">{getTranslation('addVehicleFirst', 'Please add a vehicle first to view statistics')}</p>
+            <p className="text-gray-800 dark:text-gray-300 mb-4">{getTranslation('stats.noVehicles', 'No vehicles found')}</p>
+            <p className="text-sm text-gray-700 dark:text-gray-400">{getTranslation('stats.addVehicleFirst', 'Please add a vehicle first to view statistics')}</p>
           </div>
         ) : (
           <>
@@ -1106,65 +1087,65 @@ export default function StatsTab({
               
               return (
                 <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 transition-colors">
-                  <h3 className="font-semibold text-xl mb-4 text-green-800 dark:text-green-200">{getTranslation('aggregateStats', 'Overall Fleet Statistics')}</h3>
+                  <h3 className="font-semibold text-xl mb-4 text-green-800 dark:text-green-200">{getTranslation('stats.aggregateStats', 'Overall Fleet Statistics')}</h3>
                   
                   {/* Fuel Statistics */}
                   <div className="mb-4 border-b border-green-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-green-700">{getTranslation('fuelStats', 'Fuel Statistics')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-green-700">{getTranslation('stats.fuelStats', 'Fuel Statistics')}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('totalFillUps', 'Total Fill-ups')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalFillUps}</div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('totalVolume', 'Total Volume')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.totalVolume} L</div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('minVolume', 'Min Fill-up')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.minVolume || 'N/A'} L</div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('maxVolume', 'Max Fill-up')}</div>
-                        <div className="text-lg font-semibold">{aggregateStats.maxVolume || 'N/A'} L</div>
-                      </div>
+                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.totalFillUps', 'Total Fill-ups')}</div>
+                          <div className="text-lg font-semibold">{aggregateStats.totalFillUps}</div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.totalVolume', 'Total Volume')}</div>
+                          <div className="text-lg font-semibold">{aggregateStats.totalVolume} L</div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.minVolume', 'Min Fill-up')}</div>
+                          <div className="text-lg font-semibold">{aggregateStats.minVolume || 'N/A'} L</div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.maxVolume', 'Max Fill-up')}</div>
+                          <div className="text-lg font-semibold">{aggregateStats.maxVolume || 'N/A'} L</div>
+                        </div>
                     </div>
                   </div>
 
                   {/* Consumption Statistics */}
                   <div className="mb-4 border-b border-green-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-green-700">{getTranslation('consumptionStats', 'Consumption Statistics')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-green-700">{getTranslation('stats.consumptionStats', 'Consumption Statistics')}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('avgConsumption', 'Average Consumption')}</div>
-                        <div className="text-lg font-semibold text-green-600">
-                          {aggregateStats.avgConsumption !== null ? 
-                            `${aggregateStats.avgConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
-                            'N/A'}
+                                              <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.avgConsumption', 'Average Consumption')}</div>
+                          <div className="text-lg font-semibold text-green-600">
+                            {aggregateStats.avgConsumption !== null ? 
+                              `${aggregateStats.avgConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
+                              'N/A'}
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('bestConsumption', 'Best Consumption')}</div>
-                        <div className="text-lg font-semibold text-green-600">
-                          {aggregateStats.bestConsumption !== null ? 
-                            `${aggregateStats.bestConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
-                            'N/A'}
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.bestConsumption', 'Best Consumption')}</div>
+                          <div className="text-lg font-semibold text-green-600">
+                            {aggregateStats.bestConsumption !== null ? 
+                              `${aggregateStats.bestConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
+                              'N/A'}
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
-                        <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('worstConsumption', 'Worst Consumption')}</div>
-                        <div className="text-lg font-semibold text-green-600">
-                          {aggregateStats.worstConsumption !== null ? 
-                            `${aggregateStats.worstConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
-                            'N/A'}
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
+                          <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('stats.worstConsumption', 'Worst Consumption')}</div>
+                          <div className="text-lg font-semibold text-green-600">
+                            {aggregateStats.worstConsumption !== null ? 
+                              `${aggregateStats.worstConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` : 
+                              'N/A'}
+                          </div>
                         </div>
-                      </div>
                     </div>
                   </div>
 
                   {/* Cost Statistics */}
                   <div className="mb-4 border-b border-blue-200 pb-3">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('costStats', 'Cost Statistics')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('stats.costStats', 'Cost Statistics')}</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                       <div className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
                         <div className="font-medium text-xs text-gray-800 dark:text-gray-300">{getTranslation('totalCosts', 'Total Costs')}</div>
@@ -1274,11 +1255,11 @@ export default function StatsTab({
                             <div key={month} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
                               <div className="font-medium text-xs mb-1">{month}</div>
                               <div className="text-xs">
-                                <div>{getTranslation('fillUps', 'Fill-ups')}: {stats.fillUps}</div>
-                                <div>{getTranslation('volume', 'Volume')}: {stats.volume.toFixed(1)} L</div>
-                                <div>{getTranslation('distance', 'Distance')}: {stats.distance.toFixed(0)} km</div>
+                                <div>{getTranslation('stats.fillUps', 'Fill-ups')}: {stats.fillUps}</div>
+                                <div>{getTranslation('stats.totalVolume', 'Volume')}: {stats.volume.toFixed(1)} L</div>
+                                <div>{getTranslation('stats.distance', 'Distance')}: {stats.distance.toFixed(0)} km</div>
                                 <div className="font-medium border-t pt-1">
-                                  {getTranslation('totalCost', 'Total')}: {stats.totalCost.toFixed(2)} {currency}
+                                  {getTranslation('stats.totalCosts', 'Total')}: {stats.totalCost.toFixed(2)} {currency}
                                 </div>
                               </div>
                             </div>
@@ -1289,7 +1270,7 @@ export default function StatsTab({
 
                   {/* Yearly Breakdown */}
                   <div className="mb-4">
-                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('yearlyBreakdown', 'Yearly Breakdown')}</h4>
+                    <h4 className="font-medium text-lg mb-2 text-blue-700">{getTranslation('stats.yearlyBreakdown', 'Yearly Breakdown')}</h4>
                     {Object.keys(aggregateStats.yearlyStats).length === 0 ? (
                       <p className="text-gray-700 dark:text-gray-400 text-sm">{getTranslation('noData')}</p>
                     ) : (
@@ -1300,14 +1281,14 @@ export default function StatsTab({
                             <div key={year} className="bg-white dark:bg-gray-800 p-3 rounded border dark:border-gray-700 transition-colors">
                               <div className="font-medium text-sm mb-2">{year}</div>
                               <div className="text-sm grid grid-cols-2 gap-2">
-                                <div>{getTranslation('fillUps', 'Fill-ups')}: {stats.fillUps}</div>
-                                <div>{getTranslation('volume', 'Volume')}: {stats.volume.toFixed(1)} L</div>
-                                <div>{getTranslation('distance', 'Distance')}: {stats.distance.toFixed(0)} km</div>
-                                <div>{getTranslation('fuelCost', 'Fuel')}: {stats.fuelCost.toFixed(2)} {currency}</div>
-                                <div>{getTranslation('expenseCost', 'Expenses')}: {stats.expenseCost.toFixed(2)} {currency}</div>
-                                <div>{getTranslation('incomeCost', 'Income')}: {stats.incomeCost.toFixed(2)} {currency}</div>
+                                <div>{getTranslation('stats.fillUps', 'Fill-ups')}: {stats.fillUps}</div>
+                                <div>{getTranslation('stats.totalVolume', 'Volume')}: {stats.volume.toFixed(1)} L</div>
+                                <div>{getTranslation('stats.distance', 'Distance')}: {stats.distance.toFixed(0)} km</div>
+                                <div>{getTranslation('stats.fuelCost', 'Fuel')}: {stats.fuelCost.toFixed(2)} {currency}</div>
+                                <div>{getTranslation('stats.expenseCost', 'Expenses')}: {stats.expenseCost.toFixed(2)} {currency}</div>
+                                <div>{getTranslation('stats.incomeCost', 'Income')}: {stats.incomeCost.toFixed(2)} {currency}</div>
                                 <div className="font-medium border-t pt-1 col-span-2">
-                                  {getTranslation('totalCost', 'Total')}: {stats.totalCost.toFixed(2)} {currency}
+                                  {getTranslation('stats.totalCosts', 'Total')}: {stats.totalCost.toFixed(2)} {currency}
                                 </div>
                               </div>
                             </div>
@@ -1327,16 +1308,16 @@ export default function StatsTab({
 
               return (
                 <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h3 className="font-semibold text-xl mb-4 text-green-800 dark:text-green-200">{getTranslation('charts', 'Data Visualization')}</h3>
+                  <h3 className="font-semibold text-xl mb-4 text-green-800 dark:text-green-200">{getTranslation('stats.charts', 'Data Visualization')}</h3>
                   
                   {chartData.monthlyTrends.length === 0 ? (
-                    <p className="text-gray-700 dark:text-gray-400 text-center py-8">{getTranslation('noDataForCharts', 'No data available for charts. Add some fuel entries to see visualizations.')}</p>
+                    <p className="text-gray-700 dark:text-gray-400 text-center py-8">{getTranslation('stats.noDataForCharts', 'No data available for charts. Add some fuel entries to see visualizations.')}</p>
                   ) : (
                     <div className="space-y-6">
                       
                       {/* Monthly Cost Trends */}
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('monthlyCostTrends', 'Monthly Cost Trends')}</h4>
+                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.monthlyCostTrends', 'Monthly Cost Trends')}</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <ComposedChart data={chartData.monthlyTrends}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1357,7 +1338,7 @@ export default function StatsTab({
 
                       {/* Monthly Distance and Volume */}
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('monthlyDistanceVolume', 'Monthly Distance & Volume')}</h4>
+                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.monthlyDistanceVolume', 'Monthly Distance & Volume')}</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <BarChart data={chartData.monthlyTrends}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1378,7 +1359,7 @@ export default function StatsTab({
                       {/* Fuel Price Trends */}
                       {chartData.fuelPrices.length > 0 && (
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('fuelPriceTrends', 'Fuel Price Trends')}</h4>
+                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.fuelPriceTrends', 'Fuel Price Trends')}</h4>
                           <ResponsiveContainer width="100%" height={300}>
                             <LineChart data={chartData.fuelPrices}>
                               <CartesianGrid strokeDasharray="3 3" />
@@ -1395,12 +1376,12 @@ export default function StatsTab({
                       {/* Vehicle Comparison */}
                       {chartData.carComparison.length > 1 && (
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('vehicleComparison', 'Vehicle Comparison')}</h4>
+                          <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.vehicleComparison', 'Vehicle Comparison')}</h4>
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             
                             {/* Consumption Comparison */}
                             <div>
-                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{getTranslation('avgConsumption', 'Average Consumption')}</h5>
+                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{getTranslation('stats.avgConsumption', 'Average Consumption')}</h5>
                               <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={chartData.carComparison}>
                                   <CartesianGrid strokeDasharray="3 3" />
@@ -1417,7 +1398,7 @@ export default function StatsTab({
 
                             {/* Total Distance Comparison */}
                             <div>
-                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{getTranslation('totalDistance', 'Total Distance')}</h5>
+                              <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{getTranslation('stats.totalDistance', 'Total Distance')}</h5>
                               <ResponsiveContainer width="100%" height={250}>
                                 <BarChart data={chartData.carComparison}>
                                   <CartesianGrid strokeDasharray="3 3" />
@@ -1443,7 +1424,7 @@ export default function StatsTab({
 
                         return pieData.length > 0 ? (
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                            <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('costDistribution', 'Cost Distribution')}</h4>
+                            <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.costDistribution', 'Cost Distribution')}</h4>
                             <ResponsiveContainer width="100%" height={300}>
                               <PieChart>
                                 <Pie
@@ -1519,7 +1500,7 @@ export default function StatsTab({
 
                       {/* Monthly Fill-ups and Cost per KM */}
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 transition-colors">
-                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('monthlyFillUpsAndCostPerKm', 'Monthly Fill-ups & Cost per KM')}</h4>
+                        <h4 className="font-medium text-lg mb-3 text-green-700">{getTranslation('stats.monthlyFillUpsAndCostPerKm', 'Monthly Fill-ups & Cost per KM')}</h4>
                         <ResponsiveContainer width="100%" height={300}>
                           <BarChart data={chartData.monthlyTrends}>
                             <CartesianGrid strokeDasharray="3 3" />
@@ -1562,19 +1543,19 @@ export default function StatsTab({
 
                   {/* Overall Statistics */}
                   <div className="mb-4 border-b pb-2">
-                    <h4 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-1">{getTranslation('overallStats', 'Overall Statistics')}</h4>
+                    <h4 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-1">{getTranslation('stats.overallStats', 'Overall Statistics')}</h4>
                     <p>
-                      {getTranslation('avgConsumption')}: {avgConsumption !== null ?
+                      {getTranslation('stats.avgConsumption')}: {avgConsumption !== null ?
                         `${avgConsumption} ${getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}` :
                         getTranslation('noData')}
                     </p>
                     <p>
-                      {getTranslation('avgCost')}: {avgCost !== null ?
-                        `${avgCost} ${currency}${getTranslation(fuelConsumptionUnit.includes('km') ? 'perKm' : 'perMile')}` :
+                      {getTranslation('stats.avgCost')}: {avgCost !== null ?
+                        `${avgCost} ${currency}${getTranslation(fuelConsumptionUnit.includes('km') ? 'units.consumption.perKm' : 'units.consumption.perMile')}` :
                         getTranslation('noData')}
                     </p>
-                    <p>{getTranslation('totalCost')}: {totalCost} {currency}</p>
-                    <p>{getTranslation('totalDistance', 'Total Distance')}: {totalDistance} km</p>
+                    <p>{getTranslation('stats.totalCost')}: {totalCost} {currency}</p>
+                    <p>{getTranslation('stats.totalDistance', 'Total Distance')}: {totalDistance} km</p>
                   </div>
 
                   {/* Monthly Costs */}
@@ -1599,12 +1580,12 @@ export default function StatsTab({
                                 </div>
                                 {costs.avgConsumption !== null && (
                                   <div className="text-blue-600 mt-1">
-                                    {getTranslation('avgConsumption')}: {costs.avgConsumption} {getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}
+                                    {getTranslation('stats.avgConsumption')}: {costs.avgConsumption} {getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}
                                   </div>
                                 )}
                                 {costs.avgCostPerDistance !== null && (
                                   <div className="text-green-600">
-                                    {getTranslation('avgCost')}: {costs.avgCostPerDistance} {currency}{getTranslation(fuelConsumptionUnit.includes('km') ? 'perKm' : 'perMile')}
+                                    {getTranslation('stats.avgCost')}: {costs.avgCostPerDistance} {currency}{getTranslation(fuelConsumptionUnit.includes('km') ? 'units.consumption.perKm' : 'units.consumption.perMile')}
                                   </div>
                                 )}
                               </div>
@@ -1636,12 +1617,12 @@ export default function StatsTab({
                                 </div>
                                 {costs.avgConsumption !== null && (
                                   <div className="text-blue-600 mt-1">
-                                    {getTranslation('avgConsumption')}: {costs.avgConsumption} {getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}
+                                    {getTranslation('stats.avgConsumption')}: {costs.avgConsumption} {getTranslation(consumptionUnitTranslations[fuelConsumptionUnit])}
                                   </div>
                                 )}
                                 {costs.avgCostPerDistance !== null && (
                                   <div className="text-green-600">
-                                    {getTranslation('avgCost')}: {costs.avgCostPerDistance} {currency}{getTranslation(fuelConsumptionUnit.includes('km') ? 'perKm' : 'perMile')}
+                                    {getTranslation('stats.avgCost')}: {costs.avgCostPerDistance} {currency}{getTranslation(fuelConsumptionUnit.includes('km') ? 'units.consumption.perKm' : 'units.consumption.perMile')}
                                   </div>
                                 )}
                               </div>

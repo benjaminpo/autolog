@@ -4,40 +4,40 @@ A comprehensive vehicle expense tracking application built with Next.js, featuri
 
 **A Modern Vehicle Management Platform with Comprehensive Testing & CI/CD**
 
-Vehicle Expense Tracker is a feature-rich Next.js web application designed to help users efficiently track vehicle expenses, fuel consumption, maintenance, and income. Built with modern web technologies, featuring mobile-first design, multi-language support, advanced analytics, and backed by a **robust 2,437-test suite** with complete CI/CD automation.
+Vehicle Expense Tracker is a feature-rich Next.js web application designed to help users efficiently track vehicle expenses, fuel consumption, maintenance, and income. Built with modern web technologies, featuring mobile-first design, multi-language support, advanced analytics, and backed by a **robust 2,442-test suite** with complete CI/CD automation.
 
 ---
 
 ## 📈 Latest Updates
 
 ### **Recent Enhancements**
-- **🎨 Enhanced UI/UX**: Updated text color classes for improved readability across form components and import/export pages
-- **🔧 API Testing Improvements**: Streamlined API test imports for fuel entries, companies, and fuel types with optimized session management
-- **⚡ Performance Optimizations**: Enhanced authentication logging and removed unnecessary background color styling
-- **🛠️ Code Refactoring**: Simplified API test structure and improved error handling across endpoints
-- **📦 Dependency Updates**: Upgraded to Next.js 15.3.3 with latest security patches and performance improvements
-- **🔧 Critical Test Infrastructure Fixes**: Resolved all failing tests in authentication and translation systems
-- **📊 Complete Test Suite Success**: Achieved **100% test pass rate** with 2,123 tests across 108 test suites
-- **🎯 Authentication Testing Overhaul**: Fixed RegisterPage, LoginPage, and AuthContext test suites with improved mocking strategies
-- **🌐 Translation System Reliability**: Resolved internationalization test failures with dynamic language switching support
-- **⚡ Enhanced Mock Architecture**: Implemented sophisticated jest setup with realistic AuthContext and localStorage mocking
-- **♿ Accessibility Improvements**: Enhanced contrast ratios and readability across all UI components
+- **🎨 Enhanced UI/UX**: Refactored ThemeToggle component usage in HomePage and integrated LanguageContext for better internationalization
+- **📦 Dependency Updates**: Upgraded to Tailwind CSS 4.1.11 with postcss-nesting support and improved configuration
+- **🔧 Database Improvements**: Updated MongoDB to 6.17.0 and @capacitor/ios to 7.4.1 for enhanced performance
+- **⚡ Performance Optimizations**: Enhanced authentication logging and improved component integration
+- **🛠️ Code Refactoring**: Simplified component structure and improved context management across the application
+- **🔧 Critical Test Infrastructure**: Maintained **100% test pass rate** with 2,442 tests across 119 test suites
+- **📊 Complete Test Suite Success**: Achieved continuous **100% test pass rate** with comprehensive coverage
+- **🎯 Authentication & Translation**: Robust testing infrastructure with improved mocking strategies
+- **🌐 Translation System Reliability**: Enhanced internationalization with dynamic language switching support
+- **⚡ Enhanced Development Experience**: Improved development server with automatic port detection (typically runs on port 3002)
+- **♿ Accessibility Improvements**: Maintained high contrast ratios and readability across all UI components
 - **✅ Quality Excellence**: Zero failing tests with comprehensive error handling and edge case coverage
 
 ---
 
 ## 🎯 Project Status & Quality Metrics
 
-[![Tests](https://img.shields.io/badge/tests-2,437%20passing-brightgreen)](https://github.com/benjaminpo/vehicle-expense-tracker)
+[![Tests](https://img.shields.io/badge/tests-2,442%20passing-brightgreen)](https://github.com/benjaminpo/vehicle-expense-tracker)
 [![Test Suites](https://img.shields.io/badge/test%20suites-119%20passing-brightgreen)](https://github.com/benjaminpo/vehicle-expense-tracker)
 [![Coverage](https://img.shields.io/badge/coverage-comprehensive-brightgreen)](https://github.com/benjaminpo/vehicle-expense-tracker)
 [![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-blue)](https://github.com/features/actions)
 [![TypeScript](https://img.shields.io/badge/typescript-100%25-blue)](https://github.com/benjaminpo/vehicle-expense-tracker)
-[![Next.js](https://img.shields.io/badge/Next.js-15.3.3-black)](https://nextjs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4.16-blue)](https://tailwindcss.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.3.4-black)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.1.11-blue)](https://tailwindcss.com/)
 
 ### ✅ Development Excellence
-- **🧪 Comprehensive Testing**: 2,437 tests across 119 test suites with 100% pass rate
+- **🧪 Comprehensive Testing**: 2,442 tests across 119 test suites with 100% pass rate
 - **🔄 Full CI/CD Pipeline**: Automated testing on Node.js 18.x, 20.x, 22.x with GitHub Actions
 - **📊 Multi-Layer Coverage**: Unit, Integration, Performance, Accessibility, and Security testing
 - **🔒 Quality Assurance**: ESLint, TypeScript strict mode, security audits, and bundle optimization
@@ -49,17 +49,16 @@ Vehicle Expense Tracker is a feature-rich Next.js web application designed to he
 ## 🎯 Recent Testing & Quality Achievements
 
 ### **🏆 Complete Test Suite Success**
-We've successfully achieved **100% test pass rate** with comprehensive fixes across the entire testing infrastructure:
+We've successfully maintained **100% test pass rate** with comprehensive testing infrastructure:
 
-#### **🔧 Critical Fixes Implemented**
-- **Authentication Testing**: Completely overhauled RegisterPage and LoginPage test suites
-- **Context Testing**: Fixed AuthContext tests with proper mocking and cleanup
-- **Translation System**: Resolved internationalization test failures with dynamic language support
-- **Mock Architecture**: Enhanced jest.setup.js with sophisticated mocking strategies
-- **API Testing**: Streamlined test imports and improved session management across all endpoints
+#### **🔧 Latest Improvements**
+- **Component Integration**: Enhanced ThemeToggle and LanguageContext integration with comprehensive testing
+- **Dependency Management**: Seamless upgrades to Tailwind CSS 4.1.11 and MongoDB 6.17.0 with maintained compatibility
+- **Development Experience**: Improved development server with automatic port detection and enhanced configuration
+- **Code Quality**: Continued adherence to TypeScript strict mode and ESLint standards
 
-#### **📊 Testing Statistics**
-- ✅ **2,437 tests passing** across 119 test suites (100% pass rate)
+#### **📊 Current Testing Statistics**
+- ✅ **2,442 tests passing** across 119 test suites (100% pass rate)
 - ✅ **Zero failing tests** with robust error handling
 - ✅ **Multi-environment compatibility** (Node.js 18.x, 20.x, 22.x)
 - ✅ **Complete coverage** of models, APIs, components, and core functionality
@@ -72,17 +71,17 @@ We've successfully achieved **100% test pass rate** with comprehensive fixes acr
 - **Enhanced Test Isolation**: Improved beforeEach/afterEach cleanup strategies
 - **Optimized API Tests**: Streamlined imports and session management for better performance
 
-#### **🆕 Latest Test Enhancements (Current Update)**
-Major expansion of test coverage with 134 new model tests, bringing the total to 2,437 tests across 119 test suites:
+#### **🆕 Latest Test Enhancements**
+Continued maintenance of comprehensive test coverage with 2,442 tests across 119 test suites:
 
-##### **📊 Enhanced Model Test Coverage (+134 Tests)**
-- **👤 User Model Tests (27 tests)**: Comprehensive schema validation, password hashing, authentication methods, and edge cases
-- **💰 IncomeEntry Model Tests (42 tests)**: Data validation, currency support, real-world scenarios, and interface compliance  
-- **⛽ FuelCompany Model Tests (32 tests)**: Name validation, uniqueness constraints, international companies, and active/inactive states
-- **🚙 FuelType Model Tests (33 tests)**: User-specific types, compound indexing, fuel categories, and alternative fuel support
+##### **📊 Maintained Model Test Coverage**
+- **👤 User Model Tests**: Comprehensive schema validation, password hashing, authentication methods, and edge cases
+- **💰 IncomeEntry Model Tests**: Data validation, currency support, real-world scenarios, and interface compliance  
+- **⛽ FuelCompany Model Tests**: Name validation, uniqueness constraints, international companies, and active/inactive states
+- **🚙 FuelType Model Tests**: User-specific types, compound indexing, fuel categories, and alternative fuel support
 
 ##### **🔧 Code Quality Improvements**
-- **✅ Linting Resolution**: Fixed all ESLint warnings in manage-lists page component
+- **✅ Linting Excellence**: Maintained all ESLint standards with latest configuration updates
 - **📝 TypeScript Compliance**: Achieved 100% TypeScript compilation success with proper type casting
 - **🔄 Mock Strategy Enhancement**: Improved mongoose mocking patterns for reliable model testing
 - **⚡ Test Performance**: Optimized test execution with better isolation and cleanup strategies
@@ -94,7 +93,7 @@ Major expansion of test coverage with 134 new model tests, bringing the total to
 - **📊 Data Integrity**: Comprehensive validation of required fields, data types, and business logic constraints
 
 ##### **📈 Current Quality Metrics**
-- **2,437 Tests Passing**: Maintained 100% test success rate across all environments
+- **2,442 Tests Passing**: Maintained 100% test success rate across all environments
 - **119 Test Suites**: Complete coverage of all core application functionality including enhanced model testing
 - **Zero Test Failures**: Robust and reliable test infrastructure
 - **Enhanced Coverage Quality**: Focus on meaningful test scenarios and edge case handling
@@ -232,6 +231,7 @@ npm run db:setup
 npm run dev
 
 # Visit http://localhost:3000 in your browser
+# Note: If port 3000 is in use, Next.js will automatically use the next available port (e.g., 3002)
 ```
 
 ### Environment Configuration
@@ -373,10 +373,10 @@ vehicle-expense-tracker/
 ## 🛠️ Technology Stack
 
 ### **Frontend Architecture**
-- **⚛️ Framework**: Next.js 15.3.3 with App Router for optimal performance
+- **⚛️ Framework**: Next.js 15.3.4 with App Router for optimal performance
 - **⚛️ React**: React 19.0.0 with modern concurrent features
 - **📝 Language**: TypeScript 5 with strict mode for type safety
-- **🎨 Styling**: Tailwind CSS 3.4.16 with custom design system
+- **🎨 Styling**: Tailwind CSS 4.1.11 with custom design system and postcss-nesting support
 - **🧩 Components**: Custom component library with accessibility focus
 - **📱 State Management**: React Context + Hooks with optimized re-rendering
 - **🌐 Internationalization**: Multi-language support with dynamic switching
@@ -385,7 +385,7 @@ vehicle-expense-tracker/
 
 ### **Backend & API**
 - **🔗 API Layer**: Next.js API Routes with RESTful design
-- **🗄️ Database**: MongoDB 6.16.0 with Mongoose 8.15.1 ODM for flexible data modeling
+- **🗄️ Database**: MongoDB 6.17.0 with Mongoose 8.15.1 ODM for flexible data modeling
 - **🔐 Authentication**: NextAuth.js 4.24.11 with multiple OAuth providers
 - **✅ Validation**: Input validation and runtime type checking
 - **📊 Data Processing**: Papa Parse 5.5.3 for CSV import/export
@@ -393,7 +393,7 @@ vehicle-expense-tracker/
 - **🔍 Search**: Advanced filtering and full-text search capabilities
 
 ### **Testing & Quality Assurance**
-- **🧪 Testing Framework**: Jest 29.7.0 + React Testing Library 16.3.0 (2,437 tests)
+- **🧪 Testing Framework**: Jest 29.7.0 + React Testing Library 16.3.0 (2,442 tests)
 - **🎯 Component Testing**: @testing-library/react with user-event simulation
 - **⚡ Performance Testing**: Custom benchmarks, memory profiling, and load testing
 - **♿ Accessibility Testing**: Automated WCAG compliance and screen reader testing
