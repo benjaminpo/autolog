@@ -409,7 +409,7 @@ export default function ImportPage() {
         }
 
         try {
-          const endpoint = importType === 'fuel' ? '/api/fuel-entries' : importType === 'expenses' ? '/api/expenses' : '/api/income-entries';
+          const endpoint = importType === 'fuel' ? '/api/fuel-entries' : importType === 'expenses' ? '/api/expense-entries' : '/api/income-entries';
           const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -518,7 +518,7 @@ export default function ImportPage() {
     try {
       // Get existing entries for comparison
       const existingFuelResponse = await fetch('/api/fuel-entries');
-      const existingExpenseResponse = await fetch('/api/expenses');
+              const existingExpenseResponse = await fetch('/api/expense-entries');
       const existingIncomeResponse = await fetch('/api/income-entries');
       
       if (existingFuelResponse.ok && existingExpenseResponse.ok && existingIncomeResponse.ok) {

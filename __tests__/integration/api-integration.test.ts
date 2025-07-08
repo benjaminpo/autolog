@@ -152,7 +152,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Expenses API', () => {
-    describe('GET /api/expenses', () => {
+    describe('GET /api/expense-entries', () => {
       it('should return all expenses successfully', async () => {
         const { req, res } = createMocks<NextApiRequest, NextApiResponse>({
           method: 'GET',
@@ -235,7 +235,7 @@ describe('API Integration Tests', () => {
       });
     });
 
-    describe('POST /api/expenses', () => {
+    describe('POST /api/expense-entries', () => {
       it('should create a new expense successfully', async () => {
         const expenseData = {
           vehicleId: '1',

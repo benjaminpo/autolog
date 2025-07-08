@@ -296,7 +296,7 @@ export const handlers = [
     return res(ctx.json(mockVehicles));
   }),
   
-  rest.post('/api/expenses', async (req, res, ctx) => {
+  rest.post('/api/expense-entries', async (req, res, ctx) => {
     const newExpense = await req.json();
     return res(ctx.json({ ...newExpense, id: generateId() }));
   }),
