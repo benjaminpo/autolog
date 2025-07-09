@@ -208,8 +208,9 @@ export default function StatisticsPage() {
   }, [fuelConsumptionUnit, user]);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors">
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
+      {/* Sticky Header */}
+      <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
         <PageContainer>
           <div className="flex justify-between items-center">
             <h1 className="text-lg font-bold">{t?.navigation?.statistics || 'Statistics'}</h1>
@@ -227,8 +228,7 @@ export default function StatisticsPage() {
 
       <main className="flex-grow overflow-auto bg-gray-50 dark:bg-gray-800 transition-colors">
         <PageContainer className="p-3 md:p-6">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
-            <TranslatedStatsTab
+          <TranslatedStatsTab
               cars={cars}
               entries={entries}
               expenses={expenses}
@@ -236,7 +236,6 @@ export default function StatisticsPage() {
               fuelConsumptionUnit={fuelConsumptionUnit}
               setFuelConsumptionUnit={setFuelConsumptionUnit}
             />
-          </div>
         </PageContainer>
       </main>
     </div>
