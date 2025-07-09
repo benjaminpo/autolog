@@ -7,8 +7,8 @@ services:
       dockerfile: Dockerfile
       args:
         - NODE_ENV=production
-    image: vehicle-expense-tracker:production
-    container_name: vehicle-expense-tracker-prod
+    image: autolog:production
+    container_name: autolog-prod
     restart: always
     ports:
       - "3000:3000"
@@ -17,7 +17,7 @@ services:
       - MONGODB_URI=${MONGODB_URI}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
-      - NEXTAUTH_URL=https://vehicle-expense-tracker.example.com
+      - NEXTAUTH_URL=https://autolog.vercel.app
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
     volumes:
       - ./logs:/app/logs

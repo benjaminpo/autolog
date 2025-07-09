@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:capacitor": "next build",
+    "cap:dev": "./scripts/capacitor-dev.sh",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
