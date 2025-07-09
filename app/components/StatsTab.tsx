@@ -827,11 +827,11 @@ export default function StatsTab({
   // Calculate currency-specific statistics
   const calculateCurrencySpecificStats = () => {
     const currencyBreakdown = calculateCurrencyStats(entries, expenses, incomes);
-    
+
     // Add cost per distance calculations for each currency
     const currencyStatsWithCostPerDistance = currencyBreakdown.byCurrency.map(currencyStat => {
       const costPerDistanceData = calculateCostPerDistance(entries, currencyStat.currency);
-      
+
       return {
         ...currencyStat,
         costPerDistance: costPerDistanceData.costPerDistance,
@@ -1235,12 +1235,12 @@ export default function StatsTab({
 
     // Monthly trends data by currency
     const monthlyTrendsByCurrency: { [currency: string]: any[] } = {};
-    
+
     // Group entries by currency and calculate monthly stats for each currency
     const entriesByCurrency: { [currency: string]: FuelEntry[] } = {};
     const expensesByCurrency: { [currency: string]: ExpenseEntry[] } = {};
     const incomesByCurrency: { [currency: string]: IncomeEntry[] } = {};
-    
+
     // Group fuel entries by currency
     entries.forEach(entry => {
       if (!entriesByCurrency[entry.currency]) {
@@ -1248,7 +1248,7 @@ export default function StatsTab({
       }
       entriesByCurrency[entry.currency].push(entry);
     });
-    
+
     // Group expenses by currency
     expenses.forEach(expense => {
       if (!expensesByCurrency[expense.currency]) {
@@ -1256,7 +1256,7 @@ export default function StatsTab({
       }
       expensesByCurrency[expense.currency].push(expense);
     });
-    
+
     // Group incomes by currency
     incomes.forEach(income => {
       if (!incomesByCurrency[income.currency]) {
@@ -1264,16 +1264,16 @@ export default function StatsTab({
       }
       incomesByCurrency[income.currency].push(income);
     });
-    
+
     // Calculate monthly trends for each currency
     Object.keys(entriesByCurrency).forEach(currency => {
       const currencyEntries = entriesByCurrency[currency];
       const currencyExpenses = expensesByCurrency[currency] || [];
       const currencyIncomes = incomesByCurrency[currency] || [];
-      
+
       // Group by month
       const monthlyData: { [month: string]: any } = {};
-      
+
       // Process fuel entries
       currencyEntries.forEach(entry => {
         const month = entry.date.substring(0, 7);
@@ -1289,15 +1289,15 @@ export default function StatsTab({
             fillUps: 0
           };
         }
-        
+
         monthlyData[month].fuelCost += Number(entry.cost);
         monthlyData[month].totalCost += Number(entry.cost);
         monthlyData[month].fillUps += 1;
-        
+
         const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
         monthlyData[month].volume += volume;
       });
-      
+
       // Process expenses
       currencyExpenses.forEach(expense => {
         const month = expense.date.substring(0, 7);
@@ -1313,11 +1313,11 @@ export default function StatsTab({
             fillUps: 0
           };
         }
-        
+
         monthlyData[month].expenseCost += Number(expense.amount);
         monthlyData[month].totalCost += Number(expense.amount);
       });
-      
+
       // Process incomes
       currencyIncomes.forEach(income => {
         const month = income.date.substring(0, 7);
@@ -1333,11 +1333,11 @@ export default function StatsTab({
             fillUps: 0
           };
         }
-        
+
         monthlyData[month].incomeCost += Number(income.amount);
         monthlyData[month].totalCost -= Number(income.amount); // Income reduces total cost
       });
-      
+
       // Calculate distance and cost per km for each month
       Object.values(monthlyData).forEach(monthData => {
         // Calculate distance from fuel entries for this month
@@ -1346,22 +1346,22 @@ export default function StatsTab({
           const sortedEntries = monthEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
           const firstEntry = sortedEntries[0];
           const lastEntry = sortedEntries[sortedEntries.length - 1];
-          
+
           const firstMileage = Number(firstEntry.mileage);
           const lastMileage = Number(lastEntry.mileage);
-          
+
           if (!isNaN(firstMileage) && !isNaN(lastMileage) && lastMileage > firstMileage) {
-            monthData.distance = firstEntry.distanceUnit === 'km' ? 
-              lastMileage - firstMileage : 
+            monthData.distance = firstEntry.distanceUnit === 'km' ?
+              lastMileage - firstMileage :
               (lastMileage - firstMileage) * 1.60934;
           }
         }
-        
+
         // Calculate cost per km
         monthData.costPerKm = monthData.distance > 0 ? monthData.totalCost / monthData.distance : 0;
         monthData.consumption = monthData.distance > 0 && monthData.volume > 0 ? (monthData.volume / monthData.distance) * 100 : 0;
       });
-      
+
       // Convert to array and sort by month
       monthlyTrendsByCurrency[currency] = Object.values(monthlyData)
         .sort((a, b) => a.month.localeCompare(b.month));
@@ -1385,12 +1385,12 @@ export default function StatsTab({
 
     // Fuel price trends by currency
     const fuelPricesByCurrency: { [currency: string]: any[] } = {};
-    
+
     // Group entries by currency
     entries.forEach(entry => {
       const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
       const pricePerLiter = volume > 0 ? Number(entry.cost) / volume : 0;
-      
+
       if (pricePerLiter > 0) {
         const priceData = {
           date: entry.date,
@@ -1515,17 +1515,16 @@ export default function StatsTab({
 
   return (
     <div className="p-3 max-w-7xl mx-auto flex-grow" data-testid="stats-tab">
-      {/* Summary Section for Integration Tests */}
       <div>
-        <div>Cars: {cars?.length || 0}</div>
-        <div>Fuel Entries: {entries?.length || 0}</div>
-        <div>Expenses: {expenses?.length || 0}</div>
-        <div>Incomes: {incomes?.length || 0}</div>
-        <div>Fuel Unit: {fuelConsumptionUnit}</div>
-      </div>
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow mb-4 border dark:border-gray-700 transition-colors">
         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">{getTranslation('stats.show', 'Statistics')}</h2>
-
+        {/* Summary Section for Integration Tests */}
+        <div>
+          <div>Cars: {cars?.length || 0}</div>
+          <div>Fuel Entries: {entries?.length || 0}</div>
+          <div>Expenses: {expenses?.length || 0}</div>
+          <div>Incomes: {incomes?.length || 0}</div>
+          <div>Fuel Unit: {fuelConsumptionUnit}</div>
+        </div>
         <div className="mb-3">
           <label className="text-sm font-medium text-gray-800 dark:text-gray-200">{getTranslation('vehicle.labels.consumptionUnit', 'Consumption Unit')}</label>
           <select
@@ -1662,7 +1661,7 @@ export default function StatsTab({
                   {(() => {
                     const currencyStats = calculateCurrencySpecificStats();
                     if (currencyStats.byCurrency.length === 0) return null;
-                    
+
                     return (
                       <div className="mb-4 border-b border-purple-200 pb-3">
                         <h4 className="font-medium text-lg mb-2 text-gray-800 dark:text-gray-200">
@@ -1944,13 +1943,13 @@ export default function StatsTab({
                                   <XAxis dataKey="date" />
                                   <YAxis />
                                   <Tooltip formatter={(value: any) => [`${Number(value).toFixed(2)} ${currency}/L`, 'Price per Liter']} />
-                                  <Line 
-                                    type="monotone" 
-                                    dataKey="pricePerLiter" 
-                                    stroke="#ff7300" 
-                                    strokeWidth={2} 
-                                    dot={{ r: 3 }} 
-                                    name={`Price per Liter (${currency})`} 
+                                  <Line
+                                    type="monotone"
+                                    dataKey="pricePerLiter"
+                                    stroke="#ff7300"
+                                    strokeWidth={2}
+                                    dot={{ r: 3 }}
+                                    name={`Price per Liter (${currency})`}
                                   />
                                 </LineChart>
                               </ResponsiveContainer>
@@ -2265,11 +2264,11 @@ export default function StatsTab({
                     const carFuelEntries = entries.filter((entry) => matchesCarId(entry.carId, carId));
                     const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
                     const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
-                    
+
                     const carCurrencyBreakdown = calculateCurrencyStats(carFuelEntries, carExpenseEntries, carIncomeEntries);
-                    
+
                     if (carCurrencyBreakdown.byCurrency.length === 0) return null;
-                    
+
                     return (
                       <div className="mb-4">
                         <h4 className="font-medium text-base text-gray-800 dark:text-gray-200 mb-1">
@@ -2278,7 +2277,7 @@ export default function StatsTab({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           {carCurrencyBreakdown.byCurrency.map((currencyStat) => {
                             const costPerDistanceData = calculateCostPerDistance(carFuelEntries, currencyStat.currency);
-                            
+
                             return (
                               <div key={currencyStat.currency} className="bg-white dark:bg-gray-800 p-2 rounded border dark:border-gray-700 transition-colors">
                                 <div className="flex items-center justify-between mb-1">

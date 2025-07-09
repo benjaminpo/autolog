@@ -543,9 +543,7 @@ export default function AddExpensePage() {
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700 transition-colors">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{getText('expense.labels.addExpense', 'Add New Expense')}</h2>
-              
+            <div>
               {submitMessage && (
                 <div className={`mb-4 p-3 rounded ${
                   submitMessage.type === 'success' 
