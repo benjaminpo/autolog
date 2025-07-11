@@ -39,6 +39,7 @@ interface ExpenseEntry {
   currency: string;
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface ExpenseCategoryItem {
@@ -186,6 +187,7 @@ export default function ExpenseHistoryPage() {
             currency: updatedExpense.currency,
             date: updatedExpense.date,
             notes: updatedExpense.notes,
+            images: updatedExpense.images || [],
           };
 
           const response = await fetch(`/api/expense-entries/${expenseId}`, {

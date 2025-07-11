@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes } from '../lib/vehicleData';
 import { useLanguage } from '../context/LanguageContext';
 import { getCarNameById, getObjectId } from '../lib/idUtils';
@@ -7,6 +8,7 @@ import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useDataTableFilters } from '../hooks/useDataTableFilters';
 import DataTableControls, { SortOption, FilterOption } from './DataTableControls';
 import SortableTableHeader from './SortableTableHeader';
+import ImageModal from './ImageModal';
 
 interface Car {
   id: string;
@@ -39,6 +41,7 @@ interface FuelEntry {
   tyrePressureUnit: typeof tyrePressureUnits[number];
   tags: string[];
   notes: string;
+  images: string[];
 }
 
 interface FuelTabProps {
@@ -71,6 +74,17 @@ export default function FuelTab({
   // Use translations from context if not provided as props
   const { t: contextT } = useLanguage();
   const t = propT || contextT;
+
+  // State for image modal
+  const [imageModal, setImageModal] = useState<{
+    isOpen: boolean;
+    imageSrc: string;
+    altText: string;
+  }>({
+    isOpen: false,
+    imageSrc: '',
+    altText: '',
+  });
 
   // Define sort options for fuel entries
   const sortOptions: SortOption[] = [
@@ -378,6 +392,38 @@ export default function FuelTab({
                                 const formatValue = (fieldKey: string, fieldValue: any) => {
                                   if (fieldValue == null) return '';
                                   
+                                  if (fieldKey === 'images') {
+                                    if (Array.isArray(fieldValue) && fieldValue.length > 0) {
+                                      return (
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                                          {fieldValue.map((image, index) => (
+                                            <div key={index} className="relative">
+                                              <Image
+                                                src={image}
+                                                alt={`Fuel entry image ${index + 1}`}
+                                                width={80}
+                                                height={80}
+                                                className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                                                unoptimized={true}
+                                                onClick={() => setImageModal({
+                                                  isOpen: true,
+                                                  imageSrc: image,
+                                                  altText: `Fuel entry image ${index + 1}`,
+                                                })}
+                                              />
+                                              <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                                <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                                  Click to enlarge
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      );
+                                    }
+                                    return 'No images';
+                                  }
+                                  
                                   if (Array.isArray(fieldValue)) {
                                     return fieldValue.join(', ');
                                   }
@@ -427,6 +473,14 @@ export default function FuelTab({
           {canLoadMore && <LoadingIndicator />}
         </>
       )}
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={imageModal.isOpen}
+        onClose={() => setImageModal({ isOpen: false, imageSrc: '', altText: '' })}
+        imageSrc={imageModal.imageSrc}
+        altText={imageModal.altText}
+      />
     </div>
   );
 }

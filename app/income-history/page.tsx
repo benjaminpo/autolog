@@ -13,6 +13,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { getObjectId } from '../lib/idUtils';
 import { currencies } from '../lib/vehicleData';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
+import ImageUpload from '../components/ImageUpload';
 
 // Wrap component with translations HOC
 const TranslatedIncomeTab = withTranslations(IncomeTab);
@@ -38,6 +39,7 @@ interface IncomeEntry {
   currency: string;
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface IncomeCategoryItem {
@@ -388,6 +390,18 @@ export default function IncomeHistoryPage() {
                   rows={3}
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
                   placeholder={t?.notesPlaceholder || 'Optional notes...'}
+                />
+              </div>
+
+              {/* Images */}
+              <div>
+                <label className="block text-sm font-medium text-gray-900 dark:text-gray-300 mb-1">
+                  {t?.form?.fields?.images || 'Images'}
+                </label>
+                <ImageUpload
+                  images={editingIncome.images || []}
+                  onImagesChange={(images) => setEditingIncome(prev => prev ? { ...prev, images } : null)}
+                  disabled={false}
                 />
               </div>
 

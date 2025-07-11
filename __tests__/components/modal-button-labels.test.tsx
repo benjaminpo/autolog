@@ -53,6 +53,7 @@ describe('Modal Button Labels Fallback System', () => {
         currency: 'USD',
         date: '2023-01-01',
         notes: 'Test',
+        images: [],
       };
 
       render(<Modals {...defaultProps} t={mockT} editExpense={expenseEntry} />);
@@ -83,6 +84,7 @@ describe('Modal Button Labels Fallback System', () => {
         currency: 'USD',
         date: '2023-01-01',
         notes: 'Test',
+        images: [],
       };
 
       render(<Modals {...defaultProps} t={mockT} editExpense={expenseEntry} />);
@@ -111,6 +113,7 @@ describe('Modal Button Labels Fallback System', () => {
         currency: 'USD',
         date: '2023-01-01',
         notes: 'Test',
+        images: [],
       };
 
       render(<Modals {...defaultProps} t={mockT} editExpense={expenseEntry} />);
@@ -155,6 +158,7 @@ describe('Modal Button Labels Fallback System', () => {
         tyrePressureUnit: 'psi',
         tags: [],
         notes: 'Test',
+        images: [],
       };
 
       render(<Modals {...defaultProps} t={mockT} editEntry={fuelEntry} />);
@@ -192,6 +196,7 @@ describe('Modal Button Labels Fallback System', () => {
         currency: 'USD',
         date: '2023-01-01',
         notes: 'Test',
+        images: [],
       };
 
       render(<Modals {...defaultProps} t={mockT} editExpense={expenseEntry} />);

@@ -49,6 +49,7 @@ interface FuelEntry {
   tyrePressureUnit: typeof tyrePressureUnits[number];
   tags: string[];
   notes: string;
+  images: string[];
 }
 
 export default function FuelHistoryPage() {
@@ -240,6 +241,7 @@ export default function FuelHistoryPage() {
             tyrePressureUnit: updatedEntry.tyrePressureUnit,
             tags: updatedEntry.tags,
             notes: updatedEntry.notes,
+            images: updatedEntry.images || [],
           };
 
           const response = await fetch(`/api/fuel-entries/${entryId}`, {

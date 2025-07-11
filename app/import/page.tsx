@@ -35,6 +35,7 @@ interface FuelEntry {
   tyrePressureUnit: string;
   tags: string[];
   notes: string;
+  images: string[];
 }
 
 interface ExpenseEntry {
@@ -44,6 +45,7 @@ interface ExpenseEntry {
   currency: string;
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface IncomeEntry {
@@ -53,6 +55,7 @@ interface IncomeEntry {
   currency: string;
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface ValidationError {
@@ -192,7 +195,8 @@ export default function ImportPage() {
       tyrePressure: Number(row['Tyre Pressure']) || 0,
       tyrePressureUnit: row['Tyre Pressure Unit'] || 'psi',
       tags: row['Tags'] ? row['Tags'].split(';').map(t => t.trim()) : [],
-      notes: row['Notes'] || ''
+      notes: row['Notes'] || '',
+      images: []
     };
 
     return { entry, errors: [] };
@@ -256,7 +260,8 @@ export default function ImportPage() {
       amount: Number(row['Amount']),
       currency: row['Currency'] || 'HKD',
       date: row['Date'],
-      notes: row['Notes'] || ''
+      notes: row['Notes'] || '',
+      images: []
     };
 
     return { entry, errors: [] };
@@ -320,7 +325,8 @@ export default function ImportPage() {
       amount: Number(row['Amount']),
       currency: row['Currency'] || 'HKD',
       date: row['Date'],
-      notes: row['Notes'] || ''
+      notes: row['Notes'] || '',
+      images: []
     };
 
     return { entry, errors: [] };

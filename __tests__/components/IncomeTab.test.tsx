@@ -65,6 +65,7 @@ const mockIncomes = [
     currency: 'USD',
     date: '2023-10-15',
     notes: 'Weekend earnings',
+    images: [],
   },
 ];
 
@@ -201,6 +202,7 @@ describe('IncomeTab', () => {
           currency: 'USD',
           date: '2023-10-15',
           notes: 'Food delivery',
+          images: [],
         },
       ];
 
@@ -221,6 +223,7 @@ describe('IncomeTab', () => {
           currency: 'USD',
           date: '2023-10-15',
           notes: 'Test income',
+          images: [],
         },
       ];
 
@@ -239,6 +242,7 @@ describe('IncomeTab', () => {
           currency: 'USD',
           date: '2023-10-15',
           notes: '',
+          images: [],
         },
       ];
 

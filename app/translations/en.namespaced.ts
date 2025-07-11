@@ -561,6 +561,7 @@ const en = {
       notes: 'Notes',
       tags: 'Tags',
       commaSeparated: 'comma separated',
+      images: 'Images',
     },
     placeholders: {
       notes: 'Add any additional notes...',

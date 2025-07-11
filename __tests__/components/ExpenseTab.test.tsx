@@ -101,6 +101,7 @@ const mockExpenses = [
     currency: 'USD',
     date: '2023-10-15',
     notes: 'Test maintenance',
+    images: [],
   },
   {
     id: 'expense2',
@@ -110,6 +111,7 @@ const mockExpenses = [
     currency: 'USD',
     date: '2023-10-10',
     notes: 'Test fuel',
+    images: [],
   },
   {
     id: 'expense3',
@@ -119,6 +121,7 @@ const mockExpenses = [
     currency: 'USD',
     date: '2023-10-05',
     notes: 'Test insurance',
+    images: [],
   },
 ];
 
@@ -583,6 +586,7 @@ describe('ExpenseTab', () => {
           currency: 'USD',
           date: '2023-10-15',
           notes: '',
+          images: [],
         },
       ];
 

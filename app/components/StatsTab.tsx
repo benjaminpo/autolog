@@ -38,6 +38,7 @@ interface FuelEntry {
   tyrePressureUnit: string;
   tags: string[];
   notes: string;
+  images: string[];
 }
 
 interface ExpenseEntry {
@@ -48,6 +49,7 @@ interface ExpenseEntry {
   currency: typeof currencies[number];
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface IncomeEntry {
@@ -58,6 +60,7 @@ interface IncomeEntry {
   currency: typeof currencies[number];
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface StatsTabProps {

@@ -10,6 +10,7 @@ import { SimpleThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../hooks/useTranslation';
 import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
+import ImageUpload from '../components/ImageUpload';
 
 interface Car {
   id?: string;
@@ -49,6 +50,7 @@ export default function AddFuelPage() {
     tyrePressureUnit: 'psi' as typeof tyrePressureUnits[number],
     tags: '',
     notes: '',
+    images: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -185,6 +187,7 @@ export default function AddFuelPage() {
         tyrePressureUnit: 'psi' as typeof tyrePressureUnits[number],
         tags: '',
         notes: '',
+        images: [],
       });
       setSubmitMessage({ type: 'success', text: 'Preferences cleared successfully!' });
     } catch (error) {
@@ -673,6 +676,15 @@ export default function AddFuelPage() {
                           placeholder={getText('form.fields.notes', 'Add any additional notes...')}
                         />
                       </div>
+
+                      {/* Image Upload */}
+                      <ImageUpload
+                        images={fuelForm.images}
+                        onImagesChange={(images) => setFuelForm(prev => ({ ...prev, images }))}
+                        maxImages={5}
+                        label={getText('form.fields.images', 'Images')}
+                        disabled={isSubmitting}
+                      />
                     </div>
                   )}
                 </div>

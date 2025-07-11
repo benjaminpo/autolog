@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { getObjectId } from '../lib/idUtils';
 import { vehicleBrands, vehicleModels, currencies, distanceUnits, volumeUnits, tyrePressureUnits, vehicleTypes, getTranslatedVehicleTypes, paymentTypes, expenseCategories } from '../lib/vehicleData';
 import { inputClasses, selectClasses, textareaClasses } from './FormComponents';
+import ImageUpload from './ImageUpload';
 
 interface Car {
   id: string;
@@ -49,6 +50,7 @@ interface FuelEntry {
   tyrePressureUnit: typeof tyrePressureUnits[number];
   tags: string[];
   notes: string;
+  images: string[];
 }
 
 interface ExpenseEntry {
@@ -59,6 +61,7 @@ interface ExpenseEntry {
   currency: typeof currencies[number];
   date: string;
   notes: string;
+  images: string[];
 }
 
 interface ModalsProps {
@@ -459,6 +462,21 @@ export function Modals({
                       className={`${textareaClasses} sm:p-2 p-1 sm:text-sm text-xs`}
                       rows={2}
                     />
+                    
+                    {/* Image Upload for Fuel Entry */}
+                    <ImageUpload
+                      images={editEntry.images || []}
+                      onImagesChange={(images) => {
+                        if (editEntry) {
+                          const updatedEntry = { ...editEntry, images };
+                          // Update the editEntry state through the parent component
+                          setEditEntry(updatedEntry);
+                        }
+                      }}
+                      maxImages={5}
+                      label={t.images || 'Images'}
+                      disabled={false}
+                    />
                   </div>
                 )}
               </div>
@@ -601,6 +619,21 @@ export function Modals({
                 title={t.notes || "Notes"}
                 className="p-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
                 rows={2}
+              />
+              
+              {/* Image Upload for Expense */}
+              <ImageUpload
+                images={editExpense.images || []}
+                onImagesChange={(images) => {
+                  if (editExpense) {
+                    const updatedExpense = { ...editExpense, images };
+                    // Update the editExpense state through the parent component
+                    setEditExpense(updatedExpense);
+                  }
+                }}
+                maxImages={5}
+                label={t.images || 'Images'}
+                disabled={false}
               />
               <div className="flex justify-end gap-2">
                 <button

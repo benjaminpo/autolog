@@ -93,6 +93,7 @@ const mockFuelEntries = [
     tyrePressureUnit: 'psi',
     tags: ['regular'],
     notes: 'Full tank',
+    images: [],
   },
 ];
 
@@ -105,6 +106,7 @@ const mockExpenses = [
     currency: 'USD' as const,
     date: '2023-10-15',
     notes: 'Oil change',
+    images: [],
   },
 ];
 
@@ -117,6 +119,7 @@ const mockIncomes = [
     currency: 'USD' as const,
     date: '2023-10-15',
     notes: 'Uber earnings',
+    images: [],
   },
 ];
 

@@ -10,6 +10,7 @@ import { SimpleThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../hooks/useTranslation';
 import { currencies, expenseCategories as predefinedExpenseCategories } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
+import ImageUpload from '../components/ImageUpload';
 
 interface Car {
   id?: string;
@@ -36,6 +37,7 @@ export default function AddExpensePage() {
     currency: 'HKD' as typeof currencies[number],
     date: new Date().toISOString().split('T')[0],
     notes: '',
+    images: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -129,6 +131,7 @@ export default function AddExpensePage() {
         currency: 'HKD' as typeof currencies[number],
         date: new Date().toISOString().split('T')[0],
         notes: '',
+        images: [],
       });
       setSubmitMessage({ type: 'success', text: 'Preferences cleared successfully!' });
     } catch (error) {
@@ -672,6 +675,15 @@ export default function AddExpensePage() {
                     placeholder={getText('form.fields.notes', 'Add any additional notes...')}
                   />
                 </div>
+
+                {/* Image Upload */}
+                <ImageUpload
+                  images={expenseForm.images}
+                  onImagesChange={(images) => setExpenseForm(prev => ({ ...prev, images }))}
+                  maxImages={5}
+                  label={getText('form.fields.images', 'Images')}
+                  disabled={isSubmitting}
+                />
 
                 {/* Submit Buttons */}
                 <div className="flex gap-3 pt-4">

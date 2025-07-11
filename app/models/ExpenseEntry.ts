@@ -8,6 +8,7 @@ export interface IExpenseEntry extends Document {
   currency: string;
   date: string;
   notes: string;
+  images: string[];
 }
 
 const ExpenseEntrySchema: Schema = new Schema({
@@ -39,6 +40,10 @@ const ExpenseEntrySchema: Schema = new Schema({
   notes: {
     type: String,
     default: ''
+  },
+  images: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true

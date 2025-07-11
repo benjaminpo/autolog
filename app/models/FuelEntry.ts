@@ -20,6 +20,7 @@ export interface IFuelEntry extends Document {
   tyrePressureUnit?: string;
   tags: string[];
   notes: string;
+  images: string[];
 }
 
 const FuelEntrySchema: Schema = new Schema({
@@ -99,6 +100,10 @@ const FuelEntrySchema: Schema = new Schema({
   notes: {
     type: String,
     default: ''
+  },
+  images: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true

@@ -100,6 +100,7 @@ const mockFuelEntries = [
     tyrePressureUnit: 'psi',
     tags: ['highway'],
     notes: 'Long trip fuel up',
+    images: [],
   },
 ];
 

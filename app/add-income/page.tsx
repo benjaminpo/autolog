@@ -11,6 +11,7 @@ import { SimpleThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../hooks/useTranslation';
 import { currencies } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
+import ImageUpload from '../components/ImageUpload';
 
 interface Car {
   id?: string;
@@ -38,6 +39,7 @@ export default function AddIncomePage() {
     currency: 'HKD' as typeof currencies[number],
     date: new Date().toISOString().split('T')[0],
     notes: '',
+    images: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -127,6 +129,7 @@ export default function AddIncomePage() {
         currency: 'HKD' as typeof currencies[number],
         date: new Date().toISOString().split('T')[0],
         notes: '',
+        images: [],
       });
       setSubmitMessage({ type: 'success', text: 'Preferences cleared successfully!' });
     } catch (error) {
@@ -170,6 +173,7 @@ export default function AddIncomePage() {
           ...prev,
           amount: '',
           notes: '',
+          images: [],
         }));
       } else {
         setSubmitMessage({ type: 'error', text: data.message || 'Failed to add income' });
@@ -384,6 +388,18 @@ export default function AddIncomePage() {
                     rows={3}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
                     placeholder={getText('form.fields.notes', 'Add any additional notes...')}
+                  />
+                </div>
+
+                {/* Images */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {getText('form.fields.images', 'Images')}
+                  </label>
+                  <ImageUpload
+                    images={incomeForm.images}
+                    onImagesChange={(images) => setIncomeForm(prev => ({ ...prev, images }))}
+                    disabled={isSubmitting}
                   />
                 </div>
 

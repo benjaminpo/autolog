@@ -8,6 +8,7 @@ export interface IIncomeEntry extends Document {
   currency: string;
   date: string;
   notes: string;
+  images: string[];
 }
 
 const IncomeEntrySchema: Schema = new Schema({
@@ -39,6 +40,10 @@ const IncomeEntrySchema: Schema = new Schema({
   notes: {
     type: String,
     default: ''
+  },
+  images: {
+    type: [String],
+    default: []
   }
 }, {
   timestamps: true

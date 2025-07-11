@@ -77,7 +77,8 @@ const mockEditEntry = {
   tyrePressure: 32,
   tyrePressureUnit: 'PSI' as const,
   tags: [],
-  notes: 'Test notes'
+  notes: 'Test notes',
+  images: []
 };
 
 const mockEditExpense = {
@@ -88,7 +89,8 @@ const mockEditExpense = {
   currency: 'USD' as const,
   date: '2024-01-01',
   description: 'Oil change',
-  notes: 'Regular maintenance'
+  notes: 'Regular maintenance',
+  images: []
 };
 
 const mockEditCar = {

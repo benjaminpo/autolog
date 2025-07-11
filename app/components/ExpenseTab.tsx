@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { currencies, expenseCategories } from '../lib/vehicleData';
 import { getCarNameById } from '../lib/idUtils';
 import { useLanguage } from '../context/LanguageContext';
@@ -7,6 +8,7 @@ import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useDataTableFilters } from '../hooks/useDataTableFilters';
 import DataTableControls, { SortOption, FilterOption } from './DataTableControls';
 import SortableTableHeader from './SortableTableHeader';
+import ImageModal from './ImageModal';
 
 interface Car {
   id?: string;
@@ -28,6 +30,7 @@ interface ExpenseEntry {
   currency: typeof currencies[number];
   date: string;
   notes: string;
+  images: string[];
 }
 
 // Unused interfaces removed to clean up linting warnings
@@ -64,6 +67,17 @@ export default function ExpenseTab({
   // Use translations from context if needed
   const { t: contextT } = useLanguage();
   const translatedText = t || contextT;
+
+  // State for image modal
+  const [imageModal, setImageModal] = useState<{
+    isOpen: boolean;
+    imageSrc: string;
+    altText: string;
+  }>({
+    isOpen: false,
+    imageSrc: '',
+    altText: '',
+  });
 
   // Define sort options for expense entries
   const sortOptions: SortOption[] = [
@@ -279,7 +293,7 @@ export default function ExpenseTab({
                     <strong>{(translatedText as any)?.details || 'Details'}:</strong>
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {Object.entries(expense).filter(([key]) => 
-                        key !== 'id' && key !== '_id' && key !== 'userId'
+                        key !== 'id' && key !== '_id' && key !== 'userId' && key !== '__v'
                       ).map(([key, value]) => {
                         const getFieldLabel = (fieldKey: string) => {
                           switch (fieldKey) {
@@ -303,6 +317,37 @@ export default function ExpenseTab({
                           if (fieldKey === 'amount') {
                             const numValue = Number(fieldValue);
                             return isNaN(numValue) ? fieldValue : numValue.toFixed(2);
+                          }
+                          if (fieldKey === 'images') {
+                            if (Array.isArray(fieldValue) && fieldValue.length > 0) {
+                              return (
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                                  {fieldValue.map((image, index) => (
+                                    <div key={index} className="relative">
+                                      <Image
+                                        src={image}
+                                        alt={`Expense image ${index + 1}`}
+                                        width={80}
+                                        height={80}
+                                        className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+                                        unoptimized={true}
+                                        onClick={() => setImageModal({
+                                          isOpen: true,
+                                          imageSrc: image,
+                                          altText: `Expense image ${index + 1}`,
+                                        })}
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                                        <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                          Click to enlarge
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                            return 'No images';
                           }
                           return String(fieldValue || '-');
                         };
@@ -392,6 +437,14 @@ export default function ExpenseTab({
           <ExpenseTable />
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={imageModal.isOpen}
+        onClose={() => setImageModal({ isOpen: false, imageSrc: '', altText: '' })}
+        imageSrc={imageModal.imageSrc}
+        altText={imageModal.altText}
+      />
     </div>
   );
 }
