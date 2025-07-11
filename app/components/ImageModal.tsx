@@ -11,8 +11,6 @@ interface ImageModalProps {
 }
 
 export default function ImageModal({ isOpen, onClose, imageSrc, altText }: ImageModalProps) {
-  if (!isOpen) return null;
-
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -42,6 +40,8 @@ export default function ImageModal({ isOpen, onClose, imageSrc, altText }: Image
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
 
   return (
     <div
