@@ -30,8 +30,8 @@ A comprehensive web and mobile application for tracking vehicle expenses, fuel c
 
 1. **Clone the repository**
    ```sh
-   git clone <repository-url>
-   cd vehicle-expense-tracker
+   git clone https://github.com/benjaminpo/autolog
+   cd autolog
    ```
 
 2. **Install dependencies**
