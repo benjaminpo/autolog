@@ -1,5 +1,7 @@
 # Vehicle Expense Tracker (AutoLog)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+
 A comprehensive web and mobile application for tracking vehicle expenses, fuel consumption, and income. Built with Next.js, React, TypeScript, and Capacitor for cross-platform mobile support.
 
 ## 🚗 Features
