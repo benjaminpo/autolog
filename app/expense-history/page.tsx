@@ -92,30 +92,12 @@ export default function ExpenseHistoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
-          setCars(normalizedVehicles);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
+    // Cars are now loaded automatically by useVehicles hook
+    // Just load expense entries
+    loadExpenses();
 
-    // Fetch expense categories (same as add-expense page)
-    fetch('/api/expense-categories')
-      .then(response => response.json())
+    // Fetch expense categories using shared API utility
+    expenseApi.getCategories()
       .then(data => {
         if (data.success && Array.isArray(data.expenseCategories)) {
           // Combine predefined categories with custom categories from API
@@ -146,11 +128,8 @@ export default function ExpenseHistoryPage() {
 
   const handleDeleteExpense = async (id: string) => {
     try {
-      const response = await fetch(`/api/expense-entries/${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
+      // Use shared API utility for deletion
+      const data = await expenseApi.deleteEntry(id);
 
       if (data.success) {
         // Remove the expense from the list
@@ -196,22 +175,15 @@ export default function ExpenseHistoryPage() {
             images: updatedExpense.images || [],
           };
 
-          const response = await fetch(`/api/expense-entries/${expenseId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updateData),
-          });
+          // Use shared API utility for updating
+          const data = await expenseApi.updateEntry(expenseId, updateData);
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-            console.error('Failed to update expense entry:', errorData.message);
-            alert(`Cannot update expense entry: ${errorData.message}`);
+          if (!data.success) {
+            console.error('Failed to update expense entry:', data.message || 'Unknown error');
+            alert(`Cannot update expense entry: ${data.message || 'Unknown error'}`);
             return;
           }
 
-          const data = await response.json();
           const returnedExpense = data.expense;
 
           if (returnedExpense) {
