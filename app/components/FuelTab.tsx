@@ -73,8 +73,8 @@ const getFieldLabel = (fieldKey: string, t: any): string => {
 
 // Helper function to render image grid
 const renderImageGrid = (
-  fieldValue: string[], 
-  entryType: string, 
+  fieldValue: string[],
+  entryType: string,
   setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
 ) => {
   if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
@@ -111,30 +111,30 @@ const renderImageGrid = (
 
 // Helper function to format field values
 const formatValue = (
-  fieldKey: string, 
-  fieldValue: any, 
-  cars: Car[], 
-  t: any, 
+  fieldKey: string,
+  fieldValue: any,
+  cars: Car[],
+  t: any,
   setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
 ) => {
   if (fieldValue == null) return '';
-  
+
   if (fieldKey === 'images') {
     return renderImageGrid(fieldValue, 'Fuel', setImageModal);
   }
-  
+
   if (fieldKey === 'carId') {
     return getCarNameById(String(fieldValue), cars);
   }
-  
+
   if (fieldKey === 'partialFuelUp') {
     return fieldValue ? 'Yes' : 'No';
   }
-  
+
   if (fieldKey === 'tags') {
     return Array.isArray(fieldValue) ? fieldValue.join(', ') : fieldValue;
   }
-  
+
   if ((fieldKey === 'createdAt' || fieldKey === 'updatedAt') && fieldValue) {
     try {
       return new Date(fieldValue).toLocaleString();
@@ -142,7 +142,7 @@ const formatValue = (
       return fieldValue;
     }
   }
-  
+
   return fieldValue;
 };
 

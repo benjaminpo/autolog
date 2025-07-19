@@ -9,7 +9,7 @@ import { AuthButton } from '../components/AuthButton';
 import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
-import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
+import { fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
@@ -42,7 +42,7 @@ export default function FuelHistoryPage() {
     try {
       const response = await fetch(`/api/fuel-entries?limit=${itemsPerPage}&offset=${offset}`);
       const data = await response.json();
-      
+
       if (data.success && Array.isArray(data.entries)) {
         const normalizedEntries = data.entries.map((entry: any) => {
           const normalizedEntry = {...entry};
@@ -53,7 +53,7 @@ export default function FuelHistoryPage() {
           }
           return normalizedEntry;
         });
-        
+
         if (offset === 0) {
           setEntries(normalizedEntries);
         } else {

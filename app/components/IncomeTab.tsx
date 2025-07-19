@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { currencies, expenseCategories } from '../lib/vehicleData';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useDataTableFilters } from '../hooks/useDataTableFilters';
 import DataTableControls, { SortOption, FilterOption } from './DataTableControls';
@@ -44,7 +43,7 @@ const getIncomeFieldLabel = (fieldKey: string, t: any): string => {
 
 // Helper function to render income image grid
 const renderIncomeImageGrid = (
-  fieldValue: string[], 
+  fieldValue: string[],
   setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
 ) => {
   if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
@@ -81,27 +80,27 @@ const renderIncomeImageGrid = (
 
 // Helper function to format income field values
 const formatIncomeValue = (
-  fieldKey: string, 
-  fieldValue: any, 
-  cars: Car[], 
+  fieldKey: string,
+  fieldValue: any,
+  cars: Car[],
   getCategoryTranslation: (category: string) => string,
   setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
 ) => {
   if (fieldValue == null) return '';
-  
+
   if (fieldKey === 'images') {
     return renderIncomeImageGrid(fieldValue, setImageModal);
   }
-  
+
   if (fieldKey === 'carId') {
     const car = cars.find(c => (c.id || c._id) === String(fieldValue));
     return car ? car.name : 'Unknown Vehicle';
   }
-  
+
   if (fieldKey === 'category') {
     return getCategoryTranslation(String(fieldValue));
   }
-  
+
   if ((fieldKey === 'createdAt' || fieldKey === 'updatedAt') && fieldValue) {
     try {
       return new Date(fieldValue).toLocaleString();
@@ -109,7 +108,7 @@ const formatIncomeValue = (
       return fieldValue;
     }
   }
-  
+
   return String(fieldValue);
 };
 
@@ -146,13 +145,13 @@ export default function IncomeTab({
       .split(' ')
       .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
       .join('');
-    
+
     // Try to get translation from income.labels namespace
     const translation = (t as any)?.income?.labels?.[camelCaseKey];
     if (typeof translation === 'string') {
       return translation;
     }
-    
+
     // Fallback to original category name
     return category;
   };
@@ -412,4 +411,4 @@ export default function IncomeTab({
       />
     </div>
   );
-} 
+}

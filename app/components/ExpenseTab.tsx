@@ -30,7 +30,7 @@ const getExpenseFieldLabel = (fieldKey: string, t: any): string => {
 
 // Helper function to render expense image grid
 const renderExpenseImageGrid = (
-  fieldValue: string[], 
+  fieldValue: string[],
   setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
 ) => {
   if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
@@ -67,9 +67,9 @@ const renderExpenseImageGrid = (
 
 // Helper function to format expense field values
 const formatExpenseValue = (
-  fieldKey: string, 
-  fieldValue: any, 
-  cars: Car[], 
+  fieldKey: string,
+  fieldValue: any,
+  cars: Car[],
   getCategoryTranslation: (category: string) => string,
   setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
 ) => {
@@ -77,20 +77,20 @@ const formatExpenseValue = (
     const carName = cars.find(c => (c.id || c._id) === String(fieldValue))?.name;
     return carName || 'Unknown Vehicle';
   }
-  
+
   if (fieldKey === 'category') {
     return getCategoryTranslation(String(fieldValue));
   }
-  
+
   if (fieldKey === 'amount') {
     const numValue = Number(fieldValue);
     return isNaN(numValue) ? fieldValue : numValue.toFixed(2);
   }
-  
+
   if (fieldKey === 'images') {
     return renderExpenseImageGrid(fieldValue, setImageModal);
   }
-  
+
   return String(fieldValue);
 };
 
@@ -216,7 +216,7 @@ export default function ExpenseTab({
     if (t && typeof t[key] === 'string') {
       return t[key];
     }
-    
+
     // Then try to get from various namespaced sections
     if (translatedText) {
       // Try different namespaced paths based on the key
@@ -229,13 +229,13 @@ export default function ExpenseTab({
         `form.fields.${key}`, // form fields
         `payment.${key}`, // payment
       ];
-      
+
       for (const path of paths) {
         const value = path.split('.').reduce((obj: any, prop: string) => obj?.[prop], translatedText);
         if (typeof value === 'string') return value;
       }
     }
-    
+
     return fallback || key;
   }
 
@@ -248,13 +248,13 @@ export default function ExpenseTab({
       .split(' ')
       .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
       .join('');
-    
+
     // Try to get translation from expense.labels namespace
     const translation = (translatedText as any)?.expense?.labels?.[camelCaseKey];
     if (typeof translation === 'string') {
       return translation;
     }
-    
+
     // Fallback to original category name
     return category;
   }
@@ -350,7 +350,7 @@ export default function ExpenseTab({
                   <div className="text-sm">
                     <strong>{(translatedText as any)?.details || 'Details'}:</strong>
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {Object.entries(expense).filter(([key]) => 
+                      {Object.entries(expense).filter(([key]) =>
                         key !== 'id' && key !== '_id' && key !== 'userId' && key !== '__v'
                       ).map(([key, value]) => {
                         return (

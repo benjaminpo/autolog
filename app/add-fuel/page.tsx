@@ -52,7 +52,7 @@ export default function AddFuelPage() {
   // Helper function to get payment type translation
   const getPaymentTypeTranslation = (type: string): string => {
     const typeKey = type.toLowerCase().replace(/[^a-z]/g, '');
-    
+
     switch (typeKey) {
       case 'cash':
         return getText('payment.type.cash', type);
@@ -101,7 +101,9 @@ export default function AddFuelPage() {
           const customCompanyNames = customCompanies
             .filter((company: { name: string }) => !predefinedFuelCompanies.includes(company.name))
             .map((company: { name: string }) => company.name);
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
+          const allCompanies = [...predefinedFuelCompanies, ...customCompanyNames];
+          const sortedCompanies = allCompanies.sort((a, b) => a.localeCompare(b));
+          setFuelCompanies(sortedCompanies);
         }
       })
       .catch(error => {
@@ -118,7 +120,9 @@ export default function AddFuelPage() {
           const customTypeNames = customTypes
             .filter((type: { name: string }) => !predefinedFuelTypes.includes(type.name))
             .map((type: { name: string }) => type.name);
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
+          const allTypes = [...predefinedFuelTypes, ...customTypeNames];
+          const sortedTypes = allTypes.sort((a, b) => a.localeCompare(b));
+          setFuelTypes(sortedTypes);
         }
       })
       .catch(error => {
@@ -236,7 +240,7 @@ export default function AddFuelPage() {
 
       if (data.success) {
         setSubmitMessage({ type: 'success', text: (t as any)?.fuel?.labels?.addEntry ? `${(t as any).fuel.labels.addEntry} successful!` : 'Fuel entry added successfully!' });
-        
+
         // Save user preferences
         saveFormPreferences(fuelForm);
 
@@ -327,8 +331,8 @@ export default function AddFuelPage() {
             <div>
               {submitMessage && (
                 <div className={`mb-4 p-3 rounded ${
-                  submitMessage.type === 'success' 
-                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                  submitMessage.type === 'success'
+                    ? 'bg-green-100 text-green-700 border border-green-300'
                     : 'bg-red-100 text-red-700 border border-red-300'
                 }`}>
                   {submitMessage.text}
@@ -696,8 +700,8 @@ export default function AddFuelPage() {
                         : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                     }`}
                   >
-                    {isSubmitting 
-                      ? getText('actions.submit', 'Adding...') 
+                    {isSubmitting
+                      ? getText('actions.submit', 'Adding...')
                       : getText('fuel.labels.addEntry', 'Add Fuel Entry')
                     }
                   </button>
@@ -717,4 +721,4 @@ export default function AddFuelPage() {
       </main>
     </div>
   );
-} 
+}
