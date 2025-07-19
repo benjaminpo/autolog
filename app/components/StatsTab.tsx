@@ -1,67 +1,11 @@
 import React from 'react';
 import { LineChart, Line, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
-import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
+import { currencies } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { EnhancedTranslationType } from '../translations';
 import { calculateCurrencyStats, formatCurrency, getCurrencyName, calculateCostPerDistance } from '../lib/currencyUtils';
-
-interface Car {
-  id: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface FuelEntry {
-  id: string;
-  carId: string;
-  fuelCompany: string;
-  fuelType: string;
-  mileage: number | string;
-  distanceUnit: typeof distanceUnits[number];
-  volume: number | string;
-  volumeUnit: typeof volumeUnits[number];
-  cost: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  time: string;
-  location: string;
-  partialFuelUp: boolean;
-  paymentType: string;
-  tyrePressure: number | string;
-  tyrePressureUnit: string;
-  tags: string[];
-  notes: string;
-  images: string[];
-}
-
-interface ExpenseEntry {
-  id: string;
-  carId: string;
-  category: string;
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
-
-interface IncomeEntry {
-  id: string;
-  carId: string;
-  category: string;
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
+import { Car, FuelEntry, ExpenseEntry, IncomeEntry } from '../types/common';
 
 interface StatsTabProps {
   t?: EnhancedTranslationType;

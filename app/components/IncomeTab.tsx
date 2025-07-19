@@ -9,30 +9,7 @@ import DataTableControls, { SortOption, FilterOption } from './DataTableControls
 import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { TranslationType } from '../translations';
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface IncomeEntry {
-  id?: string;
-  _id?: string;
-  carId: string;
-  category: typeof expenseCategories[number];
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
+import { Car, IncomeEntry } from '../types/common';
 
 interface IncomeTabProps {
   t?: TranslationType | Record<string, string>;

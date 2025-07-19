@@ -9,29 +9,7 @@ import { useDataTableFilters } from '../hooks/useDataTableFilters';
 import DataTableControls, { SortOption, FilterOption } from './DataTableControls';
 import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface ExpenseEntry {
-  id: string;
-  carId: string;
-  category: typeof expenseCategories[number];
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
+import { Car, ExpenseEntry } from '../types/common';
 
 // Unused interfaces removed to clean up linting warnings
 // interface Language and ExpenseCategoryItem were not being used

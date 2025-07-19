@@ -11,18 +11,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import ImageUpload from '../components/ImageUpload';
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
+import { Car } from '../types/common';
 
 export default function AddFuelPage() {
   const { user, loading } = useAuth();

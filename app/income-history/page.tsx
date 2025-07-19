@@ -14,33 +14,10 @@ import { getObjectId } from '../lib/idUtils';
 import { currencies } from '../lib/vehicleData';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
 import ImageUpload from '../components/ImageUpload';
+import { Car, IncomeEntry } from '../types/common';
 
 // Wrap component with translations HOC
 const TranslatedIncomeTab = withTranslations(IncomeTab);
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface IncomeEntry {
-  id?: string;
-  _id?: string;
-  carId: string;
-  category: string;
-  amount: number | string;
-  currency: string;
-  date: string;
-  notes: string;
-  images: string[];
-}
 
 interface IncomeCategoryItem {
   _id: string;
