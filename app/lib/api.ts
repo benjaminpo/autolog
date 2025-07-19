@@ -90,7 +90,7 @@ export const expenseApi = {
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     const queryString = queryParams.toString();
-    
+
     const url = queryString ? `/api/expense-entries?${queryString}` : '/api/expense-entries';
     return apiRequest<{ success: boolean; expenses: any[] }>(url);
   },
@@ -118,7 +118,7 @@ export const incomeApi = {
     if (params?.limit) queryParams.append('limit', params.limit.toString());
     if (params?.offset) queryParams.append('offset', params.offset.toString());
     const queryString = queryParams.toString();
-    
+
     const url = queryString ? `/api/income-entries?${queryString}` : '/api/income-entries';
     return apiRequest<{ success: boolean; entries: any[] }>(url);
   },

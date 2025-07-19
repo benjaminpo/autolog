@@ -83,7 +83,7 @@ jest.mock('../../app/context/ThemeContext', () => ({
   })),
 }));
 
-// Mock LanguageContext  
+// Mock LanguageContext
 jest.mock('../../app/context/LanguageContext', () => ({
   useLanguage: jest.fn(() => ({
     language: 'en',
@@ -225,7 +225,7 @@ describe('AddFuelPage', () => {
     it('should load vehicles, fuel companies, and fuel types on mount', async () => {
       // Reset mock to ensure we're tracking these calls specifically
       (global.fetch as jest.Mock).mockClear();
-      
+
       // Mock fetch responses for this specific test
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({
@@ -249,7 +249,7 @@ describe('AddFuelPage', () => {
             types: [{ _id: 'type1', name: 'Regular' }]
           })
         });
-      
+
       render(<AddFuelPage />);
 
       await waitFor(() => {
@@ -372,4 +372,4 @@ describe('AddFuelPage', () => {
       expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
     });
   });
-}); 
+});

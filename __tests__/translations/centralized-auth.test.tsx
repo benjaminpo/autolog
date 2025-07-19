@@ -104,8 +104,8 @@ describe('Centralized Auth Translations', () => {
       const enKeys = getAllNestedKeys(translations.en, 'auth');
       const zhKeys = getAllNestedKeys(translations.zh, 'auth');
 
-      const sortedEnKeys = enKeys.toSorted((a, b) => a.localeCompare(b));
-      const sortedZhKeys = zhKeys.toSorted((a, b) => a.localeCompare(b));
+      const sortedEnKeys = [...enKeys].sort((a, b) => a.localeCompare(b));
+      const sortedZhKeys = [...zhKeys].sort((a, b) => a.localeCompare(b));
       expect(sortedEnKeys).toEqual(sortedZhKeys);
     });
 

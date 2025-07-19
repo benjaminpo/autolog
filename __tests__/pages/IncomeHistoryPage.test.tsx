@@ -63,7 +63,7 @@ describe('IncomeHistoryPage', () => {
       user: mockUser,
       loading: false,
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
@@ -239,4 +239,4 @@ describe('IncomeHistoryPage', () => {
       });
     });
   });
-}); 
+});
