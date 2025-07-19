@@ -235,7 +235,6 @@ export default function FuelTab({
     initialSortBy: 'date',
     initialSortDirection: 'desc',
     searchFields: ['fuelCompany', 'fuelType', 'location', 'notes'],
-    sortOptions,
     filterOptions,
   });
 

@@ -206,7 +206,6 @@ export default function IncomeTab({
     initialSortBy: 'date',
     initialSortDirection: 'desc',
     searchFields: ['category', 'notes'],
-    sortOptions,
     filterOptions,
   });
 

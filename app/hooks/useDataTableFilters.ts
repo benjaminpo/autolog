@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { SortOption, FilterOption } from '../components/DataTableControls';
+import { FilterOption } from '../components/DataTableControls';
 
 interface UseDataTableFiltersProps<T> {
   data: T[];
   initialSortBy?: string;
   initialSortDirection?: 'asc' | 'desc';
   searchFields: (keyof T)[];
-  sortOptions: SortOption[];
   filterOptions: FilterOption[];
 }
 
@@ -19,12 +18,12 @@ interface UseDataTableFiltersReturn<T> {
   sortDirection: 'asc' | 'desc';
   showFilters: boolean;
   filters: Record<string, any>;
-  
+
   // Computed data
   filteredData: T[];
   totalCount: number;
   resultCount: number;
-  
+
   // Actions
   setSearchTerm: (term: string) => void;
   setSortBy: (sortBy: string) => void;
@@ -40,7 +39,6 @@ export function useDataTableFilters<T extends Record<string, any>>({
   initialSortBy = 'date',
   initialSortDirection = 'desc',
   searchFields,
-  sortOptions,
   filterOptions,
 }: UseDataTableFiltersProps<T>): UseDataTableFiltersReturn<T> {
   // State
@@ -73,7 +71,7 @@ export function useDataTableFilters<T extends Record<string, any>>({
   // Search function
   const searchData = useCallback((items: T[], term: string): T[] => {
     if (!term.trim()) return items;
-    
+
     const searchLower = term.toLowerCase();
     return items.filter(item =>
       searchFields.some(field => {
@@ -89,28 +87,28 @@ export function useDataTableFilters<T extends Record<string, any>>({
     return items.filter(item => {
       return Object.entries(filters).every(([key, value]) => {
         if (value === undefined || value === null || value === '') return true;
-        
+
         const filterOption = filterOptions.find(opt => opt.key === key);
         if (!filterOption) return true;
 
         switch (filterOption.type) {
           case 'select':
             return item[key as keyof T] === value;
-          
+
           case 'dateRange':
             if (!value.startDate && !value.endDate) return true;
             const itemDate = new Date(item[key as keyof T] as string);
             const startDate = value.startDate ? new Date(value.startDate) : null;
             const endDate = value.endDate ? new Date(value.endDate) : null;
-            
+
             if (startDate && itemDate < startDate) return false;
             if (endDate && itemDate > endDate) return false;
             return true;
-          
+
           case 'multiSelect':
             if (!Array.isArray(value) || value.length === 0) return true;
             return value.includes(item[key as keyof T]);
-          
+
           default:
             return true;
         }
@@ -121,11 +119,11 @@ export function useDataTableFilters<T extends Record<string, any>>({
   // Sort function
   const sortData = useCallback((items: T[]): T[] => {
     if (!sortBy) return items;
-    
+
     return [...items].sort((a, b) => {
       let aValue: any = a[sortBy as keyof T];
       let bValue: any = b[sortBy as keyof T];
-      
+
       // Handle different data types
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         // For date strings, convert to Date objects for proper comparison
@@ -138,19 +136,19 @@ export function useDataTableFilters<T extends Record<string, any>>({
           bValue = bValue.toLowerCase();
         }
       }
-      
+
       // Handle numbers
       if (typeof aValue === 'number' && typeof bValue === 'number') {
         return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
       }
-      
+
       // Handle dates
       if (aValue instanceof Date && bValue instanceof Date) {
-        return sortDirection === 'asc' 
-          ? aValue.getTime() - bValue.getTime() 
+        return sortDirection === 'asc'
+          ? aValue.getTime() - bValue.getTime()
           : bValue.getTime() - aValue.getTime();
       }
-      
+
       // Handle strings and fallback
       if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
@@ -161,16 +159,16 @@ export function useDataTableFilters<T extends Record<string, any>>({
   // Compute filtered and sorted data
   const filteredData = useMemo(() => {
     let result = data;
-    
+
     // Apply search
     result = searchData(result, searchTerm);
-    
+
     // Apply filters
     result = filterData(result);
-    
+
     // Apply sorting
     result = sortData(result);
-    
+
     return result;
   }, [data, searchTerm, searchData, filterData, sortData]);
 
@@ -181,12 +179,12 @@ export function useDataTableFilters<T extends Record<string, any>>({
     sortDirection,
     showFilters,
     filters,
-    
+
     // Computed data
     filteredData,
     totalCount: data.length,
     resultCount: filteredData.length,
-    
+
     // Actions
     setSearchTerm,
     setSortBy,
@@ -196,4 +194,4 @@ export function useDataTableFilters<T extends Record<string, any>>({
     resetFilters,
     handleSortChange,
   };
-} 
+}

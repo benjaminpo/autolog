@@ -187,7 +187,6 @@ export default function ExpenseTab({
     initialSortBy: 'date',
     initialSortDirection: 'desc',
     searchFields: ['category', 'notes'],
-    sortOptions,
     filterOptions,
   });
 
