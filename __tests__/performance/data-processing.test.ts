@@ -233,7 +233,7 @@ describe('Performance Tests - Data Processing', () => {
       const processed = largeStringArray
         .filter(str => str.includes('test'))
         .map(str => str.toUpperCase())
-        .sort();
+        .sort((a, b) => a.localeCompare(b));
       const endTime = performance.now();
       
       expect(processed.length).toBe(largeStringArray.length);

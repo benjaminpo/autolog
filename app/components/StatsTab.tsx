@@ -1,67 +1,11 @@
 import React from 'react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
-import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
+import { LineChart, Line, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
+import { currencies } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { useLanguage } from '../context/LanguageContext';
-import { TranslationType, EnhancedTranslationType } from '../translations';
+import { EnhancedTranslationType } from '../translations';
 import { calculateCurrencyStats, formatCurrency, getCurrencyName, calculateCostPerDistance } from '../lib/currencyUtils';
-
-interface Car {
-  id: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface FuelEntry {
-  id: string;
-  carId: string;
-  fuelCompany: string;
-  fuelType: string;
-  mileage: number | string;
-  distanceUnit: typeof distanceUnits[number];
-  volume: number | string;
-  volumeUnit: typeof volumeUnits[number];
-  cost: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  time: string;
-  location: string;
-  partialFuelUp: boolean;
-  paymentType: string;
-  tyrePressure: number | string;
-  tyrePressureUnit: string;
-  tags: string[];
-  notes: string;
-  images: string[];
-}
-
-interface ExpenseEntry {
-  id: string;
-  carId: string;
-  category: string;
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
-
-interface IncomeEntry {
-  id: string;
-  carId: string;
-  category: string;
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
+import { Car, FuelEntry, ExpenseEntry, IncomeEntry } from '../types/common';
 
 interface StatsTabProps {
   t?: EnhancedTranslationType;
@@ -99,6 +43,25 @@ export default function StatsTab({
     return fallback;
   };
 
+  // Helper function to aggregate monthly consumption data for charts
+  const aggregateMonthlyConsumption = (trends: any[], carName: string) => {
+    const monthlyData: { [key: string]: { consumption: number; count: number } } = {};
+
+    trends.forEach((trend: any) => {
+      if (!monthlyData[trend.month]) {
+        monthlyData[trend.month] = { consumption: 0, count: 0 };
+      }
+      monthlyData[trend.month].consumption += trend.consumption;
+      monthlyData[trend.month].count++;
+    });
+
+    return Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      consumption: data.consumption / data.count,
+      carName
+    }));
+  };
+
   const consumptionUnitTranslations: { [key: string]: string } = {
     'L/100km': 'units.consumption.per100km',
     'km/L': 'units.consumption.kmPerLiter',
@@ -125,25 +88,6 @@ export default function StatsTab({
       const match = matchesCarId(entry.carId, carId);
       return match;
     });
-
-    // Debug logging for CLA250 specifically
-    if (process.env.NODE_ENV === 'development') {
-      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-      if (carName?.includes('CLA250')) {
-        console.log(`🔍 CLA250 Debug - calculateStats:`, {
-          carId,
-          carName,
-          totalEntries: entries.length,
-          matchingEntries: carEntries.length,
-          firstFewEntries: carEntries.slice(0, 3).map(e => ({
-            date: e.date,
-            mileage: e.mileage,
-            volume: e.volume,
-            cost: e.cost
-          }))
-        });
-      }
-    }
 
     if (carEntries.length < 2) return { avgConsumption: null, avgCost: null, totalDistance: 0 };
 
@@ -226,53 +170,6 @@ export default function StatsTab({
           validConsumptionEntries++;
         }
       }
-
-      // Debug logging for CLA250 specifically - track consumption calculation
-      if (process.env.NODE_ENV === 'development') {
-        const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-        if (carName?.includes('CLA250') && i <= 5) { // Only log first 5 intervals to avoid spam
-          console.log(`🔍 CLA250 Debug - interval ${i}:`, {
-            prevDate: prev.date,
-            currDate: curr.date,
-            distance,
-            volume,
-            currPartialFuelUp: curr.partialFuelUp,
-            hasNonPartial,
-            condition: !hasNonPartial || !curr.partialFuelUp,
-            volumeCondition: volume > 0,
-            willAddToConsumption: (!hasNonPartial || !curr.partialFuelUp) && volume > 0
-          });
-        }
-      }
-    }
-
-    // Debug logging for CLA250 specifically
-    if (process.env.NODE_ENV === 'development') {
-      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-      if (carName?.includes('CLA250')) {
-        console.log(`🔍 CLA250 Debug - calculation results:`, {
-          carId,
-          carName,
-          sortedEntriesCount: sortedEntries.length,
-          hasNonPartial,
-          totalDistanceConsumption,
-          totalDistanceOverall,
-          totalVolume,
-          validConsumptionEntries,
-          validDistanceEntries,
-          skippedEntries,
-          negativeDistances,
-          longIntervals,
-          firstEntry: sortedEntries[0] ? {
-            date: sortedEntries[0].date,
-            mileage: sortedEntries[0].mileage
-          } : null,
-          lastEntry: sortedEntries[sortedEntries.length - 1] ? {
-            date: sortedEntries[sortedEntries.length - 1].date,
-            mileage: sortedEntries[sortedEntries.length - 1].mileage
-          } : null
-        });
-      }
     }
 
     // Calculate consumption and cost per distance
@@ -312,23 +209,6 @@ export default function StatsTab({
     const carFuelEntries = entries.filter((entry) => matchesCarId(entry.carId, carId));
     const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
     const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
-
-    // Debug logging for CLA250 specifically
-    if (process.env.NODE_ENV === 'development') {
-      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-      if (carName?.includes('CLA250')) {
-        console.log(`🔍 CLA250 Debug - calculateMonthlyCosts:`, {
-          carId,
-          carName,
-          carFuelEntries: carFuelEntries.length,
-          carIncomeEntries: carIncomeEntries.length,
-          fuelDates: carFuelEntries.map(e => e.date),
-          incomeDates: carIncomeEntries.map(e => e.date),
-          has2025_06_fuel: carFuelEntries.some(e => e.date.startsWith('2025-06')),
-          has2025_06_income: carIncomeEntries.some(e => e.date.startsWith('2025-06'))
-        });
-      }
-    }
 
     const monthlyData: {
       [key: string]: {
@@ -452,21 +332,6 @@ export default function StatsTab({
         const currDate = new Date(curr.date);
         const currMonthKey = `${currDate.getFullYear()}-${String(currDate.getMonth() + 1).padStart(2, '0')}`;
 
-        // Debug logging for CLA250 specifically - track monthly distance attribution
-        if (process.env.NODE_ENV === 'development') {
-          const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-          if (carName?.includes('CLA250') && currMonthKey.includes('2025-06')) {
-            console.log(`🔍 CLA250 Debug - monthly distance attribution:`, {
-              prevDate: prev.date,
-              currDate: curr.date,
-              distance,
-              currMonthKey,
-              existingDistance: monthlyData[currMonthKey]?.totalDistance || 0,
-              willAddDistance: distance
-            });
-          }
-        }
-
         // Make sure the month exists in our data
         if (!monthlyData[currMonthKey]) {
           monthlyData[currMonthKey] = {
@@ -484,20 +349,7 @@ export default function StatsTab({
         // Add distance to the current month
         monthlyData[currMonthKey].totalDistance += distance;
 
-        // Debug logging for 2025-06 distance attribution
-        if (process.env.NODE_ENV === 'development') {
-          const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-          if (carName?.includes('CLA250') && currMonthKey === '2025-06') {
-            console.log(`🔍 CLA250 Debug - 2025-06 distance added:`, {
-              distance,
-              totalDistance: monthlyData[currMonthKey].totalDistance,
-              date: currDate.toISOString().split('T')[0]
-            });
-          }
-        }
-
         // Handle consumption calculation
-        // FIX: Handle data inconsistency where entries are incorrectly marked as partial
         const shouldUseForConsumption = !hasNonPartial || !curr.partialFuelUp;
 
         if (shouldUseForConsumption) {
@@ -577,24 +429,6 @@ export default function StatsTab({
       monthData.total = Number(monthData.total.toFixed(2));
       monthData.totalDistance = Number(monthData.totalDistance.toFixed(2));
     });
-
-    // Debug logging for CLA250 specifically - show final monthly results
-    if (process.env.NODE_ENV === 'development') {
-      const carName = cars.find(car => getObjectId(car as unknown as Record<string, unknown>) === carId)?.name;
-      if (carName?.includes('CLA250')) {
-        console.log(`🔍 CLA250 Debug - final monthly results:`, {
-          carId,
-          carName,
-          monthlyData: Object.entries(monthlyData).map(([month, data]) => ({
-            month,
-            fuel: data.fuel,
-            income: data.incomes,
-            distance: data.totalDistance,
-            has2025_06: month.includes('2025-06')
-          }))
-        });
-      }
-    }
 
     return monthlyData;
   };
@@ -1014,36 +848,6 @@ export default function StatsTab({
         }
       }
     });
-
-    // Debug logging for aggregate data quality issues
-    if (process.env.NODE_ENV === 'development' && (totalNegativeDistances > 0 || totalLongIntervals > 0 || totalSkippedEntries > 0)) {
-      console.warn(`Aggregate data quality issues:`, {
-        totalNegativeDistances,
-        totalLongIntervals,
-        totalSkippedEntries,
-        totalDistance,
-        totalConsumptionVolume,
-        consumptionRatesCount: consumptionRates.length
-      });
-    }
-
-    // Debug logging for CLA250 aggregate stats
-    if (process.env.NODE_ENV === 'development') {
-      const cla250Entries = entries.filter(e => {
-        const carName = cars.find(car => matchesCarId(e.carId, getObjectId(car as unknown as Record<string, unknown>)))?.name;
-        return carName?.includes('CLA250');
-      });
-
-      if (cla250Entries.length > 0) {
-        console.log(`🔍 CLA250 Debug - aggregate stats:`, {
-          cla250EntriesCount: cla250Entries.length,
-          totalDistance,
-          totalConsumptionVolume,
-          avgConsumptionWillBeNull: !(totalDistance > 0 && totalConsumptionVolume > 0),
-          cla250Dates: cla250Entries.map(e => e.date).sort()
-        });
-      }
-    }
 
     // Calculate averages and extremes
     const avgConsumption = totalDistance > 0 && totalConsumptionVolume > 0
@@ -2057,21 +1861,7 @@ export default function StatsTab({
                               ]} />
                               <Legend />
                               {Object.entries(chartData.consumptionTrends).map(([carName, trends], index) => {
-                                // Aggregate monthly data for each car
-                                const monthlyData: { [key: string]: { consumption: number; count: number } } = {};
-                                trends.forEach((trend: any) => {
-                                  if (!monthlyData[trend.month]) {
-                                    monthlyData[trend.month] = { consumption: 0, count: 0 };
-                                  }
-                                  monthlyData[trend.month].consumption += trend.consumption;
-                                  monthlyData[trend.month].count++;
-                                });
-
-                                const avgMonthlyData = Object.entries(monthlyData).map(([month, data]) => ({
-                                  month,
-                                  consumption: data.consumption / data.count,
-                                  carName
-                                }));
+                                const avgMonthlyData = aggregateMonthlyConsumption(trends, carName);
 
                                 return (
                                   <Line

@@ -1,5 +1,3 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { ThemeProvider } from '../../app/context/ThemeContext';
 import { LanguageProvider } from '../../app/context/LanguageContext';
@@ -98,24 +96,24 @@ describe('Authentication Flow Integration Tests', () => {
   describe('Sign In Process', () => {
     it('should call signIn with Google provider', async () => {
       const { signIn } = require('next-auth/react');
-      
+
       await signIn('google', { callbackUrl: '/dashboard' });
-      
+
       expect(signIn).toHaveBeenCalledWith('google', { callbackUrl: '/dashboard' });
     });
 
     it('should call signIn with GitHub provider', async () => {
       const { signIn } = require('next-auth/react');
-      
+
       await signIn('github', { callbackUrl: '/' });
-      
+
       expect(signIn).toHaveBeenCalledWith('github', { callbackUrl: '/' });
     });
 
     it('should handle sign in errors', async () => {
       const { signIn } = require('next-auth/react');
       signIn.mockRejectedValue(new Error('Sign in failed'));
-      
+
       await expect(signIn('google')).rejects.toThrow('Sign in failed');
     });
   });
@@ -123,16 +121,16 @@ describe('Authentication Flow Integration Tests', () => {
   describe('Sign Out Process', () => {
     it('should call signOut successfully', async () => {
       const { signOut } = require('next-auth/react');
-      
+
       await signOut({ callbackUrl: '/' });
-      
+
       expect(signOut).toHaveBeenCalledWith({ callbackUrl: '/' });
     });
 
     it('should handle sign out errors gracefully', async () => {
       const { signOut } = require('next-auth/react');
       signOut.mockRejectedValue(new Error('Sign out failed'));
-      
+
       await expect(signOut()).rejects.toThrow('Sign out failed');
     });
   });
@@ -154,9 +152,9 @@ describe('Authentication Flow Integration Tests', () => {
           signinUrl: '/api/auth/signin/github',
         }
       };
-      
+
       getProviders.mockResolvedValue(mockProviders);
-      
+
       const providers = await getProviders();
       expect(providers).toEqual(mockProviders);
       expect(providers.google.name).toBe('Google');
@@ -166,7 +164,7 @@ describe('Authentication Flow Integration Tests', () => {
     it('should handle empty providers list', async () => {
       const { getProviders } = require('next-auth/react');
       getProviders.mockResolvedValue({});
-      
+
       const providers = await getProviders();
       expect(providers).toEqual({});
     });
@@ -224,16 +222,16 @@ describe('Authentication Flow Integration Tests', () => {
   describe('Authentication State Transitions', () => {
     it('should transition from loading to authenticated', () => {
       const { useSession } = require('next-auth/react');
-      
+
       // First call - loading
       useSession.mockReturnValueOnce({
         data: null,
         status: 'loading'
       });
-      
+
       let session = useSession();
       expect(session.status).toBe('loading');
-      
+
       // Second call - authenticated
       useSession.mockReturnValueOnce({
         data: {
@@ -242,31 +240,31 @@ describe('Authentication Flow Integration Tests', () => {
         },
         status: 'authenticated'
       });
-      
+
       session = useSession();
       expect(session.status).toBe('authenticated');
     });
 
     it('should transition from loading to unauthenticated', () => {
       const { useSession } = require('next-auth/react');
-      
+
       // First call - loading
       useSession.mockReturnValueOnce({
         data: null,
         status: 'loading'
       });
-      
+
       let session = useSession();
       expect(session.status).toBe('loading');
-      
+
       // Second call - unauthenticated
       useSession.mockReturnValueOnce({
         data: null,
         status: 'unauthenticated'
       });
-      
+
       session = useSession();
       expect(session.status).toBe('unauthenticated');
     });
   });
-}); 
+});

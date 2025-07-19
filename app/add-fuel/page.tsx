@@ -8,27 +8,17 @@ import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
 import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
+import { fuelApi } from '../lib/api';
 import ImageUpload from '../components/ImageUpload';
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
 
 export default function AddFuelPage() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const { cars } = useVehicles();
 
-  const [cars, setCars] = useState<Car[]>([]);
   const [fuelCompanies, setFuelCompanies] = useState<string[]>(predefinedFuelCompanies);
   const [fuelTypes, setFuelTypes] = useState<string[]>(predefinedFuelTypes);
   const [fuelForm, setFuelForm] = useState({
@@ -60,41 +50,40 @@ export default function AddFuelPage() {
   const [showFuelDetailsSection, setShowFuelDetailsSection] = useState(true);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
 
+  // Helper function to get payment type translation
+  const getPaymentTypeTranslation = (type: string): string => {
+    const typeKey = type.toLowerCase().replace(/[^a-z]/g, '');
+
+    switch (typeKey) {
+      case 'cash':
+        return getText('payment.type.cash', type);
+      case 'creditcard':
+        return getText('payment.type.creditCard', type);
+      case 'mobileapp':
+        return getText('payment.type.mobileApp', type);
+      case 'other':
+        return getText('payment.type.other', type);
+      default:
+        return type;
+    }
+  };
+
   // Load data
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: Partial<Car>) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
-          setCars(normalizedVehicles);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
-
-    // Fetch fuel companies
-    fetch('/api/fuel-companies')
-      .then(response => response.json())
+    // Fetch fuel companies using shared API utility
+        // Fetch fuel companies using shared API utility
+    fuelApi.getCompanies()
       .then(data => {
         if (data.companies) {
           const customCompanies = Array.isArray(data.companies) ? data.companies : [];
           const customCompanyNames = customCompanies
             .filter((company: { name: string }) => !predefinedFuelCompanies.includes(company.name))
             .map((company: { name: string }) => company.name);
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort());
+          const allCompanies = [...predefinedFuelCompanies, ...customCompanyNames];
+          const sortedCompanies = [...allCompanies].sort((a, b) => a.localeCompare(b));
+          setFuelCompanies(sortedCompanies);
         }
       })
       .catch(error => {
@@ -103,15 +92,17 @@ export default function AddFuelPage() {
       });
 
     // Fetch fuel types
-    fetch('/api/fuel-types')
-      .then(response => response.json())
+    // Fetch fuel types using shared API utility
+    fuelApi.getTypes()
       .then(data => {
         if (data.types) {
           const customTypes = Array.isArray(data.types) ? data.types : [];
           const customTypeNames = customTypes
             .filter((type: { name: string }) => !predefinedFuelTypes.includes(type.name))
             .map((type: { name: string }) => type.name);
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort());
+          const allTypes = [...predefinedFuelTypes, ...customTypeNames];
+          const sortedTypes = [...allTypes].sort((a, b) => a.localeCompare(b));
+          setFuelTypes(sortedTypes);
         }
       })
       .catch(error => {
@@ -217,19 +208,14 @@ export default function AddFuelPage() {
         tags: fuelForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
       };
 
-      const response = await fetch('/api/fuel-entries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newEntry),
+      // Use shared API utility for fuel entry creation
+      const data = await fuelApi.createEntry({
+        ...newEntry
       });
-
-      const data = await response.json();
 
       if (data.success) {
         setSubmitMessage({ type: 'success', text: (t as any)?.fuel?.labels?.addEntry ? `${(t as any).fuel.labels.addEntry} successful!` : 'Fuel entry added successfully!' });
-        
+
         // Save user preferences
         saveFormPreferences(fuelForm);
 
@@ -320,8 +306,8 @@ export default function AddFuelPage() {
             <div>
               {submitMessage && (
                 <div className={`mb-4 p-3 rounded ${
-                  submitMessage.type === 'success' 
-                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                  submitMessage.type === 'success'
+                    ? 'bg-green-100 text-green-700 border border-green-300'
                     : 'bg-red-100 text-red-700 border border-red-300'
                 }`}>
                   {submitMessage.text}
@@ -596,18 +582,7 @@ export default function AddFuelPage() {
                           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
                         >
                           {paymentTypes.map((type) => {
-                            const typeKey = type.toLowerCase().replace(' ', '');
-                            let displayText = type;
-
-                            if (typeKey === 'cash') {
-                              displayText = getText('payment.type.cash', type);
-                            } else if (typeKey === 'creditcard') {
-                              displayText = getText('payment.type.creditCard', type);
-                            } else if (typeKey === 'mobileapp') {
-                              displayText = getText('payment.type.mobileApp', type);
-                            } else if (typeKey === 'other') {
-                              displayText = getText('payment.type.other', type);
-                            }
+                            const displayText = getPaymentTypeTranslation(type);
 
                             return (
                               <option key={`payment-${type}`} value={type}>
@@ -700,8 +675,8 @@ export default function AddFuelPage() {
                         : 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                     }`}
                   >
-                    {isSubmitting 
-                      ? getText('actions.submit', 'Adding...') 
+                    {isSubmitting
+                      ? getText('actions.submit', 'Adding...')
                       : getText('fuel.labels.addEntry', 'Add Fuel Entry')
                     }
                   </button>
@@ -721,4 +696,4 @@ export default function AddFuelPage() {
       </main>
     </div>
   );
-} 
+}

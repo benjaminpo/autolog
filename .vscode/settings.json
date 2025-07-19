@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "benjaminpo-gh",
+        "projectKey": "benjaminpo_autolog"
+    }
+}

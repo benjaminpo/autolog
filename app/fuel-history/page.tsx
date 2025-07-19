@@ -9,48 +9,15 @@ import { AuthButton } from '../components/AuthButton';
 import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
-import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
+import { fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
+import { Car, FuelEntry } from '../types/common';
 
 // Wrap components with translations HOC
 const TranslatedFuelTab = withTranslations(FuelTab);
 const TranslatedModals = withTranslations(Modals);
-
-interface Car {
-  id: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface FuelEntry {
-  id: string;
-  carId: string;
-  fuelCompany: string;
-  fuelType: string;
-  mileage: number | string;
-  distanceUnit: typeof distanceUnits[number];
-  volume: number | string;
-  volumeUnit: typeof volumeUnits[number];
-  cost: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  time: string;
-  location: string;
-  partialFuelUp: boolean;
-  paymentType: typeof paymentTypes[number];
-  tyrePressure: number | string;
-  tyrePressureUnit: typeof tyrePressureUnits[number];
-  tags: string[];
-  notes: string;
-  images: string[];
-}
 
 export default function FuelHistoryPage() {
   const { user, loading } = useAuth();
@@ -75,7 +42,7 @@ export default function FuelHistoryPage() {
     try {
       const response = await fetch(`/api/fuel-entries?limit=${itemsPerPage}&offset=${offset}`);
       const data = await response.json();
-      
+
       if (data.success && Array.isArray(data.entries)) {
         const normalizedEntries = data.entries.map((entry: any) => {
           const normalizedEntry = {...entry};
@@ -86,7 +53,7 @@ export default function FuelHistoryPage() {
           }
           return normalizedEntry;
         });
-        
+
         if (offset === 0) {
           setEntries(normalizedEntries);
         } else {
@@ -138,7 +105,7 @@ export default function FuelHistoryPage() {
           const customCompanyNames = customCompanies
             .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
             .map((company: any) => company.name);
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort());
+          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
@@ -155,7 +122,7 @@ export default function FuelHistoryPage() {
           const customTypeNames = customTypes
             .filter((type: any) => !predefinedFuelTypes.includes(type.name))
             .map((type: any) => type.name);
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort());
+          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {

@@ -34,7 +34,7 @@ describe('Vehicle Data Additional Tests', () => {
     });
 
     it('should have currencies sorted alphabetically', () => {
-      const sortedCodes = [...currencies].sort();
+      const sortedCodes = [...currencies].sort((a, b) => a.localeCompare(b));
       expect(currencies).toEqual(sortedCodes);
     });
   });

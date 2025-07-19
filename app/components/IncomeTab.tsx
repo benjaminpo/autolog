@@ -1,40 +1,19 @@
-'use client';
-
 import React, { useState } from 'react';
-import Image from 'next/image';
-import { currencies, expenseCategories } from '../lib/vehicleData';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useDataTableFilters } from '../hooks/useDataTableFilters';
 import DataTableControls, { SortOption, FilterOption } from './DataTableControls';
 import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { TranslationType } from '../translations';
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface IncomeEntry {
-  id?: string;
-  _id?: string;
-  carId: string;
-  category: typeof expenseCategories[number];
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
-}
-
-interface IncomeTabProps {
+import { Car, IncomeEntry } from '../types/common';
+import {
+  getFieldLabel,
+  formatFieldValue,
+  createCategoryTranslator,
+  ImageModalState,
+  initialImageModalState,
+  resetImageModal
+} from '../lib/tabHelpers';interface IncomeTabProps {
   t?: TranslationType | Record<string, string>;
   cars: Car[];
   incomes: IncomeEntry[];
@@ -63,35 +42,10 @@ export default function IncomeTab({
   loading = false,
 }: IncomeTabProps) {
   // State for image modal
-  const [imageModal, setImageModal] = useState<{
-    isOpen: boolean;
-    imageSrc: string;
-    altText: string;
-  }>({
-    isOpen: false,
-    imageSrc: '',
-    altText: '',
-  });
+  const [imageModal, setImageModal] = useState<ImageModalState>(initialImageModalState);
 
   // Helper function to translate income categories
-  const getCategoryTranslation = (category: string): string => {
-    // Convert category name to camelCase format that matches translation keys
-    // Examples: "Ride Sharing" -> "rideSharing", "Delivery Services" -> "deliveryServices"
-    const camelCaseKey = category
-      .toLowerCase()
-      .split(' ')
-      .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
-      .join('');
-    
-    // Try to get translation from income.labels namespace
-    const translation = (t as any)?.income?.labels?.[camelCaseKey];
-    if (typeof translation === 'string') {
-      return translation;
-    }
-    
-    // Fallback to original category name
-    return category;
-  };
+  const getCategoryTranslation = createCategoryTranslator(t, 'income');
 
   // Define sort options for income entries
   const sortOptions: SortOption[] = [
@@ -143,7 +97,6 @@ export default function IncomeTab({
     initialSortBy: 'date',
     initialSortDirection: 'desc',
     searchFields: ['category', 'notes'],
-    sortOptions,
     filterOptions,
   });
 
@@ -260,96 +213,13 @@ export default function IncomeTab({
                             return null;
                           }
 
-                          // Map field keys to their proper translation paths
-                          const getFieldLabel = (fieldKey: string) => {
-                            switch (fieldKey) {
-                              case 'category':
-                                return (t as any)?.income?.labels?.category || (t as any)?.category || 'Category';
-                              case 'amount':
-                                return (t as any)?.income?.labels?.amount || (t as any)?.amount || 'Amount';
-                              case 'currency':
-                                return (t as any)?.payment?.currency || (t as any)?.currency || 'Currency';
-                              case 'date':
-                                return (t as any)?.form?.fields?.date || (t as any)?.date || 'Date';
-                              case 'notes':
-                                return (t as any)?.form?.fields?.notes || (t as any)?.notes || 'Notes';
-                              case 'createdAt':
-                                return (t as any)?.income?.labels?.createdAt || 'Created At';
-                              case 'updatedAt':
-                                return (t as any)?.income?.labels?.updatedAt || 'Updated At';
-                              default:
-                                return fieldKey;
-                            }
-                          };
-
-                          // Format timestamp fields to human-readable format
-                          const formatValue = (fieldKey: string, fieldValue: any) => {
-                            if (fieldValue == null) return '';
-                            
-                            if (fieldKey === 'images') {
-                              if (Array.isArray(fieldValue) && fieldValue.length > 0) {
-                                return (
-                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                                    {fieldValue.map((image, index) => (
-                                      <div key={index} className="relative">
-                                        <Image
-                                          src={image}
-                                          alt={`Income image ${index + 1}`}
-                                          width={80}
-                                          height={80}
-                                          className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                                          unoptimized={true}
-                                          onClick={() => setImageModal({
-                                            isOpen: true,
-                                            imageSrc: image,
-                                            altText: `Income image ${index + 1}`,
-                                          })}
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                          <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                            Click to enlarge
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              }
-                              return 'No images';
-                            }
-                            
-                            // Handle category translation
-                            if (fieldKey === 'category') {
-                              return getCategoryTranslation(String(fieldValue));
-                            }
-                            
-                            // Format timestamp fields
-                            if ((fieldKey === 'createdAt' || fieldKey === 'updatedAt') && fieldValue) {
-                              try {
-                                const date = new Date(fieldValue);
-                                return date.toLocaleString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: true,
-                                });
-                              } catch (error) {
-                                return String(fieldValue);
-                              }
-                            }
-                            
-                            return String(fieldValue);
-                          };
-
                           return (
                             <div key={`detail-${key}`} className="mb-1">
                               <span className="font-semibold text-gray-800 dark:text-gray-300">
-                                {getFieldLabel(key)}:
+                                {getFieldLabel(key, 'income', t)}:
                               </span>
                               <span className="ml-2 text-gray-900 dark:text-gray-100">
-                                {formatValue(key, value)}
+                                {formatFieldValue(key, value, cars, getCategoryTranslation, setImageModal, 'Income')}
                               </span>
                             </div>
                           );
@@ -425,10 +295,10 @@ export default function IncomeTab({
       {/* Image Modal */}
       <ImageModal
         isOpen={imageModal.isOpen}
-        onClose={() => setImageModal({ isOpen: false, imageSrc: '', altText: '' })}
+        onClose={() => setImageModal(resetImageModal())}
         imageSrc={imageModal.imageSrc}
         altText={imageModal.altText}
       />
     </div>
   );
-} 
+}

@@ -10,37 +10,16 @@ import { AuthButton } from '../components/AuthButton';
 import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
+import { incomeApi } from '../lib/api';
 import { getObjectId } from '../lib/idUtils';
 import { currencies } from '../lib/vehicleData';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
 import ImageUpload from '../components/ImageUpload';
+import { IncomeEntry } from '../types/common';
 
 // Wrap component with translations HOC
 const TranslatedIncomeTab = withTranslations(IncomeTab);
-
-interface Car {
-  id?: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
-
-interface IncomeEntry {
-  id?: string;
-  _id?: string;
-  carId: string;
-  category: string;
-  amount: number | string;
-  currency: string;
-  date: string;
-  notes: string;
-  images: string[];
-}
 
 interface IncomeCategoryItem {
   _id: string;
@@ -54,7 +33,9 @@ export default function IncomeHistoryPage() {
   const { language } = useLanguage();
   const { t } = useTranslation();
 
-  const [cars, setCars] = useState<Car[]>([]);
+  // Use shared vehicle hook instead of manual state management
+  const { cars, loading: carsLoading } = useVehicles();
+
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
   const [showIncomeDetails, setShowIncomeDetails] = useState<string | null>(null);
   const [itemsPerPage] = useState(20);
@@ -65,9 +46,12 @@ export default function IncomeHistoryPage() {
 
   const loadIncomes = useCallback(async (offset = 0) => {
     try {
-      const response = await fetch(`/api/income-entries?limit=${itemsPerPage}&offset=${offset}`);
-      const data = await response.json();
-      
+      // Use shared API utility instead of manual fetch
+      const data = await incomeApi.getEntries({
+        limit: itemsPerPage,
+        offset
+      });
+
       if (data.success && Array.isArray(data.entries)) {
         const normalizedIncomes = data.entries.map((income: any) => {
           const normalizedIncome = {...income};
@@ -78,7 +62,7 @@ export default function IncomeHistoryPage() {
           }
           return normalizedIncome;
         });
-        
+
         if (offset === 0) {
           setIncomes(normalizedIncomes);
         } else {
@@ -97,33 +81,12 @@ export default function IncomeHistoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
-          setCars(normalizedVehicles);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
-
-    // Fetch income entries
+    // Cars are now loaded automatically by useVehicles hook
+    // Just load income entries
     loadIncomes();
 
-    // Fetch income categories
-    fetch('/api/income-categories')
-      .then(response => response.json())
+    // Fetch income categories using shared API utility
+    incomeApi.getCategories()
       .then(data => {
         console.log('Income categories API response:', data);
         if (data.success && Array.isArray(data.incomeCategories)) {
@@ -137,7 +100,7 @@ export default function IncomeHistoryPage() {
         // Fallback to predefined categories
         const fallbackCategories = [
           'Ride Sharing',
-          'Delivery Services', 
+          'Delivery Services',
           'Taxi Services',
           'Car Rental',
           'Vehicle Sale',
@@ -166,11 +129,8 @@ export default function IncomeHistoryPage() {
     }
 
     try {
-      const response = await fetch(`/api/income-entries/${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
+      // Use shared API utility for deletion
+      const data = await incomeApi.deleteEntry(id);
 
       if (data.success) {
         // Remove the income from the list
@@ -191,15 +151,9 @@ export default function IncomeHistoryPage() {
   const updateIncome = async (updatedIncome: IncomeEntry) => {
     try {
       const incomeId = getObjectId(updatedIncome as unknown as Record<string, unknown>);
-      const response = await fetch(`/api/income-entries/${incomeId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedIncome),
-      });
 
-      const data = await response.json();
+      // Use shared API utility for updating
+      const data = await incomeApi.updateEntry(incomeId, updatedIncome);
 
       if (data.success) {
         // Update the income in the list
@@ -230,7 +184,7 @@ export default function IncomeHistoryPage() {
     }
   };
 
-  if (loading) {
+  if (loading || carsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-600"></div>
@@ -279,7 +233,7 @@ export default function IncomeHistoryPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border dark:border-gray-700 transition-colors">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t?.editIncome || 'Edit Income Entry'}</h2>
-            
+
             <form onSubmit={handleEditSubmit} className="space-y-4">
               {/* Vehicle Selection */}
               <div>
@@ -427,4 +381,4 @@ export default function IncomeHistoryPage() {
       )}
     </div>
   );
-} 
+}

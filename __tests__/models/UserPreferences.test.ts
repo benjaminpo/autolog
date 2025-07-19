@@ -3,9 +3,6 @@
  * Comprehensive testing of UserPreferences model including schema validation, default values, enums, and edge cases
  */
 
-import mongoose from 'mongoose';
-import UserPreferences, { IUserPreferences } from '../../app/models/UserPreferences';
-
 // Mock mongoose with simpler approach
 jest.mock('mongoose', () => ({
   Schema: jest.fn().mockImplementation((definition, options) => ({
@@ -91,7 +88,7 @@ describe('UserPreferences Model', () => {
       const schemaOptions = {
         timestamps: true
       };
-      
+
       expect(schemaOptions.timestamps).toBe(true);
     });
   });
@@ -104,7 +101,7 @@ describe('UserPreferences Model', () => {
         enum: validLanguages,
         default: 'en'
       };
-      
+
       expect(languageField.enum).toEqual(validLanguages);
       expect(languageField.default).toBe('en');
     });
@@ -116,7 +113,7 @@ describe('UserPreferences Model', () => {
         enum: validThemes,
         default: 'system'
       };
-      
+
       expect(themeField.enum).toEqual(validThemes);
       expect(themeField.default).toBe('system');
     });
@@ -128,7 +125,7 @@ describe('UserPreferences Model', () => {
         enum: validUnits,
         default: 'L/100km'
       };
-      
+
       expect(unitField.enum).toEqual(validUnits);
       expect(unitField.default).toBe('L/100km');
     });
@@ -153,7 +150,7 @@ describe('UserPreferences Model', () => {
 
       Object.entries(defaultValues).forEach(([field, defaultValue]) => {
         expect(defaultValue).toBeDefined();
-        
+
         if (field === 'fuelCompanies' || field === 'fuelTypes') {
           expect(Array.isArray(defaultValue)).toBe(true);
           expect((defaultValue as string[]).length).toBeGreaterThan(0);
@@ -171,7 +168,7 @@ describe('UserPreferences Model', () => {
   describe('Language Enum Validation', () => {
     it('should accept valid language values', () => {
       const validLanguages = ['en', 'zh'];
-      
+
       validLanguages.forEach(language => {
         expect(typeof language).toBe('string');
         expect(['en', 'zh']).toContain(language);
@@ -180,7 +177,7 @@ describe('UserPreferences Model', () => {
 
     it('should reject invalid language values', () => {
       const invalidLanguages = ['fr', 'es', 'de', 'jp', 'invalid'];
-      
+
       invalidLanguages.forEach(language => {
         expect(typeof language).toBe('string');
         expect(['en', 'zh']).not.toContain(language);
@@ -191,7 +188,7 @@ describe('UserPreferences Model', () => {
   describe('Theme Enum Validation', () => {
     it('should accept valid theme values', () => {
       const validThemes = ['light', 'dark', 'system'];
-      
+
       validThemes.forEach(theme => {
         expect(typeof theme).toBe('string');
         expect(['light', 'dark', 'system']).toContain(theme);
@@ -200,7 +197,7 @@ describe('UserPreferences Model', () => {
 
     it('should reject invalid theme values', () => {
       const invalidThemes = ['auto', 'custom', 'blue', 'night', 'invalid'];
-      
+
       invalidThemes.forEach(theme => {
         expect(typeof theme).toBe('string');
         expect(['light', 'dark', 'system']).not.toContain(theme);
@@ -211,7 +208,7 @@ describe('UserPreferences Model', () => {
   describe('Fuel Consumption Unit Enum Validation', () => {
     it('should accept valid fuel consumption units', () => {
       const validUnits = ['L/100km', 'km/L', 'G/100mi', 'km/G', 'mi/L'];
-      
+
       validUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(['L/100km', 'km/L', 'G/100mi', 'km/G', 'mi/L']).toContain(unit);
@@ -220,7 +217,7 @@ describe('UserPreferences Model', () => {
 
     it('should reject invalid fuel consumption units', () => {
       const invalidUnits = ['mpg', 'l/km', 'invalid', 'gal/mi', 'L/mi'];
-      
+
       invalidUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(['L/100km', 'km/L', 'G/100mi', 'km/G', 'mi/L']).not.toContain(unit);
@@ -337,7 +334,7 @@ describe('UserPreferences Model', () => {
   describe('Default Values for Units and Settings', () => {
     it('should handle currency settings', () => {
       const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'JPY', 'AUD'];
-      
+
       currencies.forEach(currency => {
         expect(typeof currency).toBe('string');
         expect(currency.length).toBeGreaterThanOrEqual(3);
@@ -346,7 +343,7 @@ describe('UserPreferences Model', () => {
 
     it('should handle distance unit settings', () => {
       const distanceUnits = ['km', 'miles', 'mi', 'kilometers'];
-      
+
       distanceUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(unit.length).toBeGreaterThan(0);
@@ -355,7 +352,7 @@ describe('UserPreferences Model', () => {
 
     it('should handle volume unit settings', () => {
       const volumeUnits = ['L', 'gal', 'gallons', 'liters'];
-      
+
       volumeUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(unit.length).toBeGreaterThan(0);
@@ -364,7 +361,7 @@ describe('UserPreferences Model', () => {
 
     it('should handle tyre pressure unit settings', () => {
       const pressureUnits = ['bar', 'psi', 'kPa', 'atm'];
-      
+
       pressureUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(unit.length).toBeGreaterThan(0);
@@ -373,7 +370,7 @@ describe('UserPreferences Model', () => {
 
     it('should handle payment type settings', () => {
       const paymentTypes = ['Cash', 'Credit Card', 'Debit Card', 'Mobile Payment', 'Bank Transfer'];
-      
+
       paymentTypes.forEach(type => {
         expect(typeof type).toBe('string');
         expect(type.length).toBeGreaterThan(0);
@@ -384,7 +381,7 @@ describe('UserPreferences Model', () => {
   describe('Edge Cases and Special Characters', () => {
     it('should handle very long arrays', () => {
       const longArray = Array.from({ length: 100 }, (_, i) => `Company ${i + 1}`);
-      
+
       expect(Array.isArray(longArray)).toBe(true);
       expect(longArray.length).toBe(100);
       longArray.forEach(company => {
@@ -563,7 +560,7 @@ describe('UserPreferences Model', () => {
   describe('Type Validation', () => {
     it('should validate Map type for custom objects', () => {
       const mapFields = ['customBrands', 'customModels'];
-      
+
       mapFields.forEach(field => {
         const fieldDefinition = { type: 'Map' };
         expect(fieldDefinition.type).toBe('Map');
@@ -572,11 +569,11 @@ describe('UserPreferences Model', () => {
 
     it('should validate Array type for list fields', () => {
       const arrayFields = ['fuelCompanies', 'fuelTypes'];
-      
+
       arrayFields.forEach(field => {
         const fieldDefinition = { type: [String] };
         expect(Array.isArray(fieldDefinition.type)).toBe(true);
       });
     });
   });
-}); 
+});

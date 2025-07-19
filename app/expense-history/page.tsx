@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 import PageContainer from '../components/PageContainer';
 import ExpenseTab from '../components/ExpenseTab';
 import withTranslations from '../components/withTranslations';
@@ -10,6 +9,8 @@ import { AuthButton } from '../components/AuthButton';
 import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
+import { expenseApi } from '../lib/api';
 import { expenseCategories } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
@@ -53,7 +54,9 @@ export default function ExpenseHistoryPage() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
 
-  const [cars, setCars] = useState<Car[]>([]);
+  // Use shared vehicle hook instead of manual state management
+  const { cars } = useVehicles();
+
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [showExpenseDetails, setShowExpenseDetails] = useState<string | null>(null);
   const [itemsPerPage] = useState(20);
@@ -64,9 +67,12 @@ export default function ExpenseHistoryPage() {
 
   const loadExpenses = useCallback(async (offset = 0) => {
     try {
-      const response = await fetch(`/api/expense-entries?limit=${itemsPerPage}&offset=${offset}`);
-      const data = await response.json();
-      
+      // Use shared API utility instead of manual fetch
+      const data = await expenseApi.getEntries({
+        limit: itemsPerPage,
+        offset
+      });
+
       if (data.success && Array.isArray(data.expenses)) {
         if (offset === 0) {
           setExpenses(data.expenses);
@@ -86,45 +92,27 @@ export default function ExpenseHistoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
-          setCars(normalizedVehicles);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
+    // Cars are now loaded automatically by useVehicles hook
+    // Just load expense entries
+    loadExpenses();
 
-    // Fetch expense categories (same as add-expense page)
-    fetch('/api/expense-categories')
-      .then(response => response.json())
+    // Fetch expense categories using shared API utility
+    expenseApi.getCategories()
       .then(data => {
         if (data.success && Array.isArray(data.expenseCategories)) {
           // Combine predefined categories with custom categories from API
           const customCategories = data.expenseCategories.map((cat: any) => cat.name) as string[];
           const allCategories = [...expenseCategories, ...customCategories];
-          setAvailableCategories([...new Set(allCategories)].sort());
+          setAvailableCategories([...new Set(allCategories)].sort((a, b) => a.localeCompare(b)));
         } else {
           // Fallback to predefined categories
-          setAvailableCategories(expenseCategories.slice().sort());
+          setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
         console.error('Error fetching expense categories:', error);
         // Fallback to predefined categories
-        setAvailableCategories(expenseCategories.slice().sort());
+        setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
       });
 
     // Fetch expense entries
@@ -140,11 +128,8 @@ export default function ExpenseHistoryPage() {
 
   const handleDeleteExpense = async (id: string) => {
     try {
-      const response = await fetch(`/api/expense-entries/${id}`, {
-        method: 'DELETE',
-      });
-
-      const data = await response.json();
+      // Use shared API utility for deletion
+      const data = await expenseApi.deleteEntry(id);
 
       if (data.success) {
         // Remove the expense from the list
@@ -190,22 +175,15 @@ export default function ExpenseHistoryPage() {
             images: updatedExpense.images || [],
           };
 
-          const response = await fetch(`/api/expense-entries/${expenseId}`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(updateData),
-          });
+          // Use shared API utility for updating
+          const data = await expenseApi.updateEntry(expenseId, updateData);
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-            console.error('Failed to update expense entry:', errorData.message);
-            alert(`Cannot update expense entry: ${errorData.message}`);
+          if (!data.success) {
+            console.error('Failed to update expense entry:', data.message || 'Unknown error');
+            alert(`Cannot update expense entry: ${data.message || 'Unknown error'}`);
             return;
           }
 
-          const data = await response.json();
           const returnedExpense = data.expense;
 
           if (returnedExpense) {
@@ -214,8 +192,8 @@ export default function ExpenseHistoryPage() {
               id: getObjectId(returnedExpense as unknown as Record<string, unknown>)
             };
 
-            setExpenses(prevExpenses => 
-              prevExpenses.map((expense) => 
+            setExpenses(prevExpenses =>
+              prevExpenses.map((expense) =>
                 getObjectId(expense as unknown as Record<string, unknown>) === getObjectId(editExpense as unknown as Record<string, unknown>) ? transformedExpense : expense
               )
             );
@@ -227,8 +205,8 @@ export default function ExpenseHistoryPage() {
           return;
         }
       } else {
-        setExpenses(prevExpenses => 
-          prevExpenses.map((expense) => 
+        setExpenses(prevExpenses =>
+          prevExpenses.map((expense) =>
             getObjectId(expense as unknown as Record<string, unknown>) === getObjectId(editExpense as unknown as Record<string, unknown>) ? updatedExpense : expense
           )
         );
