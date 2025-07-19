@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 // Unmock the AuthContext for this test - we want to test the real implementation
 jest.unmock('../../app/context/AuthContext');
-const { AuthProvider, useAuth } = require('../../app/context/AuthContext');
+import { AuthProvider, useAuth } from '../../app/context/AuthContext';
 
 // Mock next-auth/react
 jest.mock('next-auth/react', () => ({
@@ -32,40 +32,38 @@ const mockPush = jest.fn();
 
 // Test component that uses useAuth hook
 const TestComponent = () => {
-  try {
-    const { user, loading, login, register, logout, error, setError } = useAuth();
-    
-    return (
-      <div>
-        <div data-testid="user">{user ? JSON.stringify(user) : 'null'}</div>
-        <div data-testid="loading">{loading.toString()}</div>
-        <div data-testid="error">{error || 'no-error'}</div>
-        <button onClick={() => login('test@example.com', 'password')} data-testid="login-button">
-          Login
-        </button>
+  const { user, loading, login, register, logout, error, setError } = useAuth();
+
+  return (
+    <div>
+      <div data-testid="user">{user ? JSON.stringify(user) : 'null'}</div>
+      <div data-testid="loading">{loading.toString()}</div>
+      <div data-testid="error">{error || 'no-error'}</div>
+      <button onClick={() => login('test@example.com', 'password')} data-testid="login-button">
+        Login
+      </button>
         <button onClick={() => login('test@example.com', 'password', 'en')} data-testid="login-with-language-button">
           Login with Language
         </button>
-        <button onClick={() => register('Test User', 'test@example.com', 'password')} data-testid="register-button">
-          Register
-        </button>
-        <button onClick={() => logout()} data-testid="logout-button">
-          Logout
-        </button>
-        <button onClick={() => setError('test error')} data-testid="set-error-button">
-          Set Error
-        </button>
-        <button onClick={() => setError(null)} data-testid="clear-error-button">
-          Clear Error
-        </button>
-      </div>
-    );
-  } catch (error) {
-    return <div data-testid="hook-error">{error instanceof Error ? error.message : 'Unknown error'}</div>;
-  }
-};
-
-// Component to test hook outside provider
+      <button
+        type="button"
+        onClick={() => register('Test User', 'test@example.com', 'password')}
+        data-testid="register-button"
+      >
+        Register
+      </button>
+      <button onClick={() => logout()} data-testid="logout-button">
+        Logout
+      </button>
+      <button onClick={() => setError('test error')} data-testid="set-error-button">
+        Set Error
+      </button>
+      <button onClick={() => setError(null)} data-testid="clear-error-button">
+        Clear Error
+      </button>
+    </div>
+  );
+}; // Component to test hook outside provider
 const HookTestComponent = () => {
   try {
     const auth = useAuth();
@@ -86,7 +84,7 @@ describe('AuthContext', () => {
       forward: jest.fn(),
       refresh: jest.fn()
     } as any);
-    
+
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({ success: true })
@@ -106,7 +104,7 @@ describe('AuthContext', () => {
           <div data-testid="child">Test Child</div>
         </AuthProvider>
       );
-      
+
       expect(screen.getByTestId('child')).toBeInTheDocument();
     });
 
@@ -122,7 +120,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('user')).toHaveTextContent('null');
         expect(screen.getByTestId('loading')).toHaveTextContent('false');
@@ -151,7 +149,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await waitFor(() => {
         const userElement = screen.getByTestId('user');
         expect(userElement).toHaveTextContent('{"id":"123","name":"Test User","email":"test@example.com"}');
@@ -180,7 +178,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await waitFor(() => {
         const userElement = screen.getByTestId('user');
         expect(userElement).toHaveTextContent('{"id":"123","name":"","email":""}');
@@ -210,7 +208,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('login-button'));
       });
@@ -238,7 +236,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('login-with-language-button'));
       });
@@ -273,7 +271,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('login-button'));
       });
@@ -293,7 +291,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('login-button'));
       });
@@ -320,7 +318,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('login-with-language-button'));
       });
@@ -362,7 +360,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('register-button'));
       });
@@ -371,10 +369,10 @@ describe('AuthContext', () => {
         expect(mockFetch).toHaveBeenCalledWith('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name: 'Test User', 
-            email: 'test@example.com', 
-            password: 'password' 
+          body: JSON.stringify({
+            name: 'Test User',
+            email: 'test@example.com',
+            password: 'password'
           })
         });
         expect(mockSignIn).toHaveBeenCalledWith('credentials', {
@@ -397,7 +395,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('register-button'));
       });
@@ -420,7 +418,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('register-button'));
       });
@@ -439,7 +437,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('register-button'));
       });
@@ -475,7 +473,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await act(async () => {
         fireEvent.click(screen.getByTestId('logout-button'));
       });
@@ -494,14 +492,14 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       fireEvent.click(screen.getByTestId('logout-button'));
 
       // Wait for the logout function to complete
       await waitFor(() => {
         expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
       });
-      
+
       // When signOut fails, router.push should NOT be called (it's in the try block)
       expect(mockPush).not.toHaveBeenCalled();
     });
@@ -522,21 +520,21 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('error')).toHaveTextContent('no-error');
       });
 
       // Set error
       fireEvent.click(screen.getByTestId('set-error-button'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('error')).toHaveTextContent('test error');
       });
 
       // Clear error
       fireEvent.click(screen.getByTestId('clear-error-button'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('error')).toHaveTextContent('no-error');
       });
@@ -546,7 +544,7 @@ describe('AuthContext', () => {
   describe('useAuth hook', () => {
     it('should throw error when used outside AuthProvider', () => {
       render(<HookTestComponent />);
-      
+
       expect(screen.getByTestId('hook-error')).toHaveTextContent('useAuth must be used within an AuthProvider');
     });
 
@@ -562,7 +560,7 @@ describe('AuthContext', () => {
           <TestComponent />
         </AuthProvider>
       );
-      
+
       expect(screen.getByTestId('user')).toBeInTheDocument();
       expect(screen.getByTestId('loading')).toBeInTheDocument();
       expect(screen.getByTestId('error')).toBeInTheDocument();
@@ -664,4 +662,4 @@ describe('AuthContext', () => {
       });
     });
   });
-}); 
+});

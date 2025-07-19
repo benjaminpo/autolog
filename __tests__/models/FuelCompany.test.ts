@@ -154,7 +154,7 @@ describe('FuelCompany Model', () => {
       namesWithWhitespace.forEach(name => {
         const trimmed = name.trim();
         expect(trimmed.length).toBeLessThan(name.length);
-        expect(trimmed).not.toMatch(/^\s|\s$/);
+        expect(trimmed).not.toMatch(/^(\s)|(\s)$/);
       });
     });
 

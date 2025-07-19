@@ -33,29 +33,29 @@ describe('UI Accessibility Tests', () => {
         <form role="form" aria-label="Test form">
           <div>
             <label htmlFor="email">Email Address</label>
-            <input 
-              type="email" 
-              id="email" 
-              name="email" 
-              required 
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
               aria-describedby="email-help"
             />
             <div id="email-help">Enter your email address</div>
           </div>
-          
+
           <div>
             <label htmlFor="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              required 
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
               aria-describedby="password-help"
               minLength={8}
             />
             <div id="password-help">Password must be at least 8 characters</div>
           </div>
-          
+
           <button type="submit" aria-describedby="submit-help">
             Submit Form
           </button>
@@ -83,20 +83,20 @@ describe('UI Accessibility Tests', () => {
           <button aria-label="Add new vehicle">
             <span aria-hidden="true">+</span>
           </button>
-          
+
           <button aria-describedby="delete-description">
             Delete Vehicle
           </button>
           <div id="delete-description">
             This action cannot be undone
           </div>
-          
-          <input 
-            type="search" 
-            placeholder="Search vehicles..." 
+
+          <input
+            type="search"
+            placeholder="Search vehicles..."
             aria-label="Search vehicles"
           />
-          
+
           <select aria-label="Filter by fuel type">
             <option value="">All fuel types</option>
             <option value="gasoline">Gasoline</option>
@@ -202,35 +202,35 @@ describe('UI Accessibility Tests', () => {
           <form>
             <div className="form-field">
               <label htmlFor="email">Email</label>
-              <input 
-                type="email" 
-                id="email" 
+              <input
+                type="email"
+                id="email"
                 aria-invalid={!!errors.email}
                 aria-describedby={errors.email ? 'email-error' : undefined}
               />
               {errors.email && (
-                <div 
-                  id="email-error" 
-                  role="alert" 
+                <div
+                  id="email-error"
+                  role="alert"
                   className="error-message"
                 >
                   {errors.email}
                 </div>
               )}
             </div>
-            
+
             <div className="form-field">
               <label htmlFor="password">Password</label>
-              <input 
-                type="password" 
-                id="password" 
+              <input
+                type="password"
+                id="password"
                 aria-invalid={!!errors.password}
                 aria-describedby={errors.password ? 'password-error' : undefined}
               />
               {errors.password && (
-                <div 
-                  id="password-error" 
-                  role="alert" 
+                <div
+                  id="password-error"
+                  role="alert"
                   className="error-message"
                 >
                   {errors.password}
@@ -275,21 +275,21 @@ describe('UI Accessibility Tests', () => {
               <span className="status-text">Error</span>
             </div>
           </div>
-          
+
           <form>
             <div className="form-field">
               <label htmlFor="required-field">
                 Required Field
                 <span className="required-indicator" aria-label="required">*</span>
               </label>
-              <input 
-                type="text" 
-                id="required-field" 
-                required 
+              <input
+                type="text"
+                id="required-field"
+                required
                 aria-required="true"
               />
             </div>
-            
+
             <div className="form-field">
               <label htmlFor="optional-field">Optional Field</label>
               <input type="text" id="optional-field" />
@@ -308,7 +308,7 @@ describe('UI Accessibility Tests', () => {
       expect(screen.getByText('Active')).toBeInTheDocument();
       expect(screen.getByText('Warning')).toBeInTheDocument();
       expect(screen.getByText('Error')).toBeInTheDocument();
-      
+
       // Required field should be indicated by both visual and semantic means
       expect(screen.getByLabelText('required')).toBeInTheDocument();
       expect(screen.getByLabelText(/Required Field/)).toHaveAttribute('aria-required', 'true');
@@ -356,37 +356,72 @@ describe('UI Accessibility Tests', () => {
     });
 
     it('should provide keyboard navigation support', () => {
-      const TestKeyboardNavigation = () => (
-        <div>
-          <button onKeyDown={(e) => e.key === 'Enter' && console.log('activated')}>
-            Keyboard Accessible Button
-          </button>
-          
-          <div 
-            role="button" 
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                console.log('custom button activated');
-              }
-            }}
-          >
-            Custom Button with Keyboard Support
+      const TestKeyboardNavigation = () => {
+        const [focusedIndex, setFocusedIndex] = React.useState(0);
+        const options = [
+          { label: 'Option 1', selected: false },
+          { label: 'Option 2 (Selected)', selected: true },
+          { label: 'Option 3', selected: false },
+        ];
+        const optionRefs = options.map(() => React.createRef<HTMLLIElement>());
+
+        const handleListboxKeyDown = (e: React.KeyboardEvent) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setFocusedIndex((prev) => (prev + 1) % options.length);
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+          }
+        };
+
+        React.useEffect(() => {
+          optionRefs[focusedIndex].current?.focus();
+        }, [focusedIndex]);
+
+        return (
+          <div>
+            <button onKeyDown={(e) => e.key === 'Enter' && console.log('activated')}>
+              Keyboard Accessible Button
+            </button>
+
+            <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  console.log('custom button activated');
+                }
+              }}
+            >
+              Custom Button with Keyboard Support
+            </div>
+
+            <ul
+              role="listbox"
+              aria-label="Options"
+              onKeyDown={handleListboxKeyDown}
+            >
+              {options.map((option, idx) => (
+                <li
+                  key={option.label}
+                  role="option"
+                  tabIndex={focusedIndex === idx ? 0 : -1}
+                  aria-selected={option.selected ? 'true' : 'false'}
+                  ref={optionRefs[idx]}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      console.log(`${option.label.toLowerCase()} selected`);
+                    }
+                  }}
+                >
+                  {option.label}
+                </li>
+              ))}
+            </ul>
           </div>
-          
-          <ul role="listbox" aria-label="Options">
-            <li role="option" tabIndex={0} aria-selected={false}>
-              Option 1
-            </li>
-            <li role="option" tabIndex={0} aria-selected={true}>
-              Option 2 (Selected)
-            </li>
-            <li role="option" tabIndex={0} aria-selected={false}>
-              Option 3
-            </li>
-          </ul>
-        </div>
-      );
+        );
+      };
 
       render(
         <TestWrapper>
@@ -399,4 +434,4 @@ describe('UI Accessibility Tests', () => {
       expect(screen.getByText('Option 2 (Selected)')).toHaveAttribute('aria-selected', 'true');
     });
   });
-}); 
+});

@@ -69,17 +69,17 @@ export default function ExpenseHistoryPage() {
     try {
       // Use shared API utility instead of manual fetch
       const data = await expenseApi.getEntries({
-        limit: itemsPerPage,
-        offset
+        limit: itemsPerPage.toString(),
+        offset: offset.toString()
       });
 
-      if (data.success && Array.isArray(data.expenses)) {
+      if (data.success && Array.isArray(data.entries)) {
         if (offset === 0) {
-          setExpenses(data.expenses);
+          setExpenses(data.entries);
         } else {
-          setExpenses(prev => [...prev, ...data.expenses]);
+          setExpenses(prev => [...prev, ...data.entries]);
         }
-        setHasMore(data.expenses.length === itemsPerPage);
+        setHasMore(data.entries.length === itemsPerPage);
       }
     } catch (error) {
       console.error('Error fetching expense entries:', error);
