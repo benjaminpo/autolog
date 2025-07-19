@@ -32,7 +32,7 @@ export const renderImageGrid = (
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
       {fieldValue.map((image, index) => (
-        <div key={index} className="relative">
+        <div key={`${imageType}-${image}-${index}`} className="relative">
           <Image
             src={image}
             alt={`${imageType} image ${index + 1}`}
@@ -119,6 +119,7 @@ export const formatFieldValue = (
     try {
       return new Date(fieldValue).toLocaleString();
     } catch (error) {
+      console.warn(`Failed to parse date value: ${fieldValue}`, error);
       return fieldValue;
     }
   }
@@ -137,7 +138,7 @@ export const createCategoryTranslator = (t: any, entryType: 'expense' | 'income'
       .join('');
 
     // Try to get translation from appropriate namespace
-    const translation = (t as any)?.[entryType]?.labels?.[camelCaseKey];
+    const translation = t?.[entryType]?.labels?.[camelCaseKey];
     if (typeof translation === 'string') {
       return translation;
     }

@@ -102,7 +102,7 @@ export default function AddFuelPage() {
             .filter((company: { name: string }) => !predefinedFuelCompanies.includes(company.name))
             .map((company: { name: string }) => company.name);
           const allCompanies = [...predefinedFuelCompanies, ...customCompanyNames];
-          const sortedCompanies = allCompanies.sort((a, b) => a.localeCompare(b));
+          const sortedCompanies = allCompanies.toSorted((a, b) => a.localeCompare(b));
           setFuelCompanies(sortedCompanies);
         }
       })
@@ -121,7 +121,7 @@ export default function AddFuelPage() {
             .filter((type: { name: string }) => !predefinedFuelTypes.includes(type.name))
             .map((type: { name: string }) => type.name);
           const allTypes = [...predefinedFuelTypes, ...customTypeNames];
-          const sortedTypes = allTypes.sort((a, b) => a.localeCompare(b));
+          const sortedTypes = allTypes.toSorted((a, b) => a.localeCompare(b));
           setFuelTypes(sortedTypes);
         }
       })

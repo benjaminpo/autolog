@@ -6,9 +6,9 @@ import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { TranslationType } from '../translations';
 import { Car, IncomeEntry } from '../types/common';
-import { 
-  getFieldLabel, 
-  formatFieldValue, 
+import {
+  getFieldLabel,
+  formatFieldValue,
   createCategoryTranslator,
   ImageModalState,
   initialImageModalState,

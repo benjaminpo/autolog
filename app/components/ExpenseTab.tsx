@@ -8,9 +8,9 @@ import DataTableControls, { SortOption, FilterOption } from './DataTableControls
 import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { Car, ExpenseEntry } from '../types/common';
-import { 
-  getFieldLabel, 
-  formatFieldValue, 
+import {
+  getFieldLabel,
+  formatFieldValue,
   createCategoryTranslator,
   ImageModalState,
   initialImageModalState,

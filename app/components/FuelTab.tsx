@@ -8,7 +8,7 @@ import DataTableControls, { SortOption, FilterOption } from './DataTableControls
 import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { Car, FuelEntry } from '../types/common';
-import { 
+import {
   renderImageGrid,
   ImageModalState,
   initialImageModalState,
