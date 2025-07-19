@@ -261,7 +261,6 @@ body {
 input:focus,
 textarea:focus,
 select:focus {
-  ring-color: var(--input-border-focus);
   border-color: var(--input-border-focus);
   outline: 2px solid transparent;
   outline-offset: 2px;
