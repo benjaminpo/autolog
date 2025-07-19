@@ -38,10 +38,8 @@ export interface FuelEntry {
   images: string[];
 }
 
-// Common interface for ExpenseEntry - used in expense-related components
-export interface ExpenseEntry {
-  id: string;
-  _id?: string;
+// Base interface for financial entries (expenses and income)
+interface BaseFinancialEntry {
   carId: string;
   category: typeof expenseCategories[number];
   amount: number | string;
@@ -51,15 +49,14 @@ export interface ExpenseEntry {
   images: string[];
 }
 
+// Common interface for ExpenseEntry - used in expense-related components
+export interface ExpenseEntry extends BaseFinancialEntry {
+  id: string;
+  _id?: string;
+}
+
 // Common interface for IncomeEntry - used in income-related components
-export interface IncomeEntry {
+export interface IncomeEntry extends BaseFinancialEntry {
   id?: string;
   _id?: string;
-  carId: string;
-  category: typeof expenseCategories[number];
-  amount: number | string;
-  currency: typeof currencies[number];
-  date: string;
-  notes: string;
-  images: string[];
 }

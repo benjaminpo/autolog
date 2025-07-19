@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, ApiResponse, ExpenseEntry, FuelEntry, IncomeEntry, Vehicle } from '../lib/apiClient';
+import { apiClient, ApiResponse, ExpenseEntry, FuelEntry, Vehicle } from '../lib/apiClient';
 
 // Generic hook for API operations
 export function useApiOperation<T>() {

@@ -1,7 +1,4 @@
-'use client';
-
 import React, { useState } from 'react';
-import Image from 'next/image';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 import { useDataTableFilters } from '../hooks/useDataTableFilters';
 import DataTableControls, { SortOption, FilterOption } from './DataTableControls';
@@ -9,8 +6,14 @@ import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { TranslationType } from '../translations';
 import { Car, IncomeEntry } from '../types/common';
-
-interface IncomeTabProps {
+import { 
+  getFieldLabel, 
+  formatFieldValue, 
+  createCategoryTranslator,
+  ImageModalState,
+  initialImageModalState,
+  resetImageModal
+} from '../lib/tabHelpers';interface IncomeTabProps {
   t?: TranslationType | Record<string, string>;
   cars: Car[];
   incomes: IncomeEntry[];
@@ -24,93 +27,6 @@ interface IncomeTabProps {
   hasMore?: boolean;
   loading?: boolean;
 }
-
-// Helper function to get field labels for income entries
-const getIncomeFieldLabel = (fieldKey: string, t: any): string => {
-  switch (fieldKey) {
-    case 'carId': return t?.income?.labels?.vehicle || 'Vehicle';
-    case 'category': return t?.income?.labels?.category || 'Category';
-    case 'amount': return t?.payment?.cost || 'Amount';
-    case 'currency': return t?.payment?.currency || 'Currency';
-    case 'date': return t?.form?.fields?.date || 'Date';
-    case 'notes': return t?.form?.fields?.notes || 'Notes';
-    case 'images': return 'Images';
-    case 'createdAt': return t?.income?.labels?.createdAt || 'Created At';
-    case 'updatedAt': return t?.income?.labels?.updatedAt || 'Updated At';
-    default: return t?.income?.labels?.[fieldKey] || fieldKey;
-  }
-};
-
-// Helper function to render income image grid
-const renderIncomeImageGrid = (
-  fieldValue: string[],
-  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
-) => {
-  if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
-    return 'No images';
-  }
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-      {fieldValue.map((image, index) => (
-        <div key={index} className="relative">
-          <Image
-            src={image}
-            alt={`Income image ${index + 1}`}
-            width={80}
-            height={80}
-            className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-            unoptimized={true}
-            onClick={() => setImageModal({
-              isOpen: true,
-              imageSrc: image,
-              altText: `Income image ${index + 1}`,
-            })}
-          />
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-            <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-              Click to enlarge
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Helper function to format income field values
-const formatIncomeValue = (
-  fieldKey: string,
-  fieldValue: any,
-  cars: Car[],
-  getCategoryTranslation: (category: string) => string,
-  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
-) => {
-  if (fieldValue == null) return '';
-
-  if (fieldKey === 'images') {
-    return renderIncomeImageGrid(fieldValue, setImageModal);
-  }
-
-  if (fieldKey === 'carId') {
-    const car = cars.find(c => (c.id || c._id) === String(fieldValue));
-    return car ? car.name : 'Unknown Vehicle';
-  }
-
-  if (fieldKey === 'category') {
-    return getCategoryTranslation(String(fieldValue));
-  }
-
-  if ((fieldKey === 'createdAt' || fieldKey === 'updatedAt') && fieldValue) {
-    try {
-      return new Date(fieldValue).toLocaleString();
-    } catch (error) {
-      return fieldValue;
-    }
-  }
-
-  return String(fieldValue);
-};
 
 export default function IncomeTab({
   t,
@@ -126,35 +42,10 @@ export default function IncomeTab({
   loading = false,
 }: IncomeTabProps) {
   // State for image modal
-  const [imageModal, setImageModal] = useState<{
-    isOpen: boolean;
-    imageSrc: string;
-    altText: string;
-  }>({
-    isOpen: false,
-    imageSrc: '',
-    altText: '',
-  });
+  const [imageModal, setImageModal] = useState<ImageModalState>(initialImageModalState);
 
   // Helper function to translate income categories
-  const getCategoryTranslation = (category: string): string => {
-    // Convert category name to camelCase format that matches translation keys
-    // Examples: "Ride Sharing" -> "rideSharing", "Delivery Services" -> "deliveryServices"
-    const camelCaseKey = category
-      .toLowerCase()
-      .split(' ')
-      .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
-      .join('');
-
-    // Try to get translation from income.labels namespace
-    const translation = (t as any)?.income?.labels?.[camelCaseKey];
-    if (typeof translation === 'string') {
-      return translation;
-    }
-
-    // Fallback to original category name
-    return category;
-  };
+  const getCategoryTranslation = createCategoryTranslator(t, 'income');
 
   // Define sort options for income entries
   const sortOptions: SortOption[] = [
@@ -325,10 +216,10 @@ export default function IncomeTab({
                           return (
                             <div key={`detail-${key}`} className="mb-1">
                               <span className="font-semibold text-gray-800 dark:text-gray-300">
-                                {getIncomeFieldLabel(key, t)}:
+                                {getFieldLabel(key, 'income', t)}:
                               </span>
                               <span className="ml-2 text-gray-900 dark:text-gray-100">
-                                {formatIncomeValue(key, value, cars, getCategoryTranslation, setImageModal)}
+                                {formatFieldValue(key, value, cars, getCategoryTranslation, setImageModal, 'Income')}
                               </span>
                             </div>
                           );
@@ -404,7 +295,7 @@ export default function IncomeTab({
       {/* Image Modal */}
       <ImageModal
         isOpen={imageModal.isOpen}
-        onClose={() => setImageModal({ isOpen: false, imageSrc: '', altText: '' })}
+        onClose={() => setImageModal(resetImageModal())}
         imageSrc={imageModal.imageSrc}
         altText={imageModal.altText}
       />

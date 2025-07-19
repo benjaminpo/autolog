@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
 import PageContainer from '../components/PageContainer';
 import ExpenseTab from '../components/ExpenseTab';
 import withTranslations from '../components/withTranslations';
@@ -66,7 +65,7 @@ export default function ExpenseHistoryPage() {
     try {
       const response = await fetch(`/api/expense-entries?limit=${itemsPerPage}&offset=${offset}`);
       const data = await response.json();
-      
+
       if (data.success && Array.isArray(data.expenses)) {
         if (offset === 0) {
           setExpenses(data.expenses);
@@ -214,8 +213,8 @@ export default function ExpenseHistoryPage() {
               id: getObjectId(returnedExpense as unknown as Record<string, unknown>)
             };
 
-            setExpenses(prevExpenses => 
-              prevExpenses.map((expense) => 
+            setExpenses(prevExpenses =>
+              prevExpenses.map((expense) =>
                 getObjectId(expense as unknown as Record<string, unknown>) === getObjectId(editExpense as unknown as Record<string, unknown>) ? transformedExpense : expense
               )
             );
@@ -227,8 +226,8 @@ export default function ExpenseHistoryPage() {
           return;
         }
       } else {
-        setExpenses(prevExpenses => 
-          prevExpenses.map((expense) => 
+        setExpenses(prevExpenses =>
+          prevExpenses.map((expense) =>
             getObjectId(expense as unknown as Record<string, unknown>) === getObjectId(editExpense as unknown as Record<string, unknown>) ? updatedExpense : expense
           )
         );

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { currencies, expenseCategories } from '../lib/vehicleData';
 import { getCarNameById } from '../lib/idUtils';
 import { useLanguage } from '../context/LanguageContext';
 import { TranslationType } from '../translations';
@@ -10,89 +8,15 @@ import DataTableControls, { SortOption, FilterOption } from './DataTableControls
 import SortableTableHeader from './SortableTableHeader';
 import ImageModal from './ImageModal';
 import { Car, ExpenseEntry } from '../types/common';
-
-// Unused interfaces removed to clean up linting warnings
+import { 
+  getFieldLabel, 
+  formatFieldValue, 
+  createCategoryTranslator,
+  ImageModalState,
+  initialImageModalState,
+  resetImageModal
+} from '../lib/tabHelpers';// Unused interfaces removed to clean up linting warnings
 // interface Language and ExpenseCategoryItem were not being used
-
-// Helper function to get field labels for expense entries
-const getExpenseFieldLabel = (fieldKey: string, t: any): string => {
-  switch (fieldKey) {
-    case 'carId': return t?.expense?.labels?.vehicle || 'Vehicle';
-    case 'category': return t?.expense?.labels?.category || 'Category';
-    case 'amount': return t?.payment?.cost || 'Amount';
-    case 'currency': return t?.payment?.currency || 'Currency';
-    case 'date': return t?.form?.fields?.date || 'Date';
-    case 'notes': return t?.form?.fields?.notes || 'Notes';
-    case 'images': return 'Images';
-    default: return t?.expense?.labels?.[fieldKey] || fieldKey;
-  }
-};
-
-// Helper function to render expense image grid
-const renderExpenseImageGrid = (
-  fieldValue: string[],
-  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
-) => {
-  if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
-    return 'No images';
-  }
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-      {fieldValue.map((image, index) => (
-        <div key={index} className="relative">
-          <Image
-            src={image}
-            alt={`Expense image ${index + 1}`}
-            width={80}
-            height={80}
-            className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-            unoptimized={true}
-            onClick={() => setImageModal({
-              isOpen: true,
-              imageSrc: image,
-              altText: `Expense image ${index + 1}`,
-            })}
-          />
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-            <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-              Click to enlarge
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Helper function to format expense field values
-const formatExpenseValue = (
-  fieldKey: string,
-  fieldValue: any,
-  cars: Car[],
-  getCategoryTranslation: (category: string) => string,
-  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
-) => {
-  if (fieldKey === 'carId') {
-    const carName = cars.find(c => (c.id || c._id) === String(fieldValue))?.name;
-    return carName || 'Unknown Vehicle';
-  }
-
-  if (fieldKey === 'category') {
-    return getCategoryTranslation(String(fieldValue));
-  }
-
-  if (fieldKey === 'amount') {
-    const numValue = Number(fieldValue);
-    return isNaN(numValue) ? fieldValue : numValue.toFixed(2);
-  }
-
-  if (fieldKey === 'images') {
-    return renderExpenseImageGrid(fieldValue, setImageModal);
-  }
-
-  return String(fieldValue);
-};
 
 interface ExpenseTabProps {
   t?: TranslationType | Record<string, string>;
@@ -127,15 +51,10 @@ export default function ExpenseTab({
   const translatedText = t || contextT;
 
   // State for image modal
-  const [imageModal, setImageModal] = useState<{
-    isOpen: boolean;
-    imageSrc: string;
-    altText: string;
-  }>({
-    isOpen: false,
-    imageSrc: '',
-    altText: '',
-  });
+  const [imageModal, setImageModal] = useState<ImageModalState>(initialImageModalState);
+
+  // Helper function to translate expense categories
+  const getCategoryTranslation = createCategoryTranslator(translatedText, 'expense');
 
   // Define sort options for expense entries
   const sortOptions: SortOption[] = [
@@ -238,26 +157,6 @@ export default function ExpenseTab({
     return fallback || key;
   }
 
-  // Helper function to translate expense categories
-  function getCategoryTranslation(category: string): string {
-    // Convert category name to camelCase format that matches translation keys
-    // Examples: "Car Wash" -> "carWash", "Parking Fees" -> "parkingFees"
-    const camelCaseKey = category
-      .toLowerCase()
-      .split(' ')
-      .map((word, index) => index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1))
-      .join('');
-
-    // Try to get translation from expense.labels namespace
-    const translation = (translatedText as any)?.expense?.labels?.[camelCaseKey];
-    if (typeof translation === 'string') {
-      return translation;
-    }
-
-    // Fallback to original category name
-    return category;
-  }
-
   const getCarName = (carId: string) => {
     // Use the utility function for consistent car name lookup
     return getCarNameById(carId, cars);
@@ -354,7 +253,7 @@ export default function ExpenseTab({
                       ).map(([key, value]) => {
                         return (
                           <div key={`${expense.id}-${key}`} className="text-xs">
-                            <span className="font-medium">{getExpenseFieldLabel(key, translatedText)}:</span> {formatExpenseValue(key, value, cars, getCategoryTranslation, setImageModal)}
+                            <span className="font-medium">{getFieldLabel(key, 'expense', translatedText)}:</span> {formatFieldValue(key, value, cars, getCategoryTranslation, setImageModal, 'Expense')}
                           </div>
                         );
                       })}
@@ -441,7 +340,7 @@ export default function ExpenseTab({
       {/* Image Modal */}
       <ImageModal
         isOpen={imageModal.isOpen}
-        onClose={() => setImageModal({ isOpen: false, imageSrc: '', altText: '' })}
+        onClose={() => setImageModal(resetImageModal())}
         imageSrc={imageModal.imageSrc}
         altText={imageModal.altText}
       />
