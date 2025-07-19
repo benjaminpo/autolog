@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { Car } from '../types/common';
 
 export interface UseVehiclesReturn {
@@ -12,6 +13,7 @@ export interface UseVehiclesReturn {
 }
 
 export function useVehicles(): UseVehiclesReturn {
+  const { user, loading: authLoading } = useAuth();
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +45,16 @@ export function useVehicles(): UseVehiclesReturn {
   };
 
   useEffect(() => {
-    fetchVehicles();
-  }, []);
+    // Only fetch vehicles if user is authenticated and auth is not loading
+    if (!authLoading && user) {
+      fetchVehicles();
+    } else if (!authLoading && !user) {
+      // User is not authenticated, clear loading state
+      setLoading(false);
+      setCars([]);
+      setError(null);
+    }
+  }, [user, authLoading]);
 
   const refetch = () => {
     fetchVehicles();

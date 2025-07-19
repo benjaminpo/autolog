@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import IncomeHistoryPage from '../../app/income-history/page';
 import { useAuth } from '../../app/context/AuthContext';
 import { useTranslation } from '../../app/hooks/useTranslation';
+import { useVehicles } from '../../app/hooks/useVehicles';
 
 // Mock dependencies
 jest.mock('../../app/context/AuthContext', () => ({
@@ -11,6 +12,10 @@ jest.mock('../../app/context/AuthContext', () => ({
 
 jest.mock('../../app/hooks/useTranslation', () => ({
   useTranslation: jest.fn(),
+}));
+
+jest.mock('../../app/hooks/useVehicles', () => ({
+  useVehicles: jest.fn(),
 }));
 
 jest.mock('../../app/components/PageContainer', () => {
@@ -61,6 +66,12 @@ describe('IncomeHistoryPage', () => {
     
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
+    });
+
+    (useVehicles as jest.Mock).mockReturnValue({
+      cars: [],
+      loading: false,
+      error: null,
     });
 
     mockFetch.mockResolvedValue({
@@ -182,6 +193,12 @@ describe('IncomeHistoryPage', () => {
     it('should handle missing translation gracefully', () => {
       (useTranslation as jest.Mock).mockReturnValue({
         t: null,
+      });
+
+      (useVehicles as jest.Mock).mockReturnValue({
+        cars: [],
+        loading: false,
+        error: null,
       });
 
       render(<IncomeHistoryPage />);

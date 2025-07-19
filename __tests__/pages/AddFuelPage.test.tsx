@@ -254,8 +254,12 @@ describe('AddFuelPage', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/vehicles');
-        expect(global.fetch).toHaveBeenCalledWith('/api/fuel-companies');
-        expect(global.fetch).toHaveBeenCalledWith('/api/fuel-types');
+        expect(global.fetch).toHaveBeenCalledWith('/api/fuel-companies', {
+          headers: { 'Content-Type': 'application/json' }
+        });
+        expect(global.fetch).toHaveBeenCalledWith('/api/fuel-types', {
+          headers: { 'Content-Type': 'application/json' }
+        });
       });
     });
 
