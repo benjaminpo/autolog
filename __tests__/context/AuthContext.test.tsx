@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 
 // Unmock the AuthContext for this test - we want to test the real implementation
 jest.unmock('../../app/context/AuthContext');
-const { AuthProvider, useAuth } = require('../../app/context/AuthContext');
+import { AuthProvider, useAuth } from '../../app/context/AuthContext';
 
 // Mock next-auth/react
 jest.mock('next-auth/react', () => ({
@@ -55,7 +55,7 @@ const TestComponent = () => {
       <button onClick={() => logout()} data-testid="logout-button">
         Logout
       </button>
-      <button onClick={() => setError('Test error')} data-testid="set-error-button">
+      <button onClick={() => setError('test error')} data-testid="set-error-button">
         Set Error
       </button>
       <button onClick={() => setError(null)} data-testid="clear-error-button">

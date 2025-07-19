@@ -48,8 +48,8 @@ export default function IncomeHistoryPage() {
     try {
       // Use shared API utility instead of manual fetch
       const data = await incomeApi.getEntries({
-        limit: itemsPerPage,
-        offset
+        limit: itemsPerPage.toString(),
+        offset: offset.toString()
       });
 
       if (data.success && Array.isArray(data.entries)) {

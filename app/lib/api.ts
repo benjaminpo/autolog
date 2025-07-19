@@ -84,58 +84,51 @@ export const fuelApi = {
   getTypes: () => apiRequest<{ types: any[] }>('/api/fuel-types'),
 };
 
-export const expenseApi = {
-  getEntries: (params?: { limit?: number; offset?: number }) => {
-    const queryParams = new URLSearchParams();
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.offset) queryParams.append('offset', params.offset.toString());
-    const queryString = queryParams.toString();
+// Expense API will be created using the factory below
 
-    const url = queryString ? `/api/expense-entries?${queryString}` : '/api/expense-entries';
-    return apiRequest<{ success: boolean; expenses: any[] }>(url);
-  },
+// Income API will be created using the factory below
 
-  createEntry: (entry: any) => apiRequest('/api/expense-entries', {
-    method: 'POST',
-    body: JSON.stringify(entry),
-  }),
+// Shared financial entry API utilities
+export const createFinancialEntryApi = (entryType: 'income' | 'expense') => {
+  const basePath = entryType === 'income' ? '/api/income-entries' : '/api/expense-entries';
+  const categoryPath = entryType === 'income' ? '/api/income-categories' : '/api/expense-categories';
+  const categoryKey = entryType === 'income' ? 'incomeCategories' : 'expenseCategories';
 
-  updateEntry: (id: string, entry: any) => apiRequest(`/api/expense-entries/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(entry),
-  }),
+  return {
+    getEntries: (params?: Record<string, string>) => {
+      const queryParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value) queryParams.append(key, value);
+        });
+      }
+      const queryString = queryParams.toString();
+      const url = queryString ? `${basePath}?${queryString}` : basePath;
+      return apiRequest<{ success: boolean; entries: any[] }>(url);
+    },
 
-  deleteEntry: (id: string) => apiRequest(`/api/expense-entries/${id}`, {
-    method: 'DELETE',
-  }),
+    createEntry: (entry: any) => apiRequest(basePath, {
+      method: 'POST',
+      body: JSON.stringify(entry),
+    }),
 
-  getCategories: () => apiRequest<{ success: boolean; expenseCategories: any[] }>('/api/expense-categories'),
+    updateEntry: (id: string, entry: any) => apiRequest(`${basePath}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(entry),
+    }),
+
+    deleteEntry: (id: string) => apiRequest(`${basePath}/${id}`, {
+      method: 'DELETE',
+    }),
+
+    getCategories: () => apiRequest<{ success: boolean; expenseCategories?: any[]; incomeCategories?: any[] }>(categoryPath)
+      .then(response => ({
+        ...response,
+        categories: response[categoryKey] || []
+      })),
+  };
 };
 
-export const incomeApi = {
-  getEntries: (params?: { limit?: number; offset?: number }) => {
-    const queryParams = new URLSearchParams();
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.offset) queryParams.append('offset', params.offset.toString());
-    const queryString = queryParams.toString();
-
-    const url = queryString ? `/api/income-entries?${queryString}` : '/api/income-entries';
-    return apiRequest<{ success: boolean; entries: any[] }>(url);
-  },
-
-  createEntry: (entry: any) => apiRequest('/api/income-entries', {
-    method: 'POST',
-    body: JSON.stringify(entry),
-  }),
-
-  updateEntry: (id: string, entry: any) => apiRequest(`/api/income-entries/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(entry),
-  }),
-
-  deleteEntry: (id: string) => apiRequest(`/api/income-entries/${id}`, {
-    method: 'DELETE',
-  }),
-
-  getCategories: () => apiRequest<{ success: boolean; incomeCategories: any[] }>('/api/income-categories'),
-};
+// Export specific instances for backward compatibility and new unified API
+export const expenseApi = createFinancialEntryApi('expense');
+export const incomeApi = createFinancialEntryApi('income');

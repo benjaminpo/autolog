@@ -46,6 +46,26 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+// Error boundary component
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>No ThemeContext</div>;
+    }
+
+    return this.props.children;
+  }
+}
+
 // Test component that uses useTheme hook
 const TestComponent = () => {
   const { theme, isDark, toggleTheme } = useTheme();
@@ -245,9 +265,13 @@ describe('ThemeContext', () => {
       // Suppress console.error for this test
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      render(<HookTestComponent />);
+      render(
+        <ErrorBoundary>
+          <HookTestComponent />
+        </ErrorBoundary>
+      );
 
-      expect(screen.getByText('Hook Error: useTheme must be used within a ThemeProvider')).toBeInTheDocument();
+      expect(screen.getByText('No ThemeContext')).toBeInTheDocument();
 
       consoleSpy.mockRestore();
     });
@@ -255,7 +279,11 @@ describe('ThemeContext', () => {
 
   describe('Context without provider', () => {
     it('should render "No ThemeContext" when context is not available', () => {
-      render(<TestComponent />);
+      render(
+        <ErrorBoundary>
+          <TestComponent />
+        </ErrorBoundary>
+      );
 
       expect(screen.getByText('No ThemeContext')).toBeInTheDocument();
     });

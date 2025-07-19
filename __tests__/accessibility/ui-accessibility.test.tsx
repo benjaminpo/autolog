@@ -158,15 +158,15 @@ describe('UI Accessibility Tests', () => {
     it('should have proper tab order for form elements', () => {
       const TestFormTabOrder = () => (
         <form>
-          <input type="text" placeholder="First field" />
-          <input type="text" placeholder="Second field" />
-          <select>
+          <input type="text" placeholder="First field" tabIndex={1} />
+          <input type="text" placeholder="Second field" tabIndex={2} />
+          <select tabIndex={3}>
             <option value="">Select option</option>
             <option value="1">Option 1</option>
           </select>
-          <textarea placeholder="Comments"></textarea>
-          <button type="submit">Submit</button>
-          <button type="button">Cancel</button>
+          <textarea placeholder="Comments" tabIndex={4}></textarea>
+          <button type="submit" tabIndex={5}>Submit</button>
+          <button type="button" tabIndex={6}>Cancel</button>
         </form>
       );
 

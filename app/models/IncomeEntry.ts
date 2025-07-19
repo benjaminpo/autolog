@@ -1,52 +1,9 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose from 'mongoose';
+import { IBaseFinancialEntry, createBaseFinancialEntrySchema } from './BaseFinancialEntry';
 
-export interface IIncomeEntry extends Document {
-  userId: string;
-  carId: string;
-  category: string;
-  amount: number;
-  currency: string;
-  date: string;
-  notes: string;
-  images: string[];
-}
+// IncomeEntry type alias for the base financial entry
+export type IIncomeEntry = IBaseFinancialEntry;
 
-const IncomeEntrySchema: Schema = new Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  carId: {
-    type: String,
-    required: true
-  },
-  category: {
-    type: String,
-    required: true
-  },
-  amount: {
-    type: Number,
-    required: true
-  },
-  currency: {
-    type: String,
-    required: true
-  },
-  date: {
-    type: String,
-    required: true
-  },
-  notes: {
-    type: String,
-    default: ''
-  },
-  images: {
-    type: [String],
-    default: []
-  }
-}, {
-  timestamps: true
-});
+const IncomeEntrySchema = createBaseFinancialEntrySchema();
 
-export default mongoose.models.IncomeEntry || mongoose.model<IIncomeEntry>('IncomeEntry', IncomeEntrySchema); 
+export default mongoose.models.IncomeEntry || mongoose.model<IIncomeEntry>('IncomeEntry', IncomeEntrySchema);

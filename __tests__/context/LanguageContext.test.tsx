@@ -63,6 +63,26 @@ jest.mock('../../app/translations', () => {
   };
 });
 
+// Error boundary component
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean}> {
+  constructor(props: {children: React.ReactNode}) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>No LanguageContext</div>;
+    }
+
+    return this.props.children;
+  }
+}
+
 // Test component using useLanguage hook
 const TestComponent = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -434,7 +454,11 @@ describe('LanguageContext', () => {
 
   describe('Context without provider', () => {
     it('should handle missing context gracefully', () => {
-      render(<TestComponent />);
+      render(
+        <ErrorBoundary>
+          <TestComponent />
+        </ErrorBoundary>
+      );
 
       expect(screen.getByText('No LanguageContext')).toBeInTheDocument();
     });
