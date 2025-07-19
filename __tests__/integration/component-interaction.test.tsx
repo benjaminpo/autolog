@@ -82,10 +82,12 @@ const MockModal = ({
   if (!isOpen) return null;
 
   return (
-    <div data-testid="modal-overlay" onClick={onClose}>
+    <div data-testid="modal-overlay" onClick={onClose} role="presentation">
       <div 
         data-testid="modal-content" 
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         <button 
           data-testid="modal-close" 

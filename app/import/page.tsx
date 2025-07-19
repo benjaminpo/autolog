@@ -674,7 +674,13 @@ export default function ImportPage() {
                 onClick={generateSampleCSV}
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
               >
-                {t?.import?.downloadSample || 'Download Sample'} {importType === 'fuel' ? (t?.import?.fuelEntries || 'Fuel Entries') : importType === 'expenses' ? (t?.import?.expenses || 'Expenses') : (t?.import?.income || 'Income')} CSV
+                {t?.import?.downloadSample || 'Download Sample'} {
+                  importType === 'fuel' 
+                    ? (t?.import?.fuelEntries || 'Fuel Entries')
+                    : importType === 'expenses' 
+                      ? (t?.import?.expenses || 'Expenses')
+                      : (t?.import?.income || 'Income')
+                } CSV
               </button>
             </div>
 

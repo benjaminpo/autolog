@@ -158,15 +158,15 @@ describe('UI Accessibility Tests', () => {
     it('should have proper tab order for form elements', () => {
       const TestFormTabOrder = () => (
         <form>
-          <input type="text" placeholder="First field" tabIndex={1} />
-          <input type="text" placeholder="Second field" tabIndex={2} />
-          <select tabIndex={3}>
+          <input type="text" placeholder="First field" />
+          <input type="text" placeholder="Second field" />
+          <select>
             <option value="">Select option</option>
             <option value="1">Option 1</option>
           </select>
-          <textarea placeholder="Comments" tabIndex={4}></textarea>
-          <button type="submit" tabIndex={5}>Submit</button>
-          <button type="button" tabIndex={6}>Cancel</button>
+          <textarea placeholder="Comments"></textarea>
+          <button type="submit">Submit</button>
+          <button type="button">Cancel</button>
         </form>
       );
 
@@ -375,13 +375,40 @@ describe('UI Accessibility Tests', () => {
           </div>
           
           <ul role="listbox" aria-label="Options">
-            <li role="option" tabIndex={0} aria-selected={false}>
+            <li 
+              role="option" 
+              tabIndex={0} 
+              aria-selected="false"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  console.log('option 1 selected');
+                }
+              }}
+            >
               Option 1
             </li>
-            <li role="option" tabIndex={0} aria-selected={true}>
+            <li 
+              role="option" 
+              tabIndex={-1} 
+              aria-selected="true"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  console.log('option 2 selected');
+                }
+              }}
+            >
               Option 2 (Selected)
             </li>
-            <li role="option" tabIndex={0} aria-selected={false}>
+            <li 
+              role="option" 
+              tabIndex={-1} 
+              aria-selected="false"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  console.log('option 3 selected');
+                }
+              }}
+            >
               Option 3
             </li>
           </ul>

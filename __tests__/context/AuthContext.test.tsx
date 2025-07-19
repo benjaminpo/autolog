@@ -32,40 +32,34 @@ const mockPush = jest.fn();
 
 // Test component that uses useAuth hook
 const TestComponent = () => {
-  try {
-    const { user, loading, login, register, logout, error, setError } = useAuth();
-    
-    return (
-      <div>
-        <div data-testid="user">{user ? JSON.stringify(user) : 'null'}</div>
-        <div data-testid="loading">{loading.toString()}</div>
-        <div data-testid="error">{error || 'no-error'}</div>
-        <button onClick={() => login('test@example.com', 'password')} data-testid="login-button">
-          Login
-        </button>
+  const { user, loading, login, register, logout, error, setError } = useAuth();
+  
+  return (
+    <div>
+      <div data-testid="user">{user ? JSON.stringify(user) : 'null'}</div>
+      <div data-testid="loading">{loading.toString()}</div>
+      <div data-testid="error">{error || 'no-error'}</div>
+      <button onClick={() => login('test@example.com', 'password')} data-testid="login-button">
+        Login
+      </button>
         <button onClick={() => login('test@example.com', 'password', 'en')} data-testid="login-with-language-button">
           Login with Language
         </button>
-        <button onClick={() => register('Test User', 'test@example.com', 'password')} data-testid="register-button">
-          Register
-        </button>
-        <button onClick={() => logout()} data-testid="logout-button">
-          Logout
-        </button>
-        <button onClick={() => setError('test error')} data-testid="set-error-button">
-          Set Error
-        </button>
-        <button onClick={() => setError(null)} data-testid="clear-error-button">
-          Clear Error
-        </button>
-      </div>
-    );
-  } catch (error) {
-    return <div data-testid="hook-error">{error instanceof Error ? error.message : 'Unknown error'}</div>;
-  }
-};
-
-// Component to test hook outside provider
+      <button onClick={() => register('test@example.com', 'password')} data-testid="register-button">
+        Register
+      </button>
+      <button onClick={() => logout()} data-testid="logout-button">
+        Logout
+      </button>
+      <button onClick={() => setError('Test error')} data-testid="set-error-button">
+        Set Error
+      </button>
+      <button onClick={() => setError(null)} data-testid="clear-error-button">
+        Clear Error
+      </button>
+    </div>
+  );
+};// Component to test hook outside provider
 const HookTestComponent = () => {
   try {
     const auth = useAuth();

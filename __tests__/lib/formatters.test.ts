@@ -187,7 +187,7 @@ describe('Format Utilities', () => {
         .trim()
         .replace(/[^\w\s-]/g, '')
         .replace(/[\s_-]+/g, '-')
-        .replace(/^-+|-+$/g, '');
+        .replace(/^(-+)|(-+)$/g, '');
     };
 
     const formatVehicleName = (make: string, model: string, year?: number): string => {

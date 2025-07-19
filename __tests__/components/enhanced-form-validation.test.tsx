@@ -278,7 +278,13 @@ describe('Enhanced Form Validation Tests', () => {
         };
 
         return (
-          <div onKeyDown={handleKeyDown} tabIndex={0} data-testid="form-container">
+          <div 
+            onKeyDown={handleKeyDown} 
+            tabIndex={0} 
+            data-testid="form-container"
+            role="group"
+            aria-label="Interactive form container"
+          >
             {inputs.map((input, index) => (
               <input
                 key={input}

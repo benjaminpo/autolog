@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-@custom-variant dark (.dark &);
-
-@theme {
+:root {
   /* Custom spacing */
   --spacing-18: 4.5rem;
   --spacing-88: 22rem;
@@ -27,6 +25,17 @@
   --animate-slide-down: slideDown 0.3s ease-out;
   --animate-scale-in: scaleIn 0.2s ease-out;
 
+  /* Light theme colors */
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --surface: #f8fafc;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --muted: #334155;
+  --muted-foreground: #1e293b;
+
   /* Custom keyframes */
   @keyframes fadeIn {
     0% { opacity: 0; }
@@ -49,11 +58,10 @@
   }
 }
 
-/* Light theme colors */
-:root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --surface: #f8fafc;
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --surface: #1e293b;
   --surface-elevated: #ffffff;
   --surface-hover: #f1f5f9;
   --border: #e2e8f0;

@@ -65,33 +65,27 @@ jest.mock('../../app/translations', () => {
 
 // Test component using useLanguage hook
 const TestComponent = () => {
-  try {
-    const { language, setLanguage, t } = useLanguage();
-    
-    return (
-      <div>
-        <div data-testid="current-language">{language}</div>
-        <div data-testid="dashboard-text">{(t as any)?.navigation?.dashboard || 'Dashboard'}</div>
-                 <button 
-           onClick={() => setLanguage('zh')} 
-           data-testid="switch-to-chinese"
-         >
-           Switch to Chinese
-         </button>
-        <button 
-          onClick={() => setLanguage('en')} 
-          data-testid="switch-to-english"
-        >
-          Switch to English
+  const { language, setLanguage, t } = useLanguage();
+  
+  return (
+    <div>
+      <div data-testid="current-language">{language}</div>
+      <div data-testid="dashboard-text">{(t as any)?.navigation?.dashboard || 'Dashboard'}</div>
+               <button 
+         onClick={() => setLanguage('zh')} 
+         data-testid="switch-to-chinese"
+       >
+         Switch to Chinese
+       </button>
+       <button 
+         onClick={() => setLanguage('en')} 
+         data-testid="switch-to-english"
+       >
+         Switch to English
         </button>
       </div>
     );
-  } catch (error) {
-    return <div>No LanguageContext</div>;
-  }
-};
-
-// Test component for translation testing
+};// Test component for translation testing
 const TranslationTestComponent = () => {
   const { t } = useLanguage();
   
