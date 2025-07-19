@@ -46,11 +46,15 @@ export function useVehicles(): UseVehiclesReturn {
     fetchVehicles();
   }, []);
 
+  const refetch = () => {
+    fetchVehicles();
+  };
+
   return {
     cars,
     setCars,
     loading,
     error,
-    refetch: fetchVehicles
+    refetch
   };
 }

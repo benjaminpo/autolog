@@ -17,7 +17,7 @@ import ImageUpload from '../components/ImageUpload';
 export default function AddFuelPage() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
-  const { cars, loading: vehiclesLoading, error: vehiclesError } = useVehicles();
+  const { cars } = useVehicles();
 
   const [fuelCompanies, setFuelCompanies] = useState<string[]>(predefinedFuelCompanies);
   const [fuelTypes, setFuelTypes] = useState<string[]>(predefinedFuelTypes);

@@ -34,7 +34,7 @@ export default function IncomeHistoryPage() {
   const { t } = useTranslation();
 
   // Use shared vehicle hook instead of manual state management
-  const { cars, loading: carsLoading, error: carsError } = useVehicles();
+  const { cars, loading: carsLoading } = useVehicles();
 
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
   const [showIncomeDetails, setShowIncomeDetails] = useState<string | null>(null);

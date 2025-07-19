@@ -55,7 +55,7 @@ export default function ExpenseHistoryPage() {
   const { t } = useTranslation();
 
   // Use shared vehicle hook instead of manual state management
-  const { cars, loading: carsLoading, error: carsError } = useVehicles();
+  const { cars } = useVehicles();
 
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [showExpenseDetails, setShowExpenseDetails] = useState<string | null>(null);
