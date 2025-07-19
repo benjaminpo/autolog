@@ -60,6 +60,24 @@ export default function AddFuelPage() {
   const [showFuelDetailsSection, setShowFuelDetailsSection] = useState(true);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
 
+  // Helper function to get payment type translation
+  const getPaymentTypeTranslation = (type: string): string => {
+    const typeKey = type.toLowerCase().replace(/[^a-z]/g, '');
+    
+    switch (typeKey) {
+      case 'cash':
+        return getText('payment.type.cash', type);
+      case 'creditcard':
+        return getText('payment.type.creditCard', type);
+      case 'mobileapp':
+        return getText('payment.type.mobileApp', type);
+      case 'other':
+        return getText('payment.type.other', type);
+      default:
+        return type;
+    }
+  };
+
   // Load data
   useEffect(() => {
     if (!user) return;
@@ -596,18 +614,7 @@ export default function AddFuelPage() {
                           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 transition-colors"
                         >
                           {paymentTypes.map((type) => {
-                            const typeKey = type.toLowerCase().replace(' ', '');
-                            let displayText = type;
-
-                            if (typeKey === 'cash') {
-                              displayText = getText('payment.type.cash', type);
-                            } else if (typeKey === 'creditcard') {
-                              displayText = getText('payment.type.creditCard', type);
-                            } else if (typeKey === 'mobileapp') {
-                              displayText = getText('payment.type.mobileApp', type);
-                            } else if (typeKey === 'other') {
-                              displayText = getText('payment.type.other', type);
-                            }
+                            const displayText = getPaymentTypeTranslation(type);
 
                             return (
                               <option key={`payment-${type}`} value={type}>

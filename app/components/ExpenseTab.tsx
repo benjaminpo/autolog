@@ -36,6 +36,86 @@ interface ExpenseEntry {
 // Unused interfaces removed to clean up linting warnings
 // interface Language and ExpenseCategoryItem were not being used
 
+// Helper function to get field labels for expense entries
+const getExpenseFieldLabel = (fieldKey: string, t: any): string => {
+  switch (fieldKey) {
+    case 'carId': return t?.expense?.labels?.vehicle || 'Vehicle';
+    case 'category': return t?.expense?.labels?.category || 'Category';
+    case 'amount': return t?.payment?.cost || 'Amount';
+    case 'currency': return t?.payment?.currency || 'Currency';
+    case 'date': return t?.form?.fields?.date || 'Date';
+    case 'notes': return t?.form?.fields?.notes || 'Notes';
+    case 'images': return 'Images';
+    default: return t?.expense?.labels?.[fieldKey] || fieldKey;
+  }
+};
+
+// Helper function to render expense image grid
+const renderExpenseImageGrid = (
+  fieldValue: string[], 
+  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
+) => {
+  if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
+    return 'No images';
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+      {fieldValue.map((image, index) => (
+        <div key={index} className="relative">
+          <Image
+            src={image}
+            alt={`Expense image ${index + 1}`}
+            width={80}
+            height={80}
+            className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+            unoptimized={true}
+            onClick={() => setImageModal({
+              isOpen: true,
+              imageSrc: image,
+              altText: `Expense image ${index + 1}`,
+            })}
+          />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+            <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+              Click to enlarge
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Helper function to format expense field values
+const formatExpenseValue = (
+  fieldKey: string, 
+  fieldValue: any, 
+  cars: Car[], 
+  getCategoryTranslation: (category: string) => string,
+  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
+) => {
+  if (fieldKey === 'carId') {
+    const carName = cars.find(c => (c.id || c._id) === String(fieldValue))?.name;
+    return carName || 'Unknown Vehicle';
+  }
+  
+  if (fieldKey === 'category') {
+    return getCategoryTranslation(String(fieldValue));
+  }
+  
+  if (fieldKey === 'amount') {
+    const numValue = Number(fieldValue);
+    return isNaN(numValue) ? fieldValue : numValue.toFixed(2);
+  }
+  
+  if (fieldKey === 'images') {
+    return renderExpenseImageGrid(fieldValue, setImageModal);
+  }
+  
+  return String(fieldValue);
+};
+
 interface ExpenseTabProps {
   t?: TranslationType | Record<string, string>;
   cars: Car[];
@@ -295,66 +375,9 @@ export default function ExpenseTab({
                       {Object.entries(expense).filter(([key]) => 
                         key !== 'id' && key !== '_id' && key !== 'userId' && key !== '__v'
                       ).map(([key, value]) => {
-                        const getFieldLabel = (fieldKey: string) => {
-                          switch (fieldKey) {
-                            case 'carId': return (translatedText as any)?.expense?.labels?.vehicle || 'Vehicle';
-                            case 'category': return (translatedText as any)?.expense?.labels?.category || 'Category';
-                            case 'amount': return (translatedText as any)?.payment?.cost || 'Amount';
-                            case 'currency': return (translatedText as any)?.payment?.currency || 'Currency';
-                            case 'date': return (translatedText as any)?.form?.fields?.date || 'Date';
-                            case 'notes': return (translatedText as any)?.form?.fields?.notes || 'Notes';
-                            default: return (translatedText as any)?.expense?.labels?.[fieldKey] || fieldKey;
-                          }
-                        };
-
-                        const formatValue = (fieldKey: string, fieldValue: any) => {
-                          if (fieldKey === 'carId') {
-                            return getCarName(String(fieldValue));
-                          }
-                          if (fieldKey === 'category') {
-                            return getCategoryTranslation(String(fieldValue));
-                          }
-                          if (fieldKey === 'amount') {
-                            const numValue = Number(fieldValue);
-                            return isNaN(numValue) ? fieldValue : numValue.toFixed(2);
-                          }
-                          if (fieldKey === 'images') {
-                            if (Array.isArray(fieldValue) && fieldValue.length > 0) {
-                              return (
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                                  {fieldValue.map((image, index) => (
-                                    <div key={index} className="relative">
-                                      <Image
-                                        src={image}
-                                        alt={`Expense image ${index + 1}`}
-                                        width={80}
-                                        height={80}
-                                        className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                                        unoptimized={true}
-                                        onClick={() => setImageModal({
-                                          isOpen: true,
-                                          imageSrc: image,
-                                          altText: `Expense image ${index + 1}`,
-                                        })}
-                                      />
-                                      <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                        <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                          Click to enlarge
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            }
-                            return 'No images';
-                          }
-                          return String(fieldValue || '-');
-                        };
-
                         return (
                           <div key={`${expense.id}-${key}`} className="text-xs">
-                            <span className="font-medium">{getFieldLabel(key)}:</span> {formatValue(key, value)}
+                            <span className="font-medium">{getExpenseFieldLabel(key, translatedText)}:</span> {formatExpenseValue(key, value, cars, getCategoryTranslation, setImageModal)}
                           </div>
                         );
                       })}

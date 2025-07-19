@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { GET, POST } from '../../app/api/fuel-types/route';
 import { PUT, DELETE } from '../../app/api/fuel-types/[id]/route';
@@ -33,9 +32,9 @@ describe('/api/fuel-types', () => {
   describe('GET', () => {
     it('should return predefined fuel types when no session', async () => {
       mockGetServerSession.mockResolvedValue(null);
-      
+
       const response = await GET();
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.types).toBeDefined();
@@ -43,9 +42,9 @@ describe('/api/fuel-types', () => {
 
     it('should return predefined fuel types when no user in session', async () => {
       mockGetServerSession.mockResolvedValue({ user: null } as any);
-      
+
       const response = await GET();
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.types).toBeDefined();
@@ -65,7 +64,7 @@ describe('/api/fuel-types', () => {
       } as any);
 
       const response = await GET();
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.types).toBeDefined();
@@ -74,7 +73,7 @@ describe('/api/fuel-types', () => {
 
     it('should handle database errors', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.find.mockReturnValue({
@@ -82,7 +81,7 @@ describe('/api/fuel-types', () => {
       } as any);
 
       const response = await GET();
-      
+
       expect(response.status).toBe(500);
       const data = await response.json();
       expect(data.message).toBe('Error getting fuel types');
@@ -92,12 +91,12 @@ describe('/api/fuel-types', () => {
   describe('POST', () => {
     it('should return 401 when no session', async () => {
       mockGetServerSession.mockResolvedValue(null);
-      
+
       const request = {
         json: jest.fn().mockResolvedValue({ name: 'Test Type' })
       } as any;
       const response = await POST(request);
-      
+
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.message).toBe('Unauthorized');
@@ -105,12 +104,12 @@ describe('/api/fuel-types', () => {
 
     it('should return 401 when no user in session', async () => {
       mockGetServerSession.mockResolvedValue({ user: null } as any);
-      
+
       const request = {
         json: jest.fn().mockResolvedValue({ name: 'Test Type' })
       } as any;
       const response = await POST(request);
-      
+
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.message).toBe('Unauthorized');
@@ -118,14 +117,14 @@ describe('/api/fuel-types', () => {
 
     it('should return 400 when name is missing', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
-      
+
       const request = {
         json: jest.fn().mockResolvedValue({})
       } as any;
       const response = await POST(request);
-      
+
       expect(response.status).toBe(400);
       const data = await response.json();
       expect(data.message).toBe('Name is required');
@@ -133,7 +132,7 @@ describe('/api/fuel-types', () => {
 
     it('should return 409 when fuel type already exists', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue({ name: 'Premium' });
@@ -142,7 +141,7 @@ describe('/api/fuel-types', () => {
         json: jest.fn().mockResolvedValue({ name: 'Premium' })
       } as any;
       const response = await POST(request);
-      
+
       expect(response.status).toBe(409);
       const data = await response.json();
       expect(data.message).toBe('Fuel type already exists');
@@ -151,7 +150,7 @@ describe('/api/fuel-types', () => {
     it('should create new fuel type successfully', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
       const mockSavedType = { _id: 'type1', name: 'Premium', userId: 'user123' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue(null);
@@ -161,7 +160,7 @@ describe('/api/fuel-types', () => {
         json: jest.fn().mockResolvedValue({ name: 'Premium' })
       } as any;
       const response = await POST(request);
-      
+
       expect(response.status).toBe(201);
       const data = await response.json();
       expect(data.type).toEqual(mockSavedType);
@@ -169,7 +168,7 @@ describe('/api/fuel-types', () => {
 
     it('should handle validation errors', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue(null);
@@ -179,7 +178,7 @@ describe('/api/fuel-types', () => {
         json: jest.fn().mockResolvedValue({ name: 'Test Type' })
       } as any;
       const response = await POST(request);
-      
+
       expect(response.status).toBe(500);
       const data = await response.json();
       expect(data.message).toBe('Error creating fuel type');
@@ -195,13 +194,13 @@ describe('/api/fuel-types/[id]', () => {
   describe('PUT', () => {
     it('should return 401 when no session', async () => {
       mockGetServerSession.mockResolvedValue(null);
-      
+
       const request = {
         json: jest.fn().mockResolvedValue({ name: 'Updated Type' })
       } as any;
       const params = Promise.resolve({ id: '123' });
       const response = await PUT(request, { params });
-      
+
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -210,7 +209,7 @@ describe('/api/fuel-types/[id]', () => {
 
     it('should return 404 when fuel type not found', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue(null);
@@ -220,7 +219,7 @@ describe('/api/fuel-types/[id]', () => {
       } as any;
       const params = Promise.resolve({ id: '123' });
       const response = await PUT(request, { params });
-      
+
       expect(response.status).toBe(404);
       const data = await response.json();
       expect(data.success).toBe(false);
@@ -231,7 +230,7 @@ describe('/api/fuel-types/[id]', () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
       const mockFuelTypeInstance = { _id: 'type1', name: 'Premium', userId: 'user123' };
       const mockUpdatedType = { _id: 'type1', name: 'Updated Type', userId: 'user123' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue(mockFuelTypeInstance);
@@ -242,7 +241,7 @@ describe('/api/fuel-types/[id]', () => {
       } as any;
       const params = Promise.resolve({ id: 'type1' });
       const response = await PUT(request, { params });
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.success).toBe(true);
@@ -253,11 +252,11 @@ describe('/api/fuel-types/[id]', () => {
   describe('DELETE', () => {
     it('should return 401 when no session', async () => {
       mockGetServerSession.mockResolvedValue(null);
-      
+
       const request = {} as any;
       const params = Promise.resolve({ id: '123' });
       const response = await DELETE(request, { params });
-      
+
       expect(response.status).toBe(401);
       const data = await response.json();
       expect(data.message).toBe('Unauthorized');
@@ -265,7 +264,7 @@ describe('/api/fuel-types/[id]', () => {
 
     it('should return 404 when fuel type not found', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue(null);
@@ -273,7 +272,7 @@ describe('/api/fuel-types/[id]', () => {
       const request = {} as any;
       const params = Promise.resolve({ id: '123' });
       const response = await DELETE(request, { params });
-      
+
       expect(response.status).toBe(404);
       const data = await response.json();
       expect(data.message).toBe('Fuel type not found');
@@ -282,7 +281,7 @@ describe('/api/fuel-types/[id]', () => {
     it('should delete fuel type successfully', async () => {
       const mockUser = { id: 'user123', email: 'test@example.com' };
       const mockFuelTypeInstance = { _id: 'type1', name: 'Premium', userId: 'user123' };
-      
+
       mockGetServerSession.mockResolvedValue({ user: mockUser } as any);
       mockDbConnect.mockResolvedValue({} as any);
       mockFuelType.findOne.mockResolvedValue(mockFuelTypeInstance);
@@ -291,10 +290,10 @@ describe('/api/fuel-types/[id]', () => {
       const request = {} as any;
       const params = Promise.resolve({ id: 'type1' });
       const response = await DELETE(request, { params });
-      
+
       expect(response.status).toBe(200);
       const data = await response.json();
       expect(data.message).toBe('Fuel type deleted successfully');
     });
   });
-}); 
+});

@@ -49,6 +49,93 @@ interface IncomeTabProps {
   loading?: boolean;
 }
 
+// Helper function to get field labels for income entries
+const getIncomeFieldLabel = (fieldKey: string, t: any): string => {
+  switch (fieldKey) {
+    case 'carId': return t?.income?.labels?.vehicle || 'Vehicle';
+    case 'category': return t?.income?.labels?.category || 'Category';
+    case 'amount': return t?.payment?.cost || 'Amount';
+    case 'currency': return t?.payment?.currency || 'Currency';
+    case 'date': return t?.form?.fields?.date || 'Date';
+    case 'notes': return t?.form?.fields?.notes || 'Notes';
+    case 'images': return 'Images';
+    case 'createdAt': return t?.income?.labels?.createdAt || 'Created At';
+    case 'updatedAt': return t?.income?.labels?.updatedAt || 'Updated At';
+    default: return t?.income?.labels?.[fieldKey] || fieldKey;
+  }
+};
+
+// Helper function to render income image grid
+const renderIncomeImageGrid = (
+  fieldValue: string[], 
+  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
+) => {
+  if (!Array.isArray(fieldValue) || fieldValue.length === 0) {
+    return 'No images';
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+      {fieldValue.map((image, index) => (
+        <div key={index} className="relative">
+          <Image
+            src={image}
+            alt={`Income image ${index + 1}`}
+            width={80}
+            height={80}
+            className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
+            unoptimized={true}
+            onClick={() => setImageModal({
+              isOpen: true,
+              imageSrc: image,
+              altText: `Income image ${index + 1}`,
+            })}
+          />
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+            <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+              Click to enlarge
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Helper function to format income field values
+const formatIncomeValue = (
+  fieldKey: string, 
+  fieldValue: any, 
+  cars: Car[], 
+  getCategoryTranslation: (category: string) => string,
+  setImageModal: (modal: { isOpen: boolean; imageSrc: string; altText: string }) => void
+) => {
+  if (fieldValue == null) return '';
+  
+  if (fieldKey === 'images') {
+    return renderIncomeImageGrid(fieldValue, setImageModal);
+  }
+  
+  if (fieldKey === 'carId') {
+    const car = cars.find(c => (c.id || c._id) === String(fieldValue));
+    return car ? car.name : 'Unknown Vehicle';
+  }
+  
+  if (fieldKey === 'category') {
+    return getCategoryTranslation(String(fieldValue));
+  }
+  
+  if ((fieldKey === 'createdAt' || fieldKey === 'updatedAt') && fieldValue) {
+    try {
+      return new Date(fieldValue).toLocaleString();
+    } catch (error) {
+      return fieldValue;
+    }
+  }
+  
+  return String(fieldValue);
+};
+
 export default function IncomeTab({
   t,
   cars,
@@ -260,96 +347,13 @@ export default function IncomeTab({
                             return null;
                           }
 
-                          // Map field keys to their proper translation paths
-                          const getFieldLabel = (fieldKey: string) => {
-                            switch (fieldKey) {
-                              case 'category':
-                                return (t as any)?.income?.labels?.category || (t as any)?.category || 'Category';
-                              case 'amount':
-                                return (t as any)?.income?.labels?.amount || (t as any)?.amount || 'Amount';
-                              case 'currency':
-                                return (t as any)?.payment?.currency || (t as any)?.currency || 'Currency';
-                              case 'date':
-                                return (t as any)?.form?.fields?.date || (t as any)?.date || 'Date';
-                              case 'notes':
-                                return (t as any)?.form?.fields?.notes || (t as any)?.notes || 'Notes';
-                              case 'createdAt':
-                                return (t as any)?.income?.labels?.createdAt || 'Created At';
-                              case 'updatedAt':
-                                return (t as any)?.income?.labels?.updatedAt || 'Updated At';
-                              default:
-                                return fieldKey;
-                            }
-                          };
-
-                          // Format timestamp fields to human-readable format
-                          const formatValue = (fieldKey: string, fieldValue: any) => {
-                            if (fieldValue == null) return '';
-                            
-                            if (fieldKey === 'images') {
-                              if (Array.isArray(fieldValue) && fieldValue.length > 0) {
-                                return (
-                                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
-                                    {fieldValue.map((image, index) => (
-                                      <div key={index} className="relative">
-                                        <Image
-                                          src={image}
-                                          alt={`Income image ${index + 1}`}
-                                          width={80}
-                                          height={80}
-                                          className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                                          unoptimized={true}
-                                          onClick={() => setImageModal({
-                                            isOpen: true,
-                                            imageSrc: image,
-                                            altText: `Income image ${index + 1}`,
-                                          })}
-                                        />
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-                                          <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                                            Click to enlarge
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              }
-                              return 'No images';
-                            }
-                            
-                            // Handle category translation
-                            if (fieldKey === 'category') {
-                              return getCategoryTranslation(String(fieldValue));
-                            }
-                            
-                            // Format timestamp fields
-                            if ((fieldKey === 'createdAt' || fieldKey === 'updatedAt') && fieldValue) {
-                              try {
-                                const date = new Date(fieldValue);
-                                return date.toLocaleString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  hour12: true,
-                                });
-                              } catch (error) {
-                                return String(fieldValue);
-                              }
-                            }
-                            
-                            return String(fieldValue);
-                          };
-
                           return (
                             <div key={`detail-${key}`} className="mb-1">
                               <span className="font-semibold text-gray-800 dark:text-gray-300">
-                                {getFieldLabel(key)}:
+                                {getIncomeFieldLabel(key, t)}:
                               </span>
                               <span className="ml-2 text-gray-900 dark:text-gray-100">
-                                {formatValue(key, value)}
+                                {formatIncomeValue(key, value, cars, getCategoryTranslation, setImageModal)}
                               </span>
                             </div>
                           );

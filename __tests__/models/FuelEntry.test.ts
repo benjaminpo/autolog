@@ -3,9 +3,6 @@
  * Comprehensive testing of FuelEntry model including schema validation, required fields, and edge cases
  */
 
-import mongoose from 'mongoose';
-import FuelEntry, { IFuelEntry } from '../../app/models/FuelEntry';
-
 // Mock mongoose with simpler approach
 jest.mock('mongoose', () => ({
   Schema: jest.fn().mockImplementation((definition, options) => ({
@@ -94,17 +91,17 @@ describe('FuelEntry Model', () => {
 
     it('should have numeric fields with proper validation', () => {
       const numericFields = ['mileage', 'volume', 'cost'];
-      
+
       numericFields.forEach(field => {
         const fieldDefinition: any = {
           type: Number,
           required: true
         };
-        
+
         if (field === 'cost') {
           fieldDefinition.min = 0;
         }
-        
+
         expect(fieldDefinition.required).toBe(true);
         expect(fieldDefinition.type).toBe(Number);
       });
@@ -114,7 +111,7 @@ describe('FuelEntry Model', () => {
       const schemaOptions = {
         timestamps: true
       };
-      
+
       expect(schemaOptions.timestamps).toBe(true);
     });
   });
@@ -122,8 +119,8 @@ describe('FuelEntry Model', () => {
   describe('Field Validation Logic', () => {
     it('should validate required fields presence', () => {
       const requiredFields = [
-        'userId', 'carId', 'fuelCompany', 'fuelType', 'mileage', 
-        'distanceUnit', 'volume', 'volumeUnit', 'cost', 'currency', 
+        'userId', 'carId', 'fuelCompany', 'fuelType', 'mileage',
+        'distanceUnit', 'volume', 'volumeUnit', 'cost', 'currency',
         'date', 'paymentType'
       ];
 
@@ -140,7 +137,7 @@ describe('FuelEntry Model', () => {
         required: true,
         min: 0
       };
-      
+
       expect(costValidation.min).toBe(0);
       expect(costValidation.type).toBe(Number);
     });
@@ -171,7 +168,7 @@ describe('FuelEntry Model', () => {
 
       Object.entries(defaults).forEach(([field, defaultValue]) => {
         expect(defaultValue).toBeDefined();
-        
+
         if (field === 'partialFuelUp') {
           expect(defaultValue).toBe(false);
         } else if (field === 'tags') {
@@ -186,7 +183,7 @@ describe('FuelEntry Model', () => {
     it('should handle time default function', () => {
       const timeDefault = () => new Date().toTimeString().slice(0, 5);
       const timeValue = timeDefault();
-      
+
       expect(typeof timeValue).toBe('string');
       expect(timeValue).toMatch(/^\d{2}:\d{2}$/);
     });
@@ -195,7 +192,7 @@ describe('FuelEntry Model', () => {
   describe('Cost Validation Logic', () => {
     it('should accept zero cost for free fuel', () => {
       const costValidation = (cost: number) => cost >= 0;
-      
+
       expect(costValidation(0)).toBe(true);
       expect(costValidation(0.01)).toBe(true);
       expect(costValidation(100.50)).toBe(true);
@@ -203,14 +200,14 @@ describe('FuelEntry Model', () => {
 
     it('should reject negative costs', () => {
       const costValidation = (cost: number) => cost >= 0;
-      
+
       expect(costValidation(-1)).toBe(false);
       expect(costValidation(-100.50)).toBe(false);
     });
 
     it('should handle decimal costs', () => {
       const decimalCosts = [0.99, 45.75, 123.456];
-      
+
       decimalCosts.forEach(cost => {
         expect(typeof cost).toBe('number');
         expect(cost >= 0).toBe(true);
@@ -237,7 +234,7 @@ describe('FuelEntry Model', () => {
         type: [String],
         default: []
       };
-      
+
       expect(tagsField.default).toEqual([]);
       expect(Array.isArray(tagsField.type)).toBe(true);
     });
@@ -246,8 +243,8 @@ describe('FuelEntry Model', () => {
   describe('String Field Validation', () => {
     it('should handle various string inputs', () => {
       const stringFields = [
-        'carId', 'fuelCompany', 'fuelType', 'distanceUnit', 
-        'volumeUnit', 'currency', 'date', 'paymentType', 
+        'carId', 'fuelCompany', 'fuelType', 'distanceUnit',
+        'volumeUnit', 'currency', 'date', 'paymentType',
         'location', 'notes'
       ];
 
@@ -275,7 +272,7 @@ describe('FuelEntry Model', () => {
   describe('Unit and Currency Validation', () => {
     it('should accept various distance units', () => {
       const distanceUnits = ['km', 'miles', 'mi', 'kilometers'];
-      
+
       distanceUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(unit.length).toBeGreaterThan(0);
@@ -284,7 +281,7 @@ describe('FuelEntry Model', () => {
 
     it('should accept various volume units', () => {
       const volumeUnits = ['L', 'gal', 'gallons', 'liters'];
-      
+
       volumeUnits.forEach(unit => {
         expect(typeof unit).toBe('string');
         expect(unit.length).toBeGreaterThan(0);
@@ -293,7 +290,7 @@ describe('FuelEntry Model', () => {
 
     it('should accept various currency codes', () => {
       const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'JPY', 'AUD'];
-      
+
       currencies.forEach(currency => {
         expect(typeof currency).toBe('string');
         expect(currency.length).toBeGreaterThan(0);
@@ -343,7 +340,7 @@ describe('FuelEntry Model', () => {
 
     it('should validate tyre pressure values', () => {
       const validPressures = [28, 30, 32, 35, 40];
-      
+
       validPressures.forEach(pressure => {
         expect(typeof pressure).toBe('number');
         expect(pressure).toBeGreaterThan(0);
@@ -417,16 +414,16 @@ describe('FuelEntry Model', () => {
   describe('Performance Considerations', () => {
     it('should handle large arrays efficiently', () => {
       const largeTags = Array.from({ length: 100 }, (_, i) => `tag-${i}`);
-      
+
       expect(Array.isArray(largeTags)).toBe(true);
       expect(largeTags.length).toBe(100);
     });
 
     it('should handle long strings efficiently', () => {
       const longString = 'a'.repeat(1000);
-      
+
       expect(typeof longString).toBe('string');
       expect(longString.length).toBe(1000);
     });
   });
-}); 
+});

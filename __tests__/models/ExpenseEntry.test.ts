@@ -3,9 +3,6 @@
  * Comprehensive testing of ExpenseEntry model including schema validation, required fields, and edge cases
  */
 
-import mongoose from 'mongoose';
-import ExpenseEntry, { IExpenseEntry } from '../../app/models/ExpenseEntry';
-
 // Mock mongoose with simpler approach
 jest.mock('mongoose', () => ({
   Schema: jest.fn().mockImplementation((definition, options) => ({
@@ -68,7 +65,7 @@ describe('ExpenseEntry Model', () => {
       const schemaOptions = {
         timestamps: true
       };
-      
+
       expect(schemaOptions.timestamps).toBe(true);
     });
   });
@@ -101,7 +98,7 @@ describe('ExpenseEntry Model', () => {
   describe('Amount Validation Logic', () => {
     it('should accept positive amounts', () => {
       const amounts = [100.50, 1000, 0.01];
-      
+
       amounts.forEach(amount => {
         expect(typeof amount).toBe('number');
         expect(amount >= 0).toBe(true);
@@ -116,7 +113,7 @@ describe('ExpenseEntry Model', () => {
 
     it('should accept negative amounts for refunds', () => {
       const refundAmounts = [-50.25, -100, -0.01];
-      
+
       refundAmounts.forEach(amount => {
         expect(typeof amount).toBe('number');
         expect(amount < 0).toBe(true);
@@ -125,7 +122,7 @@ describe('ExpenseEntry Model', () => {
 
     it('should handle decimal amounts correctly', () => {
       const decimalAmounts = [123.45, 0.99, 1000.01, 99.999];
-      
+
       decimalAmounts.forEach(amount => {
         expect(typeof amount).toBe('number');
         expect(Number.isFinite(amount)).toBe(true);
@@ -172,7 +169,7 @@ describe('ExpenseEntry Model', () => {
   describe('Currency Validation', () => {
     it('should accept various currency codes', () => {
       const currencies = ['USD', 'EUR', 'GBP', 'CAD', 'JPY', 'AUD', 'CHF', 'CNY'];
-      
+
       currencies.forEach(currency => {
         expect(typeof currency).toBe('string');
         expect(currency.length).toBeGreaterThan(0);
@@ -181,7 +178,7 @@ describe('ExpenseEntry Model', () => {
 
     it('should accept custom currency codes', () => {
       const customCurrencies = ['BTC', 'ETH', 'USDC', 'LOCAL'];
-      
+
       customCurrencies.forEach(currency => {
         expect(typeof currency).toBe('string');
         expect(currency.length).toBeGreaterThan(0);
@@ -229,14 +226,14 @@ describe('ExpenseEntry Model', () => {
 
     it('should handle long notes', () => {
       const longNotes = 'This is a very long note that describes the expense in great detail. '.repeat(10);
-      
+
       expect(typeof longNotes).toBe('string');
       expect(longNotes.length).toBeGreaterThan(100);
     });
 
     it('should handle notes with special characters', () => {
       const specialNotes = 'Oil change & filter replacement (5W-30) - $150.75 @ QuickLube #123';
-      
+
       expect(typeof specialNotes).toBe('string');
       expect(specialNotes).toContain('&');
       expect(specialNotes).toContain('$');
@@ -245,7 +242,7 @@ describe('ExpenseEntry Model', () => {
 
     it('should handle notes with newlines and tabs', () => {
       const multilineNotes = 'Line 1\nLine 2\tTabbed content\nLine 3';
-      
+
       expect(typeof multilineNotes).toBe('string');
       expect(multilineNotes).toContain('\n');
       expect(multilineNotes).toContain('\t');
@@ -285,7 +282,7 @@ describe('ExpenseEntry Model', () => {
   describe('Edge Cases and Boundary Values', () => {
     it('should handle very large amounts', () => {
       const largeAmount = 999999.99;
-      
+
       expect(typeof largeAmount).toBe('number');
       expect(Number.isFinite(largeAmount)).toBe(true);
       expect(largeAmount).toBeGreaterThan(0);
@@ -293,7 +290,7 @@ describe('ExpenseEntry Model', () => {
 
     it('should handle very small amounts', () => {
       const smallAmount = 0.01;
-      
+
       expect(typeof smallAmount).toBe('number');
       expect(Number.isFinite(smallAmount)).toBe(true);
       expect(smallAmount).toBeGreaterThan(0);
@@ -301,7 +298,7 @@ describe('ExpenseEntry Model', () => {
 
     it('should handle precision for financial calculations', () => {
       const preciseAmount = 123.456789;
-      
+
       expect(typeof preciseAmount).toBe('number');
       expect(Number.isFinite(preciseAmount)).toBe(true);
     });
@@ -402,4 +399,4 @@ describe('ExpenseEntry Model', () => {
       expect(timestamps).toBe(true);
     });
   });
-}); 
+});

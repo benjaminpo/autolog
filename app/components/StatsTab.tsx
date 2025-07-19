@@ -99,6 +99,25 @@ export default function StatsTab({
     return fallback;
   };
 
+  // Helper function to aggregate monthly consumption data for charts
+  const aggregateMonthlyConsumption = (trends: any[], carName: string) => {
+    const monthlyData: { [key: string]: { consumption: number; count: number } } = {};
+    
+    trends.forEach((trend: any) => {
+      if (!monthlyData[trend.month]) {
+        monthlyData[trend.month] = { consumption: 0, count: 0 };
+      }
+      monthlyData[trend.month].consumption += trend.consumption;
+      monthlyData[trend.month].count++;
+    });
+
+    return Object.entries(monthlyData).map(([month, data]) => ({
+      month,
+      consumption: data.consumption / data.count,
+      carName
+    }));
+  };
+
   const consumptionUnitTranslations: { [key: string]: string } = {
     'L/100km': 'units.consumption.per100km',
     'km/L': 'units.consumption.kmPerLiter',
@@ -2057,21 +2076,7 @@ export default function StatsTab({
                               ]} />
                               <Legend />
                               {Object.entries(chartData.consumptionTrends).map(([carName, trends], index) => {
-                                // Aggregate monthly data for each car
-                                const monthlyData: { [key: string]: { consumption: number; count: number } } = {};
-                                trends.forEach((trend: any) => {
-                                  if (!monthlyData[trend.month]) {
-                                    monthlyData[trend.month] = { consumption: 0, count: 0 };
-                                  }
-                                  monthlyData[trend.month].consumption += trend.consumption;
-                                  monthlyData[trend.month].count++;
-                                });
-
-                                const avgMonthlyData = Object.entries(monthlyData).map(([month, data]) => ({
-                                  month,
-                                  consumption: data.consumption / data.count,
-                                  carName
-                                }));
+                                const avgMonthlyData = aggregateMonthlyConsumption(trends, carName);
 
                                 return (
                                   <Line
