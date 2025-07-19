@@ -8,16 +8,17 @@ import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
 import { currencies, distanceUnits, volumeUnits, tyrePressureUnits, paymentTypes, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
+import { fuelApi } from '../lib/api';
 import ImageUpload from '../components/ImageUpload';
-import { Car } from '../types/common';
 
 export default function AddFuelPage() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
+  const { cars, loading: vehiclesLoading, error: vehiclesError } = useVehicles();
 
-  const [cars, setCars] = useState<Car[]>([]);
   const [fuelCompanies, setFuelCompanies] = useState<string[]>(predefinedFuelCompanies);
   const [fuelTypes, setFuelTypes] = useState<string[]>(predefinedFuelTypes);
   const [fuelForm, setFuelForm] = useState({
@@ -71,30 +72,9 @@ export default function AddFuelPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: Partial<Car>) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
-          setCars(normalizedVehicles);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
-
-    // Fetch fuel companies
-    fetch('/api/fuel-companies')
-      .then(response => response.json())
+    // Fetch fuel companies using shared API utility
+        // Fetch fuel companies using shared API utility
+    fuelApi.getCompanies()
       .then(data => {
         if (data.companies) {
           const customCompanies = Array.isArray(data.companies) ? data.companies : [];
@@ -112,8 +92,8 @@ export default function AddFuelPage() {
       });
 
     // Fetch fuel types
-    fetch('/api/fuel-types')
-      .then(response => response.json())
+    // Fetch fuel types using shared API utility
+    fuelApi.getTypes()
       .then(data => {
         if (data.types) {
           const customTypes = Array.isArray(data.types) ? data.types : [];
@@ -228,15 +208,10 @@ export default function AddFuelPage() {
         tags: fuelForm.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
       };
 
-      const response = await fetch('/api/fuel-entries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newEntry),
+      // Use shared API utility for fuel entry creation
+      const data = await fuelApi.createEntry({
+        ...newEntry
       });
-
-      const data = await response.json();
 
       if (data.success) {
         setSubmitMessage({ type: 'success', text: (t as any)?.fuel?.labels?.addEntry ? `${(t as any).fuel.labels.addEntry} successful!` : 'Fuel entry added successfully!' });

@@ -9,6 +9,8 @@ import { AuthButton } from '../components/AuthButton';
 import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
+import { expenseApi } from '../lib/api';
 import { expenseCategories } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
@@ -52,7 +54,9 @@ export default function ExpenseHistoryPage() {
   const { user, loading } = useAuth();
   const { t } = useTranslation();
 
-  const [cars, setCars] = useState<Car[]>([]);
+  // Use shared vehicle hook instead of manual state management
+  const { cars, loading: carsLoading, error: carsError } = useVehicles();
+
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [showExpenseDetails, setShowExpenseDetails] = useState<string | null>(null);
   const [itemsPerPage] = useState(20);
@@ -63,8 +67,11 @@ export default function ExpenseHistoryPage() {
 
   const loadExpenses = useCallback(async (offset = 0) => {
     try {
-      const response = await fetch(`/api/expense-entries?limit=${itemsPerPage}&offset=${offset}`);
-      const data = await response.json();
+      // Use shared API utility instead of manual fetch
+      const data = await expenseApi.getEntries({
+        limit: itemsPerPage,
+        offset
+      });
 
       if (data.success && Array.isArray(data.expenses)) {
         if (offset === 0) {
