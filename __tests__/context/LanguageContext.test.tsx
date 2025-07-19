@@ -55,7 +55,7 @@ jest.mock('../../app/translations', () => {
       },
     },
   };
-  
+
   return {
     __esModule: true,
     default: mockTranslations,
@@ -66,29 +66,29 @@ jest.mock('../../app/translations', () => {
 // Test component using useLanguage hook
 const TestComponent = () => {
   const { language, setLanguage, t } = useLanguage();
-  
+
   return (
     <div>
       <div data-testid="current-language">{language}</div>
       <div data-testid="dashboard-text">{(t as any)?.navigation?.dashboard || 'Dashboard'}</div>
-               <button 
-         onClick={() => setLanguage('zh')} 
+               <button
+         onClick={() => setLanguage('zh')}
          data-testid="switch-to-chinese"
        >
          Switch to Chinese
        </button>
-       <button 
-         onClick={() => setLanguage('en')} 
+       <button
+         onClick={() => setLanguage('en')}
          data-testid="switch-to-english"
        >
          Switch to English
         </button>
       </div>
     );
-};// Test component for translation testing
+}; // Test component for translation testing
 const TranslationTestComponent = () => {
   const { t } = useLanguage();
-  
+
   return (
     <div>
       <div data-testid="save-text">{(t as any)?.common?.save || 'Save'}</div>
@@ -113,7 +113,7 @@ describe('LanguageContext', () => {
           <div data-testid="child">Test Child</div>
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('child')).toBeInTheDocument();
     });
 
@@ -123,32 +123,32 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
     });
 
     it('should initialize with English when no localStorage value', () => {
       localStorageMock.getItem.mockReturnValue(null);
-      
+
       render(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
       expect(localStorageMock.getItem).toHaveBeenCalledWith('preferredLanguage');
     });
 
     it('should initialize with stored language from localStorage', () => {
       localStorageMock.getItem.mockReturnValue('zh');
-      
+
       render(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
     });
 
@@ -158,12 +158,12 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
       expect(screen.getByTestId('dashboard-text')).toHaveTextContent('Dashboard');
-      
+
       fireEvent.click(screen.getByTestId('switch-to-chinese'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
       });
@@ -171,17 +171,17 @@ describe('LanguageContext', () => {
 
     it('should switch language from Chinese to English', async () => {
       localStorageMock.getItem.mockReturnValue('zh');
-      
+
       render(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
-      
+
       fireEvent.click(screen.getByTestId('switch-to-english'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('current-language')).toHaveTextContent('en');
       });
@@ -193,9 +193,9 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       fireEvent.click(screen.getByTestId('switch-to-chinese'));
-      
+
       await waitFor(() => {
         expect(localStorageMock.setItem).toHaveBeenCalledWith('preferredLanguage', 'zh');
       });
@@ -209,23 +209,23 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
     });
 
     it('should throw error when used outside LanguageProvider', () => {
       // Suppress console.error for this test
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       const TestComponentWithError = () => {
         const { language } = useLanguage(); // This should throw
         return <div>{language}</div>;
       };
-      
+
       expect(() => {
         render(<TestComponentWithError />);
       }).toThrow('useLanguage must be used within a LanguageProvider');
-      
+
       consoleSpy.mockRestore();
     });
   });
@@ -237,7 +237,7 @@ describe('LanguageContext', () => {
           <TranslationTestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('save-text')).toHaveTextContent('Save');
       expect(screen.getByTestId('cancel-text')).toHaveTextContent('Cancel');
       expect(screen.getByTestId('fuel-text')).toHaveTextContent('Fuel');
@@ -245,13 +245,13 @@ describe('LanguageContext', () => {
 
     it('should provide Chinese translations when language is switched', async () => {
       localStorageMock.getItem.mockReturnValue('zh');
-      
+
       render(
         <LanguageProvider>
           <TranslationTestComponent />
         </LanguageProvider>
       );
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('save-text')).toHaveTextContent('儲存');
         expect(screen.getByTestId('cancel-text')).toHaveTextContent('取消');
@@ -266,13 +266,13 @@ describe('LanguageContext', () => {
           <TranslationTestComponent />
         </LanguageProvider>
       );
-      
+
       // Initially English
       expect(screen.getByTestId('save-text')).toHaveTextContent('Save');
-      
+
       // Switch to Chinese
       fireEvent.click(screen.getByTestId('switch-to-chinese'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('save-text')).toHaveTextContent('儲存');
       });
@@ -285,18 +285,18 @@ describe('LanguageContext', () => {
       localStorageMock.setItem.mockImplementation(() => {
         throw new Error('localStorage error');
       });
-      
+
       render(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       fireEvent.click(screen.getByTestId('switch-to-chinese'));
-      
+
       // Should still switch language even if localStorage fails
       expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -305,28 +305,28 @@ describe('LanguageContext', () => {
       localStorageMock.getItem.mockImplementation(() => {
         throw new Error('localStorage error');
       });
-      
+
       render(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       // Should default to English when localStorage fails
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
-      
+
       consoleSpy.mockRestore();
     });
 
     it('should handle invalid language values from localStorage', () => {
       localStorageMock.getItem.mockReturnValue('invalid-language');
-      
+
       render(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       // Should default to English for invalid values
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
     });
@@ -342,12 +342,12 @@ describe('LanguageContext', () => {
 
     it('should synchronize language across multiple consumers', async () => {
       render(<MultiConsumerTest />);
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
       expect(screen.getByTestId('save-text')).toHaveTextContent('Save');
-      
+
       fireEvent.click(screen.getByTestId('switch-to-chinese'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
         expect(screen.getByTestId('save-text')).toHaveTextContent('儲存');
@@ -362,7 +362,7 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(() => unmount()).not.toThrow();
     });
 
@@ -372,19 +372,19 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       fireEvent.click(screen.getByTestId('switch-to-chinese'));
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
       });
-      
+
       rerender(
         <LanguageProvider>
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
     });
   });
@@ -396,16 +396,16 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       const chineseButton = screen.getByTestId('switch-to-chinese');
       const englishButton = screen.getByTestId('switch-to-english');
-      
+
       // Rapid switches
       fireEvent.click(chineseButton);
       fireEvent.click(englishButton);
       fireEvent.click(chineseButton);
       fireEvent.click(englishButton);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('current-language')).toHaveTextContent('en');
       });
@@ -413,20 +413,20 @@ describe('LanguageContext', () => {
 
     it('should work with different initial localStorage states', () => {
       const languages = ['en', 'zh', '', null, 'invalid'];
-      
+
       languages.forEach((lang) => {
         localStorageMock.clear();
         localStorageMock.getItem.mockReturnValue(lang);
-        
+
         const { unmount } = render(
           <LanguageProvider>
             <TestComponent />
           </LanguageProvider>
         );
-        
+
         const expectedLang = lang === 'zh' ? 'zh' : 'en';
         expect(screen.getByTestId('current-language')).toHaveTextContent(expectedLang);
-        
+
         unmount();
       });
     });
@@ -435,7 +435,7 @@ describe('LanguageContext', () => {
   describe('Context without provider', () => {
     it('should handle missing context gracefully', () => {
       render(<TestComponent />);
-      
+
       expect(screen.getByText('No LanguageContext')).toBeInTheDocument();
     });
   });
@@ -447,14 +447,14 @@ describe('LanguageContext', () => {
           <TestComponent />
         </LanguageProvider>
       );
-      
+
       const chineseButton = screen.getByTestId('switch-to-chinese');
       const englishButton = screen.getByTestId('switch-to-english');
-      
+
       expect(chineseButton).toBeInTheDocument();
       expect(chineseButton.tagName).toBe('BUTTON');
       expect(englishButton).toBeInTheDocument();
       expect(englishButton.tagName).toBe('BUTTON');
     });
   });
-}); 
+});
