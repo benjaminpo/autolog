@@ -104,7 +104,7 @@ describe('Centralized Auth Translations', () => {
       const enKeys = getAllNestedKeys(translations.en, 'auth');
       const zhKeys = getAllNestedKeys(translations.zh, 'auth');
 
-      expect(enKeys.sort()).toEqual(zhKeys.sort());
+      expect(enKeys.sort((a, b) => a.localeCompare(b))).toEqual(zhKeys.sort((a, b) => a.localeCompare(b)));
     });
 
     it('should not have empty translation values', () => {

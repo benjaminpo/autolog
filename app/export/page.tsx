@@ -167,7 +167,11 @@ export default function ExportPage() {
         // Calculate stats
         const allEntries = [...fuelData.entries || [], ...expenseData.expenses || [], ...incomeData.entries || []];
         if (allEntries.length > 0) {
-          const dates = allEntries.map(entry => entry.date).sort();
+          const dates = allEntries.map(entry => entry.date).sort((a, b) => {
+            const dateA = typeof a === 'string' ? new Date(a) : a;
+            const dateB = typeof b === 'string' ? new Date(b) : b;
+            return dateA.getTime() - dateB.getTime();
+          });
           setExportStats({
             totalFuelEntries: fuelData.entries?.length || 0,
             totalExpenseEntries: expenseData.expenses?.length || 0,

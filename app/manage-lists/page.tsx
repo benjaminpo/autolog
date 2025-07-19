@@ -178,7 +178,7 @@ export default function ManageListsPage() {
             .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
             .map((company: any) => company.name);
           
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort());
+          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
           setFullFuelCompanies([...predefinedCompanyObjects, ...customCompanies.filter((company: any) => !predefinedFuelCompanies.includes(company.name))]);
         }
       })
@@ -215,7 +215,7 @@ export default function ManageListsPage() {
             .filter((type: any) => !predefinedFuelTypes.includes(type.name))
             .map((type: any) => type.name);
           
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort());
+          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
           setFullFuelTypes([...predefinedTypeObjects, ...customTypes.filter((type: any) => !predefinedFuelTypes.includes(type.name))]);
         }
       })
@@ -464,7 +464,7 @@ export default function ManageListsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setFuelCompanies([...fuelCompanies, newFuelCompany].sort());
+        setFuelCompanies([...fuelCompanies, newFuelCompany].sort((a, b) => a.localeCompare(b)));
         setFullFuelCompanies([...fullFuelCompanies, data.company]);
         setNewFuelCompany('');
       }
@@ -489,7 +489,7 @@ export default function ManageListsPage() {
       const data = await response.json();
 
       if (data.success) {
-        setFuelTypes([...fuelTypes, newFuelType].sort());
+        setFuelTypes([...fuelTypes, newFuelType].sort((a, b) => a.localeCompare(b)));
         setFullFuelTypes([...fullFuelTypes, data.type]);
         setNewFuelType('');
       }

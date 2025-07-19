@@ -1059,7 +1059,11 @@ export default function StatsTab({
           totalDistance,
           totalConsumptionVolume,
           avgConsumptionWillBeNull: !(totalDistance > 0 && totalConsumptionVolume > 0),
-          cla250Dates: cla250Entries.map(e => e.date).sort()
+          cla250Dates: cla250Entries.map(e => e.date).sort((a, b) => {
+            const dateA = typeof a === 'string' ? new Date(a) : a;
+            const dateB = typeof b === 'string' ? new Date(b) : b;
+            return dateA.getTime() - dateB.getTime();
+          })
         });
       }
     }

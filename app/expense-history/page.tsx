@@ -115,16 +115,16 @@ export default function ExpenseHistoryPage() {
           // Combine predefined categories with custom categories from API
           const customCategories = data.expenseCategories.map((cat: any) => cat.name) as string[];
           const allCategories = [...expenseCategories, ...customCategories];
-          setAvailableCategories([...new Set(allCategories)].sort());
+          setAvailableCategories([...new Set(allCategories)].sort((a, b) => a.localeCompare(b)));
         } else {
           // Fallback to predefined categories
-          setAvailableCategories(expenseCategories.slice().sort());
+          setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
         console.error('Error fetching expense categories:', error);
         // Fallback to predefined categories
-        setAvailableCategories(expenseCategories.slice().sort());
+        setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
       });
 
     // Fetch expense entries

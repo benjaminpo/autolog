@@ -75,16 +75,16 @@ export default function AddExpensePage() {
           // Combine predefined categories with custom categories from API
           const customCategories = data.expenseCategories.map((cat: { name: string }) => cat.name);
           const allCategories = [...predefinedExpenseCategories, ...customCategories];
-          setExpenseCategories([...new Set(allCategories)].sort());
+          setExpenseCategories([...new Set(allCategories)].sort((a, b) => a.localeCompare(b)));
         } else {
           // Fallback to predefined categories only
-          setExpenseCategories(predefinedExpenseCategories.slice().sort());
+          setExpenseCategories(predefinedExpenseCategories.slice().sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
         console.error('Error fetching expense categories:', error);
         // Fallback to predefined categories only
-        setExpenseCategories(predefinedExpenseCategories.slice().sort());
+        setExpenseCategories(predefinedExpenseCategories.slice().sort((a, b) => a.localeCompare(b)));
       });
 
     // Load user preferences

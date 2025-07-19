@@ -112,7 +112,7 @@ export default function AddFuelPage() {
           const customCompanyNames = customCompanies
             .filter((company: { name: string }) => !predefinedFuelCompanies.includes(company.name))
             .map((company: { name: string }) => company.name);
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort());
+          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
@@ -129,7 +129,7 @@ export default function AddFuelPage() {
           const customTypeNames = customTypes
             .filter((type: { name: string }) => !predefinedFuelTypes.includes(type.name))
             .map((type: { name: string }) => type.name);
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort());
+          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {

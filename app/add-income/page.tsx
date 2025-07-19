@@ -75,7 +75,7 @@ export default function AddIncomePage() {
       .then(data => {
         if (data.success && Array.isArray(data.incomeCategories)) {
           const allCategories = data.incomeCategories.map((cat: { name: string }) => cat.name);
-          setIncomeCategories(allCategories.sort());
+          setIncomeCategories(allCategories.sort((a: string, b: string) => a.localeCompare(b)));
         } else {
           setIncomeCategories([]);
         }

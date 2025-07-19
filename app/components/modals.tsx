@@ -211,7 +211,7 @@ export function Modals({
 
   // Memoize sorted arrays to prevent re-sorting on every render
   const sortedFuelTypes = useMemo(() => {
-    return fuelTypes ? [...fuelTypes].sort() : [];
+    return fuelTypes ? [...fuelTypes].sort((a, b) => a.localeCompare(b)) : [];
   }, [fuelTypes]);
 
   // Sort models dynamically for Edit Car modal

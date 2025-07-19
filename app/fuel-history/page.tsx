@@ -138,7 +138,7 @@ export default function FuelHistoryPage() {
           const customCompanyNames = customCompanies
             .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
             .map((company: any) => company.name);
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort());
+          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
@@ -155,7 +155,7 @@ export default function FuelHistoryPage() {
           const customTypeNames = customTypes
             .filter((type: any) => !predefinedFuelTypes.includes(type.name))
             .map((type: any) => type.name);
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort());
+          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
         }
       })
       .catch(error => {
