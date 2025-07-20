@@ -240,11 +240,11 @@ const createResetHandler = (setCount: (value: number) => void, setHistory: (valu
 // Helper for async data fetching
 const simulateAsyncFetch = async (shouldFail: boolean) => {
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   if (shouldFail) {
     throw new Error('API Error');
   }
-  
+
   return [
     { id: 1, name: 'Item 1' },
     { id: 2, name: 'Item 2' },

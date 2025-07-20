@@ -112,14 +112,14 @@ const TestKeyboardNavigation = () => {
           </button>
         ))}
       </div>
-      
+
       <button
         onKeyDown={handleButtonKeyDown}
         aria-label="Primary action"
       >
         Standard Button
       </button>
-      
+
       <div
         role="button"
         tabIndex={0}
