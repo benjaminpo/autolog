@@ -401,9 +401,13 @@ describe('UI Accessibility Tests', () => {
           }
         };
 
+        const logOptionSelection = (option: typeof options[0]) => {
+          console.log(`${option.label.toLowerCase()} selected`);
+        };
+
         const handleOptionKeyDown = (option: typeof options[0]) => (e: React.KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            console.log(`${option.label.toLowerCase()} selected`);
+            logOptionSelection(option);
           }
         };
 

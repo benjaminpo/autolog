@@ -165,12 +165,20 @@ describe('Enhanced Form Validation Tests', () => {
           }
         };
 
+        const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, email: e.target.value });
+        };
+
+        const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, password: e.target.value });
+        };
+
         return (
           <form onSubmit={handleSubmit}>
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={handleEmailInputChange}
               data-testid="email-input"
             />
             {errors.email && <span data-testid="email-error">{errors.email}</span>}
@@ -178,7 +186,7 @@ describe('Enhanced Form Validation Tests', () => {
             <input
               type="password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={handlePasswordInputChange}
               data-testid="password-input"
             />
             {errors.password && <span data-testid="password-error">{errors.password}</span>}
@@ -390,11 +398,19 @@ describe('Enhanced Form Validation Tests', () => {
       const ConditionalForm = () => {
         const [formData, setFormData] = React.useState({ userType: '', companyName: '' });
 
+        const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+          setFormData({ ...formData, userType: e.target.value });
+        };
+
+        const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, companyName: e.target.value });
+        };
+
         return (
           <form>
             <select
               value={formData.userType}
-              onChange={(e) => setFormData({ ...formData, userType: e.target.value })}
+              onChange={handleUserTypeChange}
               data-testid="user-type-select"
             >
               <option value="">Select user type</option>
@@ -407,7 +423,7 @@ describe('Enhanced Form Validation Tests', () => {
                 type="text"
                 placeholder="Company Name"
                 value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                onChange={handleCompanyNameChange}
                 data-testid="company-name-input"
               />
             )}
@@ -445,18 +461,26 @@ describe('Enhanced Form Validation Tests', () => {
           setFormData({ name: '', email: '' });
         };
 
+        const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, name: e.target.value });
+        };
+
+        const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, email: e.target.value });
+        };
+
         return (
           <form>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={handleNameChange}
               data-testid="name-input"
             />
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={handleEmailChange}
               data-testid="email-input"
             />
             <button type="button" onClick={handleReset} data-testid="reset-button">
@@ -502,10 +526,14 @@ describe('Enhanced Form Validation Tests', () => {
           return () => clearTimeout(timer);
         }, [formData]);
 
+        const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+          setFormData({ content: e.target.value });
+        };
+
         return (
           <textarea
             value={formData.content}
-            onChange={(e) => setFormData({ content: e.target.value })}
+            onChange={handleContentChange}
             data-testid="content-textarea"
           />
         );
