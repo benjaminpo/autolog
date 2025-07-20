@@ -371,12 +371,16 @@ describe('UI Accessibility Tests', () => {
         ];
         const optionRefs = options.map(() => React.createRef<HTMLLIElement>());
 
-        const handleArrowNavigation = (direction: 'up' | 'down') => {
+        const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down') => {
           if (direction === 'down') {
-            setFocusedIndex((prev) => (prev + 1) % options.length);
+            return (currentIndex + 1) % options.length;
           } else {
-            setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+            return (currentIndex - 1 + options.length) % options.length;
           }
+        };
+
+        const handleArrowNavigation = (direction: 'up' | 'down') => {
+          setFocusedIndex(prevIndex => calculateNextIndex(prevIndex, direction));
         };
 
         const handleListboxKeyDown = (e: React.KeyboardEvent) => {

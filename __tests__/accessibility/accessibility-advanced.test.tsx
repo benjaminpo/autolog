@@ -80,16 +80,30 @@ const AccessibleModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
       const firstFocusableElement = focusableContent?.[0] as HTMLElement;
       const lastFocusableElement = focusableContent?.[focusableContent.length - 1] as HTMLElement;
 
+      const handleShiftTab = () => {
+        if (document.activeElement === firstFocusableElement) {
+          lastFocusableElement?.focus();
+          return true; // preventDefault needed
+        }
+        return false;
+      };
+
+      const handleForwardTab = () => {
+        if (document.activeElement === lastFocusableElement) {
+          firstFocusableElement?.focus();
+          return true; // preventDefault needed
+        }
+        return false;
+      };
+
       const handleTabKey = (e: KeyboardEvent) => {
         if (e.key === 'Tab') {
           if (e.shiftKey) {
-            if (document.activeElement === firstFocusableElement) {
-              lastFocusableElement?.focus();
+            if (handleShiftTab()) {
               e.preventDefault();
             }
           } else {
-            if (document.activeElement === lastFocusableElement) {
-              firstFocusableElement?.focus();
+            if (handleForwardTab()) {
               e.preventDefault();
             }
           }
