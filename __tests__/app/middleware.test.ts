@@ -53,7 +53,7 @@ describe('Middleware', () => {
   const testAuthPath = (path: string, shouldRedirect: boolean = true) => {
     mockRequest.nextUrl!.pathname = path;
     jest.clearAllMocks();
-    middleware(mockRequest as NextRequestWithAuth);
+    middleware(mockRequest);
 
     if (shouldRedirect) {
       expect(NextResponse.redirect).toHaveBeenCalled();
@@ -84,7 +84,7 @@ describe('Middleware', () => {
     it('should redirect authenticated users away from login page', () => {
       setupAuthenticatedRequest('/auth/login');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectRedirectToHome();
     });
@@ -92,7 +92,7 @@ describe('Middleware', () => {
     it('should redirect authenticated users away from register page', () => {
       setupAuthenticatedRequest('/auth/register');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectRedirectToHome();
     });
@@ -100,7 +100,7 @@ describe('Middleware', () => {
     it('should allow unauthenticated users to access login page', () => {
       setupUnauthenticatedRequest('/auth/login');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectNext();
     });
@@ -108,7 +108,7 @@ describe('Middleware', () => {
     it('should allow unauthenticated users to access register page', () => {
       setupUnauthenticatedRequest('/auth/register');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectNext();
     });
@@ -118,7 +118,7 @@ describe('Middleware', () => {
     it('should allow authenticated users to access protected routes', () => {
       setupAuthenticatedRequest('/dashboard');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectNext();
     });
@@ -126,7 +126,7 @@ describe('Middleware', () => {
     it('should handle profile routes for authenticated users', () => {
       setupAuthenticatedRequest('/profile/settings');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectNext();
     });
@@ -134,7 +134,7 @@ describe('Middleware', () => {
     it('should handle nested protected routes', () => {
       setupAuthenticatedRequest('/expense-history/details');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectNext();
     });
@@ -144,7 +144,7 @@ describe('Middleware', () => {
     it('should handle missing token gracefully', () => {
       setupUnauthenticatedRequest('/');
 
-      middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest);
 
       expectNext();
     });

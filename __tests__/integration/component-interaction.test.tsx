@@ -398,7 +398,6 @@ describe('Component Integration Tests', () => {
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
           onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
-          tabIndex={0}
           aria-label="Event testing container"
         >
           <button

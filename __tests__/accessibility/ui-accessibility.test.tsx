@@ -405,15 +405,19 @@ describe('UI Accessibility Tests', () => {
           console.log(`${option.label.toLowerCase()} selected`);
         };
 
-        const handleOptionKeyDown = (option: typeof options[0]) => (e: React.KeyboardEvent) => {
+        const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLLIElement>) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            logOptionSelection(option);
+            const optionText = e.currentTarget.textContent || '';
+            const option = options.find(opt => opt.label === optionText);
+            if (option) {
+              logOptionSelection(option);
+            }
           }
         };
 
         React.useEffect(() => {
           optionRefs[focusedIndex].current?.focus();
-        }, [focusedIndex]);
+        }, [focusedIndex, optionRefs]);
 
         return (
           <div>
@@ -441,7 +445,7 @@ describe('UI Accessibility Tests', () => {
                   tabIndex={focusedIndex === idx ? 0 : -1}
                   aria-selected={option.selected ? 'true' : 'false'}
                   ref={optionRefs[idx]}
-                  onKeyDown={handleOptionKeyDown(option)}
+                  onKeyDown={handleOptionKeyDown}
                 >
                   {option.label}
                 </li>
