@@ -21,12 +21,19 @@ const validatePassword = (value: string, setPasswordError: (error: string) => vo
   } else if (value.length < 8) {
     setPasswordError('Password must be at least 8 characters');
     setPasswordStrength('weak');
-  } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-    setPasswordError('Password must contain uppercase, lowercase, and number');
-    setPasswordStrength('medium');
   } else {
-    setPasswordError('');
-    setPasswordStrength('strong');
+    // Safe password validation without vulnerable regex
+    const hasLowercase = /[a-z]/.test(value);
+    const hasUppercase = /[A-Z]/.test(value);
+    const hasDigit = /\d/.test(value);
+
+    if (!hasLowercase || !hasUppercase || !hasDigit) {
+      setPasswordError('Password must contain uppercase, lowercase, and number');
+      setPasswordStrength('medium');
+    } else {
+      setPasswordError('');
+      setPasswordStrength('strong');
+    }
   }
 };
 

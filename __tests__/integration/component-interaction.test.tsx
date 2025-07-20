@@ -438,6 +438,8 @@ describe('Component Integration Tests', () => {
           onClick={() => addEvent('container-click')}
           onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
           aria-label="Event testing container"
+          tabIndex={0}
+          role="group"
         >
           <button
             data-testid="propagation-button"

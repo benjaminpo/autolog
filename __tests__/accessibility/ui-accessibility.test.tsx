@@ -6,16 +6,20 @@ import { LanguageProvider } from '../../app/context/LanguageContext';
 
 // Mock Next.js components
 jest.mock('next/image', () => {
-  return ({ src, alt, ...props }: any) => {
+  const MockImage = ({ src, alt, ...props }: any) => {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={src} alt={alt} {...props} />;
   };
+  MockImage.displayName = 'MockImage';
+  return MockImage;
 });
 
 jest.mock('next/link', () => {
-  return ({ children, href, ...props }: any) => {
+  const MockLink = ({ children, href, ...props }: any) => {
     return <a href={href} {...props}>{children}</a>;
   };
+  MockLink.displayName = 'MockLink';
+  return MockLink;
 });
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -86,32 +90,27 @@ const TestKeyboardNavigation = () => {
   };
 
   React.useEffect(() => {
-    if (optionRefs[focusedIndex] && optionRefs[focusedIndex].current) {
-      optionRefs[focusedIndex].current?.focus();
-    }
+    optionRefs[focusedIndex]?.current?.focus();
   }, [focusedIndex, optionRefs]);
 
   return (
     <div>
-      <div
-        role="listbox"
+      <select
+        multiple
         onKeyDown={handleListboxKeyDown}
-        tabIndex={0}
         aria-label="Test listbox"
+        data-testid="accessible-select"
       >
         {options.map((option, index) => (
-          <button
-            key={index}
-            ref={optionRefs[index]}
-            role="option"
-            aria-selected={option.selected}
-            onKeyDown={handleOptionKeyDown}
-            tabIndex={-1}
+          <option
+            key={`option-${index}`}
+            selected={option.selected}
+            value={option.label}
           >
             {option.label}
-          </button>
+          </option>
         ))}
-      </div>
+      </select>
 
       <button
         onKeyDown={handleButtonKeyDown}
@@ -120,14 +119,13 @@ const TestKeyboardNavigation = () => {
         Standard Button
       </button>
 
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         onKeyDown={handleCustomButtonKeyDown}
         aria-label="Custom button implementation"
       >
         Custom Button
-      </div>
+      </button>
     </div>
   );
 };
@@ -266,7 +264,7 @@ describe('UI Accessibility Tests', () => {
         <form>
           <input type="text" placeholder="First field" />
           <input type="text" placeholder="Second field" />
-          <select>
+          <select aria-label="Select an option">
             <option value="">Select option</option>
             <option value="1">Option 1</option>
           </select>
@@ -317,7 +315,7 @@ describe('UI Accessibility Tests', () => {
               <input
                 type="email"
                 id="email"
-                aria-invalid={!!errors.email}
+                aria-invalid={errors.email ? 'true' : 'false'}
                 aria-describedby={errors.email ? 'email-error' : undefined}
               />
               {errors.email && (
@@ -336,7 +334,7 @@ describe('UI Accessibility Tests', () => {
               <input
                 type="password"
                 id="password"
-                aria-invalid={!!errors.password}
+                aria-invalid={errors.password ? 'true' : 'false'}
                 aria-describedby={errors.password ? 'password-error' : undefined}
               />
               {errors.password && (
@@ -434,7 +432,7 @@ describe('UI Accessibility Tests', () => {
           </header>
           <nav role="navigation" aria-label="Main navigation">
             <ul>
-              <li><a href="/">Home</a></li>
+              <li><a href="/home">Home</a></li>
               <li><a href="/dashboard">Dashboard</a></li>
             </ul>
           </nav>
