@@ -103,6 +103,7 @@ const formatValue = (
     try {
       return new Date(fieldValue).toLocaleString();
     } catch (error) {
+      console.warn('Failed to parse date:', fieldValue, error);
       return fieldValue;
     }
   }

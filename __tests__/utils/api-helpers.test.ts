@@ -215,20 +215,20 @@ describe('API Helper Functions', () => {
     it('should transform MongoDB documents for API response', () => {
       const transformDocument = (doc: any) => {
         if (!doc) return null;
-        
+
         const transformed = doc.toObject ? doc.toObject() : { ...doc };
-        
+
         if (transformed._id) {
           transformed.id = transformed._id.toString();
           delete transformed._id;
         }
-        
+
         delete transformed.__v;
-        
+
         if (transformed.password) {
           delete transformed.password;
         }
-        
+
         return transformed;
       };
 
@@ -281,35 +281,35 @@ describe('API Helper Functions', () => {
   describe('Rate Limiting Helpers', () => {
     it('should track request counts per IP', () => {
       const requestCounts = new Map<string, { count: number; resetTime: number }>();
-      
+
       const trackRequest = (ip: string, windowMs: number = 60000, maxRequests: number = 100) => {
         const now = Date.now();
         const current = requestCounts.get(ip);
-        
+
         if (!current || now > current.resetTime) {
           requestCounts.set(ip, { count: 1, resetTime: now + windowMs });
           return { allowed: true, remaining: maxRequests - 1 };
         }
-        
+
         current.count++;
         const remaining = Math.max(0, maxRequests - current.count);
         const allowed = current.count <= maxRequests;
-        
+
         return { allowed, remaining, resetTime: current.resetTime };
       };
 
       const ip = '192.168.1.1';
-      
+
       // First request should be allowed
       const result1 = trackRequest(ip, 60000, 2);
       expect(result1.allowed).toBe(true);
       expect(result1.remaining).toBe(1);
-      
+
       // Second request should be allowed
       const result2 = trackRequest(ip, 60000, 2);
       expect(result2.allowed).toBe(true);
       expect(result2.remaining).toBe(0);
-      
+
       // Third request should be denied
       const result3 = trackRequest(ip, 60000, 2);
       expect(result3.allowed).toBe(false);
@@ -320,40 +320,36 @@ describe('API Helper Functions', () => {
   describe('Cache Helpers', () => {
     it('should implement simple in-memory cache', () => {
       const cache = new Map<string, { data: any; expires: number }>();
-      
+
       const set = (key: string, data: any, ttlMs: number = 300000) => {
         cache.set(key, { data, expires: Date.now() + ttlMs });
       };
-      
+
       const get = (key: string) => {
         const item = cache.get(key);
         if (!item) return null;
-        
+
         if (Date.now() > item.expires) {
           cache.delete(key);
           return null;
         }
-        
+
         return item.data;
-      };
-      
-      const clear = () => {
-        cache.clear();
       };
 
       // Test setting and getting
       set('test-key', { id: '123', name: 'Test' }, 1000);
       const retrieved = get('test-key');
-      
+
       expect(retrieved).toEqual({ id: '123', name: 'Test' });
-      
+
       // Test expiration (mock time passing)
       const mockNow = Date.now() + 2000;
       jest.spyOn(Date, 'now').mockReturnValue(mockNow);
-      
+
       const expired = get('test-key');
       expect(expired).toBeNull();
-      
+
       jest.restoreAllMocks();
     });
   });
@@ -366,7 +362,7 @@ describe('API Helper Functions', () => {
       };
 
       const allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
-      
+
       expect(validateFileType('image.jpg', allowedTypes)).toBe(true);
       expect(validateFileType('photo.PNG', allowedTypes)).toBe(true);
       expect(validateFileType('document.pdf', allowedTypes)).toBe(false);
@@ -375,11 +371,11 @@ describe('API Helper Functions', () => {
     it('should format file sizes', () => {
       const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
-        
+
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
-        
+
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
       };
 
@@ -393,7 +389,7 @@ describe('API Helper Functions', () => {
   describe('Environment Helpers', () => {
     it('should check if running in development', () => {
       const isDevelopment = (env?: string) => (env || process.env.NODE_ENV) === 'development';
-      
+
       expect(isDevelopment('development')).toBe(true);
       expect(isDevelopment('production')).toBe(false);
       expect(isDevelopment('test')).toBe(false);
@@ -406,13 +402,13 @@ describe('API Helper Functions', () => {
 
       const dbUrl = getEnvVar('TEST_DB_URL', 'mongodb://localhost:27017/test');
       expect(dbUrl).toBe('mongodb://localhost:27017/test');
-      
+
       // Set a test env var
       process.env.TEST_VAR = 'test-value';
       const testVar = getEnvVar('TEST_VAR', 'default');
       expect(testVar).toBe('test-value');
-      
+
       delete process.env.TEST_VAR;
     });
   });
-}); 
+});

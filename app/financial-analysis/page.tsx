@@ -72,7 +72,7 @@ interface IncomeEntry {
 
 export default function FinancialAnalysisPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   const [cars, setCars] = useState<Car[]>([]);
@@ -83,10 +83,10 @@ export default function FinancialAnalysisPage() {
   // Helper function to match car IDs
   const matchesCarId = (entryCarId: string, targetCarId: string): boolean => {
     if (!entryCarId || !targetCarId) return false;
-    
+
     const normalizedEntryId = entryCarId.toString();
     const normalizedTargetId = targetCarId.toString();
-    
+
     return normalizedEntryId === normalizedTargetId;
   };
 
@@ -188,7 +188,7 @@ export default function FinancialAnalysisPage() {
     // Calculate monthly averages
     const sortedEntries = [...carFuelEntries, ...carExpenseEntries, ...carIncomeEntries]
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
+
     if (sortedEntries.length === 0) {
       return {
         totalIncome: 0,
@@ -209,7 +209,7 @@ export default function FinancialAnalysisPage() {
 
     const firstDate = new Date(sortedEntries[0].date);
     const lastDate = new Date(sortedEntries[sortedEntries.length - 1].date);
-    const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 + 
+    const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 +
                       (lastDate.getMonth() - firstDate.getMonth()) + 1;
 
     const monthlyAvgIncome = monthsDiff > 0 ? totalIncome / monthsDiff : 0;
@@ -255,10 +255,10 @@ export default function FinancialAnalysisPage() {
     for (let i = 1; i < sortedFuelEntries.length; i++) {
       const curr = sortedFuelEntries[i];
       const prev = sortedFuelEntries[i - 1];
-      const distance = curr.distanceUnit === 'km' 
+      const distance = curr.distanceUnit === 'km'
         ? Number(curr.mileage) - Number(prev.mileage)
         : (Number(curr.mileage) - Number(prev.mileage)) * 1.60934;
-      
+
       if (distance > 0 && distance <= 2000) {
         totalDistance += distance;
       }
@@ -298,7 +298,7 @@ export default function FinancialAnalysisPage() {
     );
   }
 
-  const currency = entries.length > 0 ? entries[0].currency : 
+  const currency = entries.length > 0 ? entries[0].currency :
                    expenses.length > 0 ? expenses[0].currency :
                    incomes.length > 0 ? incomes[0].currency : currencies[0];
 
@@ -325,14 +325,14 @@ export default function FinancialAnalysisPage() {
         <PageContainer className="p-3 md:p-6">
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>
-            
+
             {cars.length === 0 ? (
               <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg">
                 <p className="text-gray-600 mb-4">{(t as any)?.stats?.noVehiclesFound || 'No vehicles found. Add vehicles to see financial analysis.'}</p>
               </div>
             ) : (
               <div className="space-y-6">
-                
+
                 {/* Overall Financial Summary */}
                 {(() => {
                   const aggregateStats = calculateAggregateStats();
@@ -377,7 +377,7 @@ export default function FinancialAnalysisPage() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Break-even analysis */}
                       <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                         <h4 className="font-medium text-lg text-gray-900 dark:text-gray-100 mb-3">{(t as any)?.stats?.breakEvenAnalysis || 'Break-Even Analysis'}</h4>
@@ -411,7 +411,7 @@ export default function FinancialAnalysisPage() {
                       const carId = getObjectId(car as unknown as Record<string, unknown>);
                       const financialAnalysis = calculateFinancialAnalysis(carId);
                       const efficiencyMetrics = calculateEfficiencyMetrics(carId);
-                      
+
                       if (financialAnalysis.totalCosts === 0 && financialAnalysis.totalIncome === 0) {
                         return (
                           <div key={carId} className="border rounded-lg p-4 bg-gray-50">
@@ -466,7 +466,7 @@ export default function FinancialAnalysisPage() {
                               financialAnalysis.isBreakEven ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
                             }`}>
-                              {financialAnalysis.isProfitable ? ((t as any)?.stats?.profitable || 'Profitable') : 
+                              {financialAnalysis.isProfitable ? ((t as any)?.stats?.profitable || 'Profitable') :
                                financialAnalysis.isBreakEven ? ((t as any)?.stats?.breakEven || 'Break-Even') : ((t as any)?.stats?.loss || 'Loss')}
                             </div>
                           </div>
@@ -549,4 +549,4 @@ export default function FinancialAnalysisPage() {
       </main>
     </div>
   );
-} 
+}

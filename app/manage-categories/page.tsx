@@ -21,7 +21,7 @@ interface ExpenseCategoryItem {
 
 export default function ManageCategoriesPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   const [fullExpenseCategories, setFullExpenseCategories] = useState<ExpenseCategoryItem[]>([]);
@@ -39,7 +39,7 @@ export default function ManageCategoriesPage() {
       .then(data => {
         if (data.success && Array.isArray(data.expenseCategories)) {
           const customCategories = data.expenseCategories;
-          
+
           // Create predefined category objects
           const predefinedCategoryObjects = predefinedExpenseCategories.map(name => ({
             _id: `predefined-${name}`,
@@ -47,12 +47,12 @@ export default function ManageCategoriesPage() {
             name,
             isPredefined: true
           }));
-          
+
           // Merge predefined with custom, avoiding duplicates
-          const customCategoriesFiltered = customCategories.filter((category: any) => 
+          const customCategoriesFiltered = customCategories.filter((category: any) =>
             !predefinedExpenseCategories.includes(category.name)
           );
-          
+
           setFullExpenseCategories([...predefinedCategoryObjects, ...customCategoriesFiltered]);
         } else {
           // Set predefined categories as fallback
@@ -89,12 +89,12 @@ export default function ManageCategoriesPage() {
 
   const getCategoryTranslation = (category: string): string => {
     const categoryKey = category.toLowerCase().replace(/\s+/g, '');
-    
+
     // Check if there's a direct translation available
     if (t && categoryKey in t) {
       return t[categoryKey];
     }
-    
+
     // Map to specific translation keys
     const categoryMap: { [key: string]: string } = {
       'service': getText('expense.labels.service', category),
@@ -122,7 +122,7 @@ export default function ManageCategoriesPage() {
     }
 
     // Check if category already exists
-    const categoryExists = fullExpenseCategories.some(cat => 
+    const categoryExists = fullExpenseCategories.some(cat =>
       cat.name.toLowerCase() === newExpenseCategory.trim().toLowerCase()
     );
 
@@ -232,15 +232,15 @@ export default function ManageCategoriesPage() {
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <div className="max-w-4xl mx-auto space-y-6">
-            
+
             {/* Add New Category */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700 transition-colors">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{getText('expense.labels.addCustomCategory', 'Add Custom Category')}</h2>
-              
+
               {submitMessage && (
                 <div className={`mb-4 p-3 rounded ${
-                  submitMessage.type === 'success' 
-                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                  submitMessage.type === 'success'
+                    ? 'bg-green-100 text-green-700 border border-green-300'
                     : 'bg-red-100 text-red-700 border border-red-300'
                 }`}>
                   {submitMessage.text}
@@ -276,7 +276,7 @@ export default function ManageCategoriesPage() {
 
             {/* Categories Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              
+
               {/* Predefined Categories */}
               <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow border dark:border-gray-700 transition-colors">
                 <div className="mb-4">
@@ -349,4 +349,4 @@ export default function ManageCategoriesPage() {
       </main>
     </div>
   );
-} 
+}

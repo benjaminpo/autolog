@@ -12,7 +12,7 @@ import FinancialEntryForm from '../components/FinancialEntryForm';
 
 export default function AddIncomePage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   const getText = (key: string, fallback?: string): string => {

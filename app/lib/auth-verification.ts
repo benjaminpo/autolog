@@ -18,6 +18,7 @@ export async function verifyAuth(token?: string): Promise<AuthVerificationResult
 
     return { valid: false, error: 'Invalid token' };
   } catch (error) {
+    console.error('Token verification error:', error);
     return { valid: false, error: 'Token verification failed' };
   }
-} 
+}

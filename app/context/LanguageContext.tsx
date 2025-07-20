@@ -34,7 +34,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<LanguageType>('en');
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
 
   // Load language from localStorage on first load
   useEffect(() => {
@@ -140,7 +140,7 @@ export function useLanguage() {
 function getNestedTranslation(obj: Record<string, unknown>, path: string): string {
   const keys = path.split('.');
   let current = obj;
-  
+
   for (const key of keys) {
     if (current && typeof current === 'object' && key in current) {
       current = current[key] as Record<string, unknown>;
@@ -148,6 +148,6 @@ function getNestedTranslation(obj: Record<string, unknown>, path: string): strin
       return path; // Return the path as fallback if not found
     }
   }
-  
+
   return typeof current === 'string' ? current : path;
 }

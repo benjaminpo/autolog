@@ -57,7 +57,7 @@ interface FuelTypeItem {
 
 export default function ManageListsPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   const [cars, setCars] = useState<Car[]>([]);
@@ -122,7 +122,7 @@ export default function ManageListsPage() {
     if (!user) return;
 
     setIsLoading(true);
-    
+
     // Load vehicle form preferences
     loadVehicleFormPreferences();
 
@@ -164,7 +164,7 @@ export default function ManageListsPage() {
         if (data.companies) {
           const customCompanies = Array.isArray(data.companies) ? data.companies : [];
           setFullFuelCompanies(customCompanies);
-          
+
           // Create predefined company objects
           const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
             _id: `predefined-${name}`,
@@ -172,12 +172,12 @@ export default function ManageListsPage() {
             name,
             isPredefined: true
           }));
-          
+
           // Merge predefined with custom, avoiding duplicates
           const customCompanyNames = customCompanies
             .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
             .map((company: any) => company.name);
-          
+
           setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
           setFullFuelCompanies([...predefinedCompanyObjects, ...customCompanies.filter((company: any) => !predefinedFuelCompanies.includes(company.name))]);
         }
@@ -201,7 +201,7 @@ export default function ManageListsPage() {
       .then(data => {
         if (data.types) {
           const customTypes = Array.isArray(data.types) ? data.types : [];
-          
+
           // Create predefined type objects
           const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
             _id: `predefined-${name}`,
@@ -209,12 +209,12 @@ export default function ManageListsPage() {
             name,
             isPredefined: true
           }));
-          
+
           // Merge predefined with custom, avoiding duplicates
           const customTypeNames = customTypes
             .filter((type: any) => !predefinedFuelTypes.includes(type.name))
             .map((type: any) => type.name);
-          
+
           setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
           setFullFuelTypes([...predefinedTypeObjects, ...customTypes.filter((type: any) => !predefinedFuelTypes.includes(type.name))]);
         }
@@ -267,24 +267,6 @@ export default function ManageListsPage() {
     }
   }, []);
 
-  const clearVehiclePreferences = () => {
-    try {
-      localStorage.removeItem('vehicleFormPreferences');
-      setNewCar(prev => ({
-        ...prev,
-        distanceUnit: 'km',
-        fuelUnit: 'L',
-        consumptionUnit: 'L/100km',
-        fuelType: '',
-        country: '',
-        state: '',
-        city: '',
-      }));
-    } catch (error) {
-      console.error('Error clearing vehicle preferences:', error);
-    }
-  };
-
   // Handle new car input changes - use functional update to avoid dependencies
   const handleNewCarInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -312,7 +294,7 @@ export default function ManageListsPage() {
         }
         if (!updatedBrands[vehicleType].includes(brand)) {
           updatedBrands[vehicleType].push(brand);
-          
+
           // Update in database asynchronously
           fetch('/api/user-preferences', {
             method: 'PUT',
@@ -346,7 +328,7 @@ export default function ManageListsPage() {
         }
         if (!updatedModels[vehicleType][brand].includes(model)) {
           updatedModels[vehicleType][brand].push(model);
-          
+
           // Update in database asynchronously
           fetch('/api/user-preferences', {
             method: 'PUT',

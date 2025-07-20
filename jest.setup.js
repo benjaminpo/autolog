@@ -123,11 +123,11 @@ jest.mock('mongoose', () => {
     plugin: jest.fn(),
     methods: {},
   }));
-  
+
   mockSchema.Types = {
     ObjectId: 'ObjectId',
   };
-  
+
   return {
     connect: jest.fn(),
     connection: {
@@ -204,6 +204,7 @@ jest.mock('next/server', () => ({
       try {
         return typeof this.body === 'string' ? JSON.parse(this.body) : this.body
       } catch (error) {
+        console.error('JSON parsing failed:', error)
         throw new Error('Invalid JSON')
       }
     }
@@ -238,6 +239,7 @@ jest.mock('next/server', () => ({
       try {
         return typeof this.body === 'string' ? JSON.parse(this.body) : this.body
       } catch (error) {
+        console.error('JSON parsing failed:', error)
         throw new Error('Invalid JSON')
       }
     }
@@ -284,7 +286,7 @@ jest.mock('./app/context/AuthContext', () => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      
+
       // Save language preference if provided
       if (language) {
         await global.fetch('/api/user-preferences', {
@@ -293,7 +295,7 @@ jest.mock('./app/context/AuthContext', () => ({
           body: JSON.stringify({ language }),
         });
       }
-      
+
       return true;
     }),
     register: jest.fn().mockImplementation(async (name, email, password) => {
@@ -303,12 +305,12 @@ jest.mock('./app/context/AuthContext', () => ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Registration failed');
       }
-      
+
       return true;
     }),
     logout: jest.fn(),
@@ -321,4 +323,4 @@ beforeEach(() => {
   jest.clearAllMocks()
   // Reset localStorage mock
   localStorageMock.getItem.mockReturnValue('en')
-}) 
+})

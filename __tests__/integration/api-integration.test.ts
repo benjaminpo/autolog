@@ -60,7 +60,7 @@ describe('API Integration Tests', () => {
         await mockVehiclesHandler(req, res);
 
         expect(res._getStatusCode()).toBe(200);
-        
+
         const responseData = JSON.parse(res._getData());
         expect(responseData.success).toBe(true);
         expect(responseData.data).toHaveLength(2);
@@ -77,9 +77,10 @@ describe('API Integration Tests', () => {
           try {
             throw new Error('Database connection failed');
           } catch (error) {
-            res.status(500).json({ 
-              success: false, 
-              error: 'Internal server error' 
+            console.error('Database error in test:', error);
+            res.status(500).json({
+              success: false,
+              error: 'Internal server error'
             });
           }
         };
@@ -111,7 +112,7 @@ describe('API Integration Tests', () => {
         await mockVehiclesHandler(req, res);
 
         expect(res._getStatusCode()).toBe(201);
-        
+
         const responseData = JSON.parse(res._getData());
         expect(responseData.success).toBe(true);
         expect(responseData.data).toMatchObject(vehicleData);
@@ -132,12 +133,12 @@ describe('API Integration Tests', () => {
         const mockValidationHandler = async (req: NextApiRequest, res: NextApiResponse) => {
           const { name } = req.body;
           if (!name) {
-            return res.status(400).json({ 
-              success: false, 
-              error: 'Name is required' 
+            return res.status(400).json({
+              success: false,
+              error: 'Name is required'
             });
           }
-          
+
           res.status(201).json({ success: true, data: req.body });
         };
 
@@ -161,7 +162,7 @@ describe('API Integration Tests', () => {
         await mockExpensesHandler(req, res);
 
         expect(res._getStatusCode()).toBe(200);
-        
+
         const responseData = JSON.parse(res._getData());
         expect(responseData.success).toBe(true);
         expect(responseData.data).toHaveLength(2);
@@ -180,18 +181,18 @@ describe('API Integration Tests', () => {
             { id: '1', vehicleId: '1', amount: 45.50, date: '2024-01-15', category: 'fuel' },
             { id: '2', vehicleId: '2', amount: 120.00, date: '2024-01-16', category: 'maintenance' }
           ];
-          
-          const filteredExpenses = vehicleId 
+
+          const filteredExpenses = vehicleId
             ? allExpenses.filter(expense => expense.vehicleId === vehicleId)
             : allExpenses;
-          
+
           res.status(200).json({ success: true, data: filteredExpenses });
         };
 
         await mockFilterHandler(req, res);
 
         expect(res._getStatusCode()).toBe(200);
-        
+
         const responseData = JSON.parse(res._getData());
         expect(responseData.success).toBe(true);
         expect(responseData.data).toHaveLength(1);
@@ -210,24 +211,24 @@ describe('API Integration Tests', () => {
             { id: '1', vehicleId: '1', amount: 45.50, date: '2024-01-15', category: 'fuel' },
             { id: '2', vehicleId: '2', amount: 120.00, date: '2024-02-16', category: 'maintenance' }
           ];
-          
+
           let filteredExpenses = allExpenses;
-          
+
           if (startDate && endDate) {
             filteredExpenses = allExpenses.filter(expense => {
               const expenseDate = new Date(expense.date);
-              return expenseDate >= new Date(startDate as string) && 
+              return expenseDate >= new Date(startDate as string) &&
                      expenseDate <= new Date(endDate as string);
             });
           }
-          
+
           res.status(200).json({ success: true, data: filteredExpenses });
         };
 
         await mockDateFilterHandler(req, res);
 
         expect(res._getStatusCode()).toBe(200);
-        
+
         const responseData = JSON.parse(res._getData());
         expect(responseData.success).toBe(true);
         expect(responseData.data).toHaveLength(1);
@@ -253,7 +254,7 @@ describe('API Integration Tests', () => {
         await mockExpensesHandler(req, res);
 
         expect(res._getStatusCode()).toBe(201);
-        
+
         const responseData = JSON.parse(res._getData());
         expect(responseData.success).toBe(true);
         expect(responseData.data).toMatchObject(expenseData);
@@ -276,12 +277,12 @@ describe('API Integration Tests', () => {
         const mockValidationHandler = async (req: NextApiRequest, res: NextApiResponse) => {
           const { amount } = req.body;
           if (amount <= 0) {
-            return res.status(400).json({ 
-              success: false, 
-              error: 'Amount must be positive' 
+            return res.status(400).json({
+              success: false,
+              error: 'Amount must be positive'
             });
           }
-          
+
           res.status(201).json({ success: true, data: req.body });
         };
 
@@ -324,9 +325,10 @@ describe('API Integration Tests', () => {
           }
           res.status(200).json({ success: true });
         } catch (error) {
-          res.status(400).json({ 
-            success: false, 
-            error: 'Invalid request format' 
+          console.error('Validation error in test:', error);
+          res.status(400).json({
+            success: false,
+            error: 'Invalid request format'
           });
         }
       };
@@ -350,14 +352,14 @@ describe('API Integration Tests', () => {
       const mockRateLimitHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         // Simulate rate limit exceeded
         const requestCount = 101; // Assume this came from rate limiter
-        
+
         if (requestCount > 100) {
-          return res.status(429).json({ 
-            success: false, 
-            error: 'Rate limit exceeded. Please try again later.' 
+          return res.status(429).json({
+            success: false,
+            error: 'Rate limit exceeded. Please try again later.'
           });
         }
-        
+
         res.status(200).json({ success: true });
       };
 
@@ -380,14 +382,14 @@ describe('API Integration Tests', () => {
       const mockAuthHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         // Simulate no session
         const session = null;
-        
+
         if (!session) {
-          return res.status(401).json({ 
-            success: false, 
-            error: 'Authentication required' 
+          return res.status(401).json({
+            success: false,
+            error: 'Authentication required'
           });
         }
-        
+
         res.status(200).json({ success: true });
       };
 
@@ -407,18 +409,18 @@ describe('API Integration Tests', () => {
       const mockAuthHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         // Simulate valid session
         const session = { user: { id: '1', email: 'test@example.com' } };
-        
+
         if (!session) {
-          return res.status(401).json({ 
-            success: false, 
-            error: 'Authentication required' 
+          return res.status(401).json({
+            success: false,
+            error: 'Authentication required'
           });
         }
-        
-        res.status(200).json({ 
-          success: true, 
+
+        res.status(200).json({
+          success: true,
           data: 'Protected data',
-          user: session.user 
+          user: session.user
         });
       };
 
@@ -448,17 +450,17 @@ describe('API Integration Tests', () => {
 
       const mockIntegrityHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         const { vehicleId } = req.body;
-        
+
         // Simulate vehicle lookup
         const existingVehicles = ['1', '2'];
-        
+
         if (!existingVehicles.includes(vehicleId)) {
-          return res.status(400).json({ 
-            success: false, 
-            error: 'Vehicle not found' 
+          return res.status(400).json({
+            success: false,
+            error: 'Vehicle not found'
           });
         }
-        
+
         res.status(201).json({ success: true, data: req.body });
       };
 
@@ -486,23 +488,23 @@ describe('API Integration Tests', () => {
 
       const mockBulkHandler = async (req: NextApiRequest, res: NextApiResponse) => {
         const { expenses } = req.body;
-        
+
         if (!Array.isArray(expenses)) {
-          return res.status(400).json({ 
-            success: false, 
-            error: 'Expenses must be an array' 
+          return res.status(400).json({
+            success: false,
+            error: 'Expenses must be an array'
           });
         }
-        
+
         const createdExpenses = expenses.map((expense, index) => ({
           id: `bulk-${index}`,
           ...expense
         }));
-        
-        res.status(201).json({ 
-          success: true, 
+
+        res.status(201).json({
+          success: true,
           data: createdExpenses,
-          count: createdExpenses.length 
+          count: createdExpenses.length
         });
       };
 
