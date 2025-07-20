@@ -30,7 +30,7 @@ const AccessibleButton = ({
 );
 
 const AccessibleForm = () => (
-  <form role="form" aria-labelledby="form-title">
+  <form aria-labelledby="form-title">
     <h2 id="form-title">Contact Form</h2>
     
     <div>

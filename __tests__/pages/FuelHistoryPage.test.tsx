@@ -73,10 +73,11 @@ describe('FuelHistoryPage Logic Tests', () => {
 
   describe('Data Validation', () => {
     it('should handle empty fuel entries', () => {
-      const emptyEntries: any[] = [];
-      const total = emptyEntries.reduce((sum, entry) => sum + entry.amount, 0);
+      const entries: any[] = [];
+      const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
       
       expect(total).toBe(0);
+      expect(entries.length).toBe(0);
     });
 
     it('should validate entry data', () => {

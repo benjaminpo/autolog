@@ -82,7 +82,12 @@ const MockModal = ({
   if (!isOpen) return null;
 
   return (
-    <div data-testid="modal-overlay" onClick={onClose} role="presentation">
+    <div 
+      data-testid="modal-overlay" 
+      onClick={onClose} 
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      role="presentation"
+    >
       <div 
         data-testid="modal-content" 
         onClick={(e) => e.stopPropagation()}
@@ -392,6 +397,9 @@ describe('Component Integration Tests', () => {
         <div 
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
+          onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
+          tabIndex={0}
+          role="button"
         >
           <button 
             data-testid="propagation-button"

@@ -688,16 +688,18 @@ describe('StatisticsPage Additional Tests', () => {
     });
 
     it('should handle empty datasets', () => {
-      const emptyExpenses: any[] = [];
-      const emptyFuelEntries: any[] = [];
+      const expenses: any[] = [];
+      const fuelEntries: any[] = [];
       
-      const totalExpenses = emptyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-      const avgFuelConsumption = emptyFuelEntries.length > 0 
-        ? emptyFuelEntries.reduce((sum, entry) => sum + entry.amount, 0) / emptyFuelEntries.length 
+      const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+      const avgFuelConsumption = fuelEntries.length > 0 
+        ? fuelEntries.reduce((sum, entry) => sum + entry.amount, 0) / fuelEntries.length 
         : 0;
 
       expect(totalExpenses).toBe(0);
       expect(avgFuelConsumption).toBe(0);
+      expect(expenses.length).toBe(0);
+      expect(fuelEntries.length).toBe(0);
     });
   });
 

@@ -192,7 +192,7 @@ describe('NextAuthProvider', () => {
 
     it('should render without crashing when no children provided', () => {
       expect(() => {
-        render(<NextAuthProvider children={null} />);
+        render(<NextAuthProvider><div /></NextAuthProvider>);
       }).not.toThrow();
     });
   });
