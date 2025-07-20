@@ -184,12 +184,12 @@ export default function ListsTab({
     const vehicleType = translateVehicleType(car.vehicleType, t);
     const yearPart = car.year ? `, ${car.year}` : '';
     const mainDetails = `${car.name} (${vehicleType}, ${car.brand}, ${car.model}${yearPart})`;
-    
+
     const details = [mainDetails];
 
     const licenseLabel = (t as any)?.system?.license || (t as any)?.license || 'License';
     const fuelLabel = (t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel';
-    
+
     if (car.licensePlate) details.push(`${licenseLabel}: ${car.licensePlate}`);
     if (car.fuelType) details.push(`${fuelLabel}: ${car.fuelType}`);
 
@@ -670,7 +670,7 @@ export default function ListsTab({
               const carId = getObjectId(car as unknown as Record<string, unknown>);
               const fallbackKey = `temp-${index}-${Date.now()}`;
               const keyValue = `car-item-${String(carId || fallbackKey)}`;
-              
+
               return (
               <div key={keyValue} className="flex justify-between items-center p-3">
                 <div className="flex items-center gap-3">
@@ -701,11 +701,11 @@ export default function ListsTab({
                         const licenseLabel = (t as any)?.system?.license || (t as any)?.license || 'License';
                         const fuelLabel = (t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel';
                         const parts = [];
-                        
+
                         if (car.licensePlate) parts.push(`${licenseLabel}: ${car.licensePlate} • `);
                         if (car.fuelType) parts.push(`${fuelLabel}: ${car.fuelType} • `);
                         parts.push(`Added: ${formatDateTime(car.dateAdded)}`);
-                        
+
                         return parts.join('');
                       })()}
                     </span>

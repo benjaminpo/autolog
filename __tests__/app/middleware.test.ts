@@ -10,15 +10,57 @@ jest.mock('next/server', () => ({
 }));
 
 jest.mock('next-auth/middleware', () => ({
-  withAuth: jest.fn((middleware, config) => middleware),
+  withAuth: jest.fn((middleware) => middleware),
 }));
 
-// Import the middleware after mocking
-const middleware = require('../../app/middleware').default;
+// Import the middleware after mocking using dynamic import for testing
+let middleware: any;
+
+beforeAll(async () => {
+  const middlewareModule = await import('../../app/middleware');
+  middleware = middlewareModule.default;
+});
 
 describe('Middleware', () => {
   let mockRequest: Partial<NextRequestWithAuth>;
   let mockNextResponse: jest.Mocked<typeof NextResponse>;
+
+  // Helper functions to reduce duplication
+  const createAuthenticatedToken = () => ({ sub: '123', email: 'test@example.com' });
+
+  const setupAuthenticatedRequest = (pathname: string, url = 'http://localhost:3000') => {
+    mockRequest.nextauth!.token = createAuthenticatedToken();
+    mockRequest.nextUrl!.pathname = pathname;
+    if (url !== mockRequest.url) {
+      mockRequest = { ...mockRequest, url };
+    }
+  };
+
+  const setupUnauthenticatedRequest = (pathname: string) => {
+    mockRequest.nextauth!.token = null;
+    mockRequest.nextUrl!.pathname = pathname;
+  };
+
+  const expectRedirectToHome = (url = 'http://localhost:3000') => {
+    expect(NextResponse.redirect).toHaveBeenCalledWith(new URL('/', url));
+  };
+
+  const expectNext = () => {
+    expect(NextResponse.next).toHaveBeenCalled();
+    expect(NextResponse.redirect).not.toHaveBeenCalled();
+  };
+
+  const testAuthPath = (path: string, shouldRedirect: boolean = true) => {
+    mockRequest.nextUrl!.pathname = path;
+    jest.clearAllMocks();
+    middleware(mockRequest as NextRequestWithAuth);
+
+    if (shouldRedirect) {
+      expect(NextResponse.redirect).toHaveBeenCalled();
+    } else {
+      expectNext();
+    }
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -40,88 +82,71 @@ describe('Middleware', () => {
 
   describe('Authentication Flow', () => {
     it('should redirect authenticated users away from login page', () => {
-      mockRequest.nextauth!.token = { sub: '123', email: 'test@example.com' };
-      mockRequest.nextUrl!.pathname = '/auth/login';
-
-      const result = middleware(mockRequest as NextRequestWithAuth);
-
-      expect(NextResponse.redirect).toHaveBeenCalledWith(
-        new URL('/', mockRequest.url)
-      );
-    });
-
-    it('should redirect authenticated users away from register page', () => {
-      mockRequest.nextauth!.token = { sub: '123', email: 'test@example.com' };
-      mockRequest.nextUrl!.pathname = '/auth/register';
-
-      const result = middleware(mockRequest as NextRequestWithAuth);
-
-      expect(NextResponse.redirect).toHaveBeenCalledWith(
-        new URL('/', mockRequest.url)
-      );
-    });
-
-    it('should allow unauthenticated users to access login page', () => {
-      mockRequest.nextauth!.token = null;
-      mockRequest.nextUrl!.pathname = '/auth/login';
+      setupAuthenticatedRequest('/auth/login');
 
       middleware(mockRequest as NextRequestWithAuth);
 
-      expect(NextResponse.next).toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
+      expectRedirectToHome();
+    });
+
+    it('should redirect authenticated users away from register page', () => {
+      setupAuthenticatedRequest('/auth/register');
+
+      middleware(mockRequest as NextRequestWithAuth);
+
+      expectRedirectToHome();
+    });
+
+    it('should allow unauthenticated users to access login page', () => {
+      setupUnauthenticatedRequest('/auth/login');
+
+      middleware(mockRequest as NextRequestWithAuth);
+
+      expectNext();
     });
 
     it('should allow unauthenticated users to access register page', () => {
-      mockRequest.nextauth!.token = null;
-      mockRequest.nextUrl!.pathname = '/auth/register';
+      setupUnauthenticatedRequest('/auth/register');
 
-      const result = middleware(mockRequest as NextRequestWithAuth);
+      middleware(mockRequest as NextRequestWithAuth);
 
-      expect(NextResponse.next).toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
+      expectNext();
     });
   });
 
   describe('Protected Routes', () => {
     it('should allow authenticated users to access protected routes', () => {
-      mockRequest.nextauth!.token = { sub: '123', email: 'test@example.com' };
-      mockRequest.nextUrl!.pathname = '/dashboard';
+      setupAuthenticatedRequest('/dashboard');
 
       middleware(mockRequest as NextRequestWithAuth);
 
-      expect(NextResponse.next).toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
+      expectNext();
     });
 
     it('should handle profile routes for authenticated users', () => {
-      mockRequest.nextauth!.token = { sub: '123', email: 'test@example.com' };
-      mockRequest.nextUrl!.pathname = '/profile/settings';
+      setupAuthenticatedRequest('/profile/settings');
 
       middleware(mockRequest as NextRequestWithAuth);
 
-      expect(NextResponse.next).toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
+      expectNext();
     });
 
     it('should handle nested protected routes', () => {
-      mockRequest.nextauth!.token = { sub: '123', email: 'test@example.com' };
-      mockRequest.nextUrl!.pathname = '/expense-history/details';
+      setupAuthenticatedRequest('/expense-history/details');
 
       middleware(mockRequest as NextRequestWithAuth);
 
-      expect(NextResponse.next).toHaveBeenCalled();
-      expect(NextResponse.redirect).not.toHaveBeenCalled();
+      expectNext();
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle missing token gracefully', () => {
-      mockRequest.nextauth = { token: null };
-      mockRequest.nextUrl!.pathname = '/';
+      setupUnauthenticatedRequest('/');
 
       middleware(mockRequest as NextRequestWithAuth);
 
-      expect(NextResponse.next).toHaveBeenCalled();
+      expectNext();
     });
 
     it('should handle undefined nextauth object', () => {
@@ -135,23 +160,21 @@ describe('Middleware', () => {
 
       middleware(safeRequest);
 
-      expect(NextResponse.next).toHaveBeenCalled();
+      expectNext();
     });
 
     it('should handle different URL formats', () => {
       const customUrl = 'https://example.com/auth/login/callback';
       const customRequest = {
         ...mockRequest,
-        nextauth: { token: { sub: '123', email: 'test@example.com' } },
+        nextauth: { token: createAuthenticatedToken() },
         nextUrl: { pathname: '/auth/login/callback' },
         url: customUrl,
       } as NextRequestWithAuth;
 
       middleware(customRequest);
 
-      expect(NextResponse.redirect).toHaveBeenCalledWith(
-        new URL('/', customUrl)
-      );
+      expectRedirectToHome(customUrl);
     });
   });
 
@@ -161,14 +184,7 @@ describe('Middleware', () => {
 
       const loginPaths = ['/auth/login', '/auth/login/', '/auth/login/extra'];
 
-      loginPaths.forEach(path => {
-        mockRequest.nextUrl!.pathname = path;
-        jest.clearAllMocks();
-
-        middleware(mockRequest as NextRequestWithAuth);
-
-        expect(NextResponse.redirect).toHaveBeenCalled();
-      });
+      loginPaths.forEach(path => testAuthPath(path, true));
     });
 
     it('should correctly identify auth register paths', () => {
@@ -176,14 +192,7 @@ describe('Middleware', () => {
 
       const registerPaths = ['/auth/register', '/auth/register/', '/auth/register/extra'];
 
-      registerPaths.forEach(path => {
-        mockRequest.nextUrl!.pathname = path;
-        jest.clearAllMocks();
-
-        middleware(mockRequest as NextRequestWithAuth);
-
-        expect(NextResponse.redirect).toHaveBeenCalled();
-      });
+      registerPaths.forEach(path => testAuthPath(path, true));
     });
 
     it('should not match partial auth paths', () => {
@@ -191,21 +200,18 @@ describe('Middleware', () => {
 
       const nonAuthPaths = ['/authentication', '/authorize', '/register-vehicle'];
 
-      nonAuthPaths.forEach(path => {
-        mockRequest.nextUrl!.pathname = path;
-        jest.clearAllMocks();
-
-        middleware(mockRequest as NextRequestWithAuth);
-
-        expect(NextResponse.next).toHaveBeenCalled();
-        expect(NextResponse.redirect).not.toHaveBeenCalled();
-      });
+      nonAuthPaths.forEach(path => testAuthPath(path, false));
     });
   });
 });
 
 describe('Middleware Configuration', () => {
-  const { config } = require('../../app/middleware');
+  let config: any;
+
+  beforeAll(async () => {
+    const middlewareModule = await import('../../app/middleware');
+    config = middlewareModule.config;
+  });
 
   it('should have correct matcher configuration', () => {
     expect(config.matcher).toEqual([
