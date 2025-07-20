@@ -181,13 +181,17 @@ export default function ListsTab({
 
   // Format vehicle details with additional info
   const formatVehicleDetails = useCallback((car: Car) => {
-    const yearText = car.year ? `, ${car.year}` : '';
-    const details = [
-              `${car.name} (${translateVehicleType(car.vehicleType, t)}, ${car.brand}, ${car.model}${yearText})`,
-    ];
+    const vehicleType = translateVehicleType(car.vehicleType, t);
+    const yearPart = car.year ? `, ${car.year}` : '';
+    const mainDetails = `${car.name} (${vehicleType}, ${car.brand}, ${car.model}${yearPart})`;
 
-    if (car.licensePlate) details.push(`${(t as any)?.system?.license || (t as any)?.license || 'License'}: ${car.licensePlate}`);
-    if (car.fuelType) details.push(`${(t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel'}: ${car.fuelType}`);
+    const details = [mainDetails];
+
+    const licenseLabel = (t as any)?.system?.license || (t as any)?.license || 'License';
+    const fuelLabel = (t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel';
+
+    if (car.licensePlate) details.push(`${licenseLabel}: ${car.licensePlate}`);
+    if (car.fuelType) details.push(`${fuelLabel}: ${car.fuelType}`);
 
     return details.join(', ');
   }, [t]);
@@ -297,7 +301,7 @@ export default function ListsTab({
       <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">
         {(t as any)?.vehicle?.actions?.addVehicle || 'Add Vehicle'}
       </h3>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="vehicle-name" className={labelClasses}>
@@ -313,7 +317,7 @@ export default function ListsTab({
             required
           />
         </div>
-        
+
         <div>
           <label htmlFor="vehicle-type" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.vehicleType || 'Vehicle Type'} *
@@ -354,7 +358,7 @@ export default function ListsTab({
               ))}
             </FormSelect>
           </div>
-          
+
           <div>
             {newCar.brand === 'Other' ? (
               <>
@@ -432,7 +436,7 @@ export default function ListsTab({
             max="2030"
           />
         </div>
-        
+
         <div>
           <label htmlFor="vehicle-photo" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.photo || 'Photo'}
@@ -491,7 +495,7 @@ export default function ListsTab({
             <option value="mi">{(t as any)?.units?.distance?.milesFull || 'Miles (mi)'}</option>
           </FormSelect>
         </div>
-        
+
         <div>
           <label htmlFor="fuel-unit" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.volumeUnit || 'Fuel Unit'}
@@ -507,7 +511,7 @@ export default function ListsTab({
             <option value="gal">{(t as any)?.units?.volume?.gallonsFull || 'Gallons (gal)'}</option>
           </FormSelect>
         </div>
-        
+
         <div>
           <label htmlFor="consumption-unit" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.consumptionUnit || 'Consumption Unit'}
@@ -543,7 +547,7 @@ export default function ListsTab({
             ))}
           </FormSelect>
         </div>
-        
+
         <div>
           <label htmlFor="tank-capacity" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.tankCapacity || 'Tank Capacity (L)'}
@@ -575,7 +579,7 @@ export default function ListsTab({
             placeholder={(t as any)?.vehicle?.labels?.licensePlate || 'License Plate'}
           />
         </div>
-        
+
         <div>
           <label htmlFor="vin" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.vin || 'VIN'}
@@ -619,7 +623,7 @@ export default function ListsTab({
             placeholder={(t as any)?.vehicle?.labels?.country || 'Country'}
           />
         </div>
-        
+
         <div>
           <label htmlFor="state" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.state || 'State/Region/Province'}
@@ -633,7 +637,7 @@ export default function ListsTab({
             placeholder={(t as any)?.vehicle?.labels?.state || 'State/Region/Province'}
           />
         </div>
-        
+
         <div>
           <label htmlFor="city" className={labelClasses}>
             {(t as any)?.vehicle?.labels?.city || 'City'}
@@ -662,8 +666,13 @@ export default function ListsTab({
         </h4>
         {cars && cars.length > 0 ? (
           <div className="divide-y dark:divide-gray-600">
-            {cars.map((car, index) => (
-              <div key={`car-item-${String(getObjectId(car as unknown as Record<string, unknown>) || `temp-${index}-${Date.now()}`)}`} className="flex justify-between items-center p-3">
+            {cars.map((car, index) => {
+              const carId = getObjectId(car as unknown as Record<string, unknown>);
+              const fallbackKey = `temp-${index}-${Date.now()}`;
+              const keyValue = `car-item-${String(carId || fallbackKey)}`;
+
+              return (
+              <div key={keyValue} className="flex justify-between items-center p-3">
                 <div className="flex items-center gap-3">
                   {car.photo ? (
                     <Image
@@ -681,12 +690,24 @@ export default function ListsTab({
                   )}
                   <div className="flex flex-col">
                     <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {car.name} ({translateVehicleType(car.vehicleType, t)}, {car.brand}, {car.model}{car.year ? `, ${car.year}` : ''})
+                      {(() => {
+                        const vehicleType = translateVehicleType(car.vehicleType, t);
+                        const yearPart = car.year ? `, ${car.year}` : '';
+                        return `${car.name} (${vehicleType}, ${car.brand}, ${car.model}${yearPart})`;
+                      })()}
                     </span>
                     <span className="text-xs text-gray-700 dark:text-gray-400">
-                      {car.licensePlate && `${(t as any)?.system?.license || (t as any)?.license || 'License'}: ${car.licensePlate} • `}
-                      {car.fuelType && `${(t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel'}: ${car.fuelType} • `}
-                      Added: {formatDateTime(car.dateAdded)}
+                      {(() => {
+                        const licenseLabel = (t as any)?.system?.license || (t as any)?.license || 'License';
+                        const fuelLabel = (t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel';
+                        const parts = [];
+
+                        if (car.licensePlate) parts.push(`${licenseLabel}: ${car.licensePlate} • `);
+                        if (car.fuelType) parts.push(`${fuelLabel}: ${car.fuelType} • `);
+                        parts.push(`Added: ${formatDateTime(car.dateAdded)}`);
+
+                        return parts.join('');
+                      })()}
                     </span>
                   </div>
                 </div>
@@ -705,7 +726,8 @@ export default function ListsTab({
                   </button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="text-sm text-gray-700 dark:text-gray-400 text-center p-6">
@@ -721,7 +743,7 @@ export default function ListsTab({
       <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">
         {(t as any)?.fuel?.labels?.fuelCompany || 'Fuel Companies'}
       </h3>
-      
+
       <div>
         <label htmlFor="new-fuel-company" className={labelClasses}>
           {(t as any)?.fuel?.labels?.addFuelCompany || 'Add Fuel Company'}
@@ -735,14 +757,14 @@ export default function ListsTab({
           placeholder={(t as any)?.fuel?.labels?.addFuelCompany || 'Add Fuel Company'}
         />
       </div>
-      
+
       <button
         onClick={addFuelCompany}
         className="w-full bg-green-500 text-white p-3 rounded-md hover:bg-green-600 font-medium transition-colors"
       >
         {(t as any)?.fuel?.labels?.addFuelCompany || 'Add Fuel Company'}
       </button>
-      
+
       <div className="max-h-64 overflow-y-auto border rounded-md bg-gray-50 dark:bg-gray-700">
         <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 p-3 border-b dark:border-gray-600">
           {(t as any)?.system?.existingFuelCompanies || 'Existing Fuel Companies'}
@@ -797,7 +819,7 @@ export default function ListsTab({
       <h3 className="text-md font-semibold text-gray-900 dark:text-gray-100">
         {(t as any)?.fuel?.labels?.fuelType || 'Fuel Types'}
       </h3>
-      
+
       <div>
         <label htmlFor="new-fuel-type" className={labelClasses}>
           {(t as any)?.fuel?.labels?.addFuelType || 'Add Fuel Type'}
@@ -811,14 +833,14 @@ export default function ListsTab({
           placeholder={(t as any)?.fuel?.labels?.addFuelType || 'Add Fuel Type'}
         />
       </div>
-      
+
       <button
         onClick={addFuelType}
         className="w-full bg-green-500 text-white p-3 rounded-md hover:bg-green-600 font-medium transition-colors"
       >
         {(t as any)?.fuel?.labels?.addFuelType || 'Add Fuel Type'}
       </button>
-      
+
       <div className="max-h-64 overflow-y-auto border rounded-md bg-gray-50 dark:bg-gray-700">
         <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 p-3 border-b dark:border-gray-600">
           {(t as any)?.system?.existingFuelTypes || 'Existing Fuel Types'}
@@ -914,7 +936,7 @@ export default function ListsTab({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto border dark:border-gray-700 transition-colors">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{(t as any)?.vehicle?.actions?.editVehicle || 'Edit Vehicle'}</h3>
-          
+
           <div className="space-y-4">
             {/* Vehicle Name */}
             <div>
@@ -1026,7 +1048,7 @@ export default function ListsTab({
                   max="2030"
                 />
               </div>
-              
+
               {/* Photo */}
               <div>
                 <label htmlFor="edit-vehicle-photo" className={labelClasses}>
@@ -1089,7 +1111,7 @@ export default function ListsTab({
                   <option value="mi">{(t as any)?.units?.distance?.milesFull || 'Miles (mi)'}</option>
                 </FormSelect>
               </div>
-              
+
               <div>
                 <label htmlFor="edit-fuel-unit" className={labelClasses}>
                   {(t as any)?.vehicle?.labels?.volumeUnit || 'Fuel Unit'}
@@ -1105,7 +1127,7 @@ export default function ListsTab({
                   <option value="gal">{(t as any)?.units?.volume?.gallonsFull || 'Gallons (gal)'}</option>
                 </FormSelect>
               </div>
-              
+
               <div>
                 <label htmlFor="edit-consumption-unit" className={labelClasses}>
                   {(t as any)?.vehicle?.labels?.consumptionUnit || 'Consumption Unit'}
@@ -1142,7 +1164,7 @@ export default function ListsTab({
                   ))}
                 </FormSelect>
               </div>
-              
+
               {/* Tank Capacity */}
               <div>
                 <label htmlFor="edit-tank-capacity" className={labelClasses}>
@@ -1176,7 +1198,7 @@ export default function ListsTab({
                   placeholder={(t as any)?.vehicle?.labels?.licensePlate || 'License Plate'}
                 />
               </div>
-              
+
               {/* VIN */}
               <div>
                 <label htmlFor="edit-vin" className={labelClasses}>
@@ -1223,7 +1245,7 @@ export default function ListsTab({
                   placeholder={(t as any)?.vehicle?.labels?.country || 'Country'}
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="edit-state" className={labelClasses}>
                   {(t as any)?.vehicle?.labels?.state || 'State'}
@@ -1237,7 +1259,7 @@ export default function ListsTab({
                   placeholder={(t as any)?.vehicle?.labels?.state || 'State'}
                 />
               </div>
-              
+
               <div>
                 <label htmlFor="edit-city" className={labelClasses}>
                   {(t as any)?.vehicle?.labels?.city || 'City'}
@@ -1253,7 +1275,7 @@ export default function ListsTab({
               </div>
             </div>
           </div>
-          
+
           <div className="flex gap-2 mt-6">
             <button
               onClick={() => updateCar(editCarData)}
@@ -1282,7 +1304,7 @@ export default function ListsTab({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full border dark:border-gray-700 transition-colors">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{(t as any)?.fuel?.labels?.editFuelCompany || 'Edit Fuel Company'}</h3>
-          
+
           <div className="space-y-4">
             <div>
               <label htmlFor="edit-fuel-company-name" className={labelClasses}>
@@ -1298,7 +1320,7 @@ export default function ListsTab({
               />
             </div>
           </div>
-          
+
           <div className="flex gap-2 mt-6">
             <button
               onClick={() => updateFuelCompany(editFuelCompany.old, newName)}
@@ -1327,7 +1349,7 @@ export default function ListsTab({
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md w-full border dark:border-gray-700 transition-colors">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{(t as any)?.fuel?.labels?.editFuelType || 'Edit Fuel Type'}</h3>
-          
+
           <div className="space-y-4">
             <div>
               <label htmlFor="edit-fuel-type-name" className={labelClasses}>
@@ -1343,7 +1365,7 @@ export default function ListsTab({
               />
             </div>
           </div>
-          
+
           <div className="flex gap-2 mt-6">
             <button
               onClick={() => updateFuelType(editFuelType.old, newName)}
@@ -1374,7 +1396,7 @@ export default function ListsTab({
             {(t as any)?.navigation?.manageListsDescription || 'Manage your vehicles, fuel companies, and fuel types'}
           </p>
         </div>
-        
+
         <div className="p-6 space-y-8">
           <div key="car-management-section">
             {carManagementSection}
@@ -1387,7 +1409,7 @@ export default function ListsTab({
           </div>
         </div>
       </div>
-      
+
       {/* Edit Modals */}
       <EditCarModal />
       <EditFuelCompanyModal />

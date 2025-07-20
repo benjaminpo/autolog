@@ -30,7 +30,7 @@ interface IncomeCategoryItem {
 
 export default function IncomeHistoryPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   // Use shared vehicle hook instead of manual state management

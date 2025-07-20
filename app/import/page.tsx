@@ -73,7 +73,7 @@ interface DuplicateWarning {
 
 export default function ImportPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   const [importType, setImportType] = useState<'fuel' | 'expenses' | 'income'>('fuel');
@@ -119,7 +119,7 @@ export default function ImportPage() {
   // Validation functions
   const validateFuelEntry = (row: CSVRow, index: number): { entry: FuelEntry | null; errors: ValidationError[] } => {
     const errors: ValidationError[] = [];
-    
+
     // Required fields validation - using export format field names
     const requiredFields = ['Car Name', 'Date', 'Mileage', 'Volume', 'Cost'];
     requiredFields.forEach(field => {
@@ -204,7 +204,7 @@ export default function ImportPage() {
 
   const validateExpenseEntry = (row: CSVRow, index: number): { entry: ExpenseEntry | null; errors: ValidationError[] } => {
     const errors: ValidationError[] = [];
-    
+
     // Required fields validation - using export format field names
     const requiredFields = ['Car Name', 'Date', 'Category', 'Amount'];
     requiredFields.forEach(field => {
@@ -269,7 +269,7 @@ export default function ImportPage() {
 
   const validateIncomeEntry = (row: CSVRow, index: number): { entry: IncomeEntry | null; errors: ValidationError[] } => {
     const errors: ValidationError[] = [];
-    
+
     // Required fields validation - using export format field names
     const requiredFields = ['Car Name', 'Date', 'Category', 'Amount'];
     requiredFields.forEach(field => {
@@ -347,7 +347,7 @@ export default function ImportPage() {
       const csvText = e.target?.result as string;
       const parsedData = parseCSV(csvText);
       setCsvData(parsedData);
-      
+
       // Validate data
       const validEntries: (FuelEntry | ExpenseEntry | IncomeEntry)[] = [];
       const allErrors: ValidationError[] = [];
@@ -370,7 +370,7 @@ export default function ImportPage() {
 
       setValidatedData(validEntries);
       setValidationErrors(allErrors);
-      
+
       // Check for duplicates if there are valid entries
       if (validEntries.length > 0) {
         const duplicates = await checkForDuplicates(validEntries);
@@ -398,7 +398,7 @@ export default function ImportPage() {
         const entry = validatedData[i];
         const progress = Math.round(((i + 1) / validatedData.length) * 100);
         setImportProgress(progress);
-        
+
         // Show current item being processed
         if (importType === 'fuel') {
           const fuelEntry = entry as FuelEntry;
@@ -440,21 +440,21 @@ export default function ImportPage() {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      setImportResults({ 
-        success: successCount, 
+      setImportResults({
+        success: successCount,
         failed: failedCount,
-        errors: failedEntries.length > 0 ? failedEntries : undefined 
+        errors: failedEntries.length > 0 ? failedEntries : undefined
       });
-      
+
       // Clear data after import
       setCsvData([]);
       setValidatedData([]);
       setValidationErrors([]);
-      
+
     } catch (error) {
       console.error('Import error:', error);
-      setImportResults({ 
-        success: successCount, 
+      setImportResults({
+        success: successCount,
         failed: failedCount + (validatedData.length - successCount - failedCount),
         errors: [`General error: ${error instanceof Error ? error.message : 'Unknown error'}`]
       });
@@ -473,7 +473,7 @@ export default function ImportPage() {
         ['My Car', '2024-01-15', '14:30', 'Shell', 'Petrol', '15000', 'km', '45', 'liters', '350', 'HKD', 'Central', 'No', 'Credit Card', '32', 'psi', 'highway; city', 'Regular fill-up'],
         ['My Car', '2024-01-20', '09:15', 'Caltex', 'Petrol', '15250', 'km', '40', 'liters', '320', 'HKD', 'Tsim Sha Tsui', 'No', 'Cash', '32', 'psi', 'city', 'Morning commute']
       ];
-      
+
       const csvContent = Papa.unparse(sampleData);
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -489,7 +489,7 @@ export default function ImportPage() {
         ['My Car', '2024-01-20', 'Parking', '50', 'HKD', 'Shopping mall parking'],
         ['My Car', '2024-01-25', 'Insurance', '2000', 'HKD', 'Annual insurance premium']
       ];
-      
+
       const csvContent = Papa.unparse(sampleData);
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -505,7 +505,7 @@ export default function ImportPage() {
         ['My Car', '2024-01-20', 'Delivery Services', '450', 'HKD', 'Food delivery income'],
         ['My Car', '2024-01-25', 'Mileage Reimbursement', '300', 'HKD', 'Business trip reimbursement']
       ];
-      
+
       const csvContent = Papa.unparse(sampleData);
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -520,28 +520,28 @@ export default function ImportPage() {
   // Check for potential duplicates
   const checkForDuplicates = async (entries: (FuelEntry | ExpenseEntry | IncomeEntry)[]): Promise<DuplicateWarning[]> => {
     const warnings: DuplicateWarning[] = [];
-    
+
     try {
       // Get existing entries for comparison
       const existingFuelResponse = await fetch('/api/fuel-entries');
               const existingExpenseResponse = await fetch('/api/expense-entries');
       const existingIncomeResponse = await fetch('/api/income-entries');
-      
+
       if (existingFuelResponse.ok && existingExpenseResponse.ok && existingIncomeResponse.ok) {
         const existingFuel = await existingFuelResponse.json();
         const existingExpenses = await existingExpenseResponse.json();
         const existingIncome = await existingIncomeResponse.json();
-        
+
         entries.forEach((entry, index) => {
           if (importType === 'fuel') {
             const fuelEntry = entry as FuelEntry;
-            const duplicates = existingFuel.entries?.filter((existing: any) => 
+            const duplicates = existingFuel.entries?.filter((existing: any) =>
               existing.carId === fuelEntry.carId &&
               existing.date === fuelEntry.date &&
               Math.abs(Number(existing.mileage) - fuelEntry.mileage) < 10 &&
               Math.abs(Number(existing.cost) - fuelEntry.cost) < 1
             ) || [];
-            
+
             if (duplicates.length > 0) {
               warnings.push({
                 row: index + 1,
@@ -551,13 +551,13 @@ export default function ImportPage() {
             }
           } else if (importType === 'expenses') {
             const expenseEntry = entry as ExpenseEntry;
-            const duplicates = existingExpenses.expenses?.filter((existing: any) => 
+            const duplicates = existingExpenses.expenses?.filter((existing: any) =>
               existing.carId === expenseEntry.carId &&
               existing.date === expenseEntry.date &&
               existing.category === expenseEntry.category &&
               Math.abs(Number(existing.amount) - expenseEntry.amount) < 1
             ) || [];
-            
+
             if (duplicates.length > 0) {
               warnings.push({
                 row: index + 1,
@@ -567,13 +567,13 @@ export default function ImportPage() {
             }
           } else {
             const incomeEntry = entry as IncomeEntry;
-            const duplicates = existingIncome.entries?.filter((existing: any) => 
+            const duplicates = existingIncome.entries?.filter((existing: any) =>
               existing.carId === incomeEntry.carId &&
               existing.date === incomeEntry.date &&
               existing.category === incomeEntry.category &&
               Math.abs(Number(existing.amount) - incomeEntry.amount) < 1
             ) || [];
-            
+
             if (duplicates.length > 0) {
               warnings.push({
                 row: index + 1,
@@ -587,7 +587,7 @@ export default function ImportPage() {
     } catch (error) {
       console.warn('Could not check for duplicates:', error);
     }
-    
+
     return warnings;
   };
 
@@ -675,9 +675,9 @@ export default function ImportPage() {
                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
               >
                 {t?.import?.downloadSample || 'Download Sample'} {
-                  importType === 'fuel' 
+                  importType === 'fuel'
                     ? (t?.import?.fuelEntries || 'Fuel Entries')
-                    : importType === 'expenses' 
+                    : importType === 'expenses'
                       ? (t?.import?.expenses || 'Expenses')
                       : (t?.import?.income || 'Income')
                 } CSV
@@ -699,7 +699,7 @@ export default function ImportPage() {
             {csvData.length > 0 && (
               <div className="mb-6">
                 <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3">{t?.import?.validationResults || 'Validation Results'}</h3>
-                
+
                 {/* Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="bg-blue-50 p-3 rounded border">
@@ -723,7 +723,7 @@ export default function ImportPage() {
                     <div className="max-h-48 overflow-y-auto bg-red-50 border border-red-200 rounded p-3">
                       {validationErrors.map((error, index) => (
                         <div key={index} className="text-sm mb-1">
-                          <span className="font-medium">Row {error.row}:</span> {error.message} 
+                          <span className="font-medium">Row {error.row}:</span> {error.message}
                           <span className="text-gray-800 dark:text-gray-300"> (Value: &quot;{error.value}&quot;)</span>
                         </div>
                       ))}
@@ -765,14 +765,6 @@ export default function ImportPage() {
                                 <th className="px-2 py-1 border-b text-left">{t?.import?.volume || 'Volume'}</th>
                                 <th className="px-2 py-1 border-b text-left">{t?.import?.cost || 'Cost'}</th>
                                 <th className="px-2 py-1 border-b text-left">{t?.import?.company || 'Company'}</th>
-                              </>
-                            ) : importType === 'expenses' ? (
-                              <>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.car || 'Car'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.date || 'Date'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.category || 'Category'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.amount || 'Amount'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.notes || 'Notes'}</th>
                               </>
                             ) : (
                               <>
@@ -939,4 +931,4 @@ export default function ImportPage() {
       </main>
     </div>
   );
-} 
+}

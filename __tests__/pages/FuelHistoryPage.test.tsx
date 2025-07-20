@@ -8,7 +8,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       ];
 
       const total = fuelEntries.reduce((sum, entry) => sum + entry.amount, 0);
-      
+
       expect(total).toBe(120.00);
     });
 
@@ -20,7 +20,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       ];
 
       const totalCost = fuelEntries.reduce((sum, entry) => sum + (entry.amount * entry.pricePerUnit), 0);
-      
+
       expect(totalCost).toBe(185.00);
     });
 
@@ -32,7 +32,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       ];
 
       const sortedByDate = entries.sort((a, b) => a.date.getTime() - b.date.getTime());
-      
+
       expect(sortedByDate[0].date.getDate()).toBe(1);
       expect(sortedByDate[2].date.getDate()).toBe(15);
     });
@@ -40,7 +40,7 @@ describe('FuelHistoryPage Logic Tests', () => {
     it('should filter entries by date range', () => {
       const startDate = new Date('2023-01-01');
       const endDate = new Date('2023-03-31');
-      
+
       const entries = [
         { date: '2022-12-15', amount: 100 },
         { date: '2023-02-10', amount: 150 },
@@ -65,7 +65,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       if (entries.length >= 2) {
         const distance = entries[1].odometer - entries[0].odometer;
         const efficiency = distance / entries[1].amount;
-        
+
         expect(efficiency).toBeCloseTo(11.11);
       }
     });
@@ -73,10 +73,11 @@ describe('FuelHistoryPage Logic Tests', () => {
 
   describe('Data Validation', () => {
     it('should handle empty fuel entries', () => {
-      const emptyEntries: any[] = [];
-      const total = emptyEntries.reduce((sum, entry) => sum + entry.amount, 0);
-      
+      const entries: any[] = [];
+      const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+
       expect(total).toBe(0);
+      expect(entries.length).toBe(0);
     });
 
     it('should validate entry data', () => {
@@ -86,10 +87,10 @@ describe('FuelHistoryPage Logic Tests', () => {
         { amount: 50, date: null },
       ];
 
-             const validEntries = invalidEntries.filter((entry: any) => 
-         typeof entry.amount === 'number' && 
-         entry.amount > 0 && 
-         entry.date && 
+             const validEntries = invalidEntries.filter((entry: any) =>
+         typeof entry.amount === 'number' &&
+         entry.amount > 0 &&
+         entry.date &&
          typeof entry.date === 'string'
        );
 
@@ -106,7 +107,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       ];
 
       const avgPrice = entries.reduce((sum, entry) => sum + entry.pricePerUnit, 0) / entries.length;
-      
+
       expect(avgPrice).toBeCloseTo(1.55);
     });
 
@@ -118,7 +119,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       ];
 
       const maxCost = Math.max(...entries.map(entry => entry.totalCost));
-      
+
       expect(maxCost).toBe(85.00);
     });
   });
@@ -152,7 +153,7 @@ describe('FuelHistoryPage Logic Tests', () => {
       const totalEntries = 150;
       const pageSize = 25;
       const totalPages = Math.ceil(totalEntries / pageSize);
-      
+
       expect(totalPages).toBe(6);
     });
 
@@ -160,8 +161,8 @@ describe('FuelHistoryPage Logic Tests', () => {
       const currentPage = 3;
       const pageSize = 25;
       const offset = (currentPage - 1) * pageSize;
-      
+
       expect(offset).toBe(50);
     });
   });
-}); 
+});

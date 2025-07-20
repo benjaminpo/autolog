@@ -56,8 +56,8 @@ const MockDataDisplay = ({ data, onEdit }: { data: any[]; onEdit: (item: any) =>
           {data.map((item, index) => (
             <li key={index} data-testid={`data-item-${index}`}>
               <span>{item.name} - {item.email}</span>
-              <button 
-                onClick={() => onEdit(item)} 
+              <button
+                onClick={() => onEdit(item)}
                 data-testid={`edit-button-${index}`}
               >
                 Edit
@@ -70,27 +70,32 @@ const MockDataDisplay = ({ data, onEdit }: { data: any[]; onEdit: (item: any) =>
   );
 };
 
-const MockModal = ({ 
-  isOpen, 
-  onClose, 
-  children 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  children: React.ReactNode 
+const MockModal = ({
+  isOpen,
+  onClose,
+  children
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode
 }) => {
   if (!isOpen) return null;
 
   return (
-    <div data-testid="modal-overlay" onClick={onClose} role="presentation">
-      <div 
-        data-testid="modal-content" 
+    <div
+      data-testid="modal-overlay"
+      onClick={onClose}
+      onKeyDown={(e) => e.key === 'Escape' && onClose()}
+      role="presentation"
+    >
+      <div
+        data-testid="modal-content"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
-        <button 
-          data-testid="modal-close" 
+        <button
+          data-testid="modal-close"
           onClick={onClose}
         >
           ×
@@ -110,8 +115,8 @@ const IntegratedApp = () => {
   const handleFormSubmit = (formData: any) => {
     if (editingItem) {
       // Update existing item
-      setData(prev => 
-        prev.map(item => 
+      setData(prev =>
+        prev.map(item =>
           item.id === editingItem.id ? { ...formData, id: editingItem.id } : item
         )
       );
@@ -135,20 +140,20 @@ const IntegratedApp = () => {
 
   return (
     <div data-testid="integrated-app">
-      <button 
+      <button
         onClick={handleAddNew}
         data-testid="add-new-button"
       >
         Add New
       </button>
-      
+
       <MockDataDisplay data={data} onEdit={handleEdit} />
-      
-      <MockModal 
-        isOpen={isModalOpen} 
+
+      <MockModal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       >
-        <MockFormComponent 
+        <MockFormComponent
           onSubmit={handleFormSubmit}
           initialData={editingItem || {}}
         />
@@ -158,12 +163,12 @@ const IntegratedApp = () => {
 };
 
 // Filter component for testing search functionality
-const MockFilterComponent = ({ 
-  data, 
-  onFilter 
-}: { 
-  data: any[]; 
-  onFilter: (filtered: any[]) => void 
+const MockFilterComponent = ({
+  data,
+  onFilter
+}: {
+  data: any[];
+  onFilter: (filtered: any[]) => void
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedCategory, setSelectedCategory] = React.useState('all');
@@ -172,7 +177,7 @@ const MockFilterComponent = ({
     let filtered = data;
 
     if (searchTerm) {
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -389,11 +394,13 @@ describe('Component Integration Tests', () => {
       };
 
       return (
-        <div 
+        <div
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
+          onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
+          aria-label="Event testing container"
         >
-          <button 
+          <button
             data-testid="propagation-button"
             onClick={(e) => {
               e.stopPropagation();
@@ -402,8 +409,8 @@ describe('Component Integration Tests', () => {
           >
             Stop Propagation
           </button>
-          
-          <button 
+
+          <button
             data-testid="normal-button"
             onClick={() => addEvent('normal-button-click')}
           >
@@ -468,7 +475,7 @@ describe('Component Integration Tests', () => {
       return (
         <div data-testid="state-manager">
           <div data-testid="current-count">Count: {count}</div>
-          
+
           <button onClick={increment} data-testid="increment-button">
             +
           </button>
@@ -529,7 +536,7 @@ describe('Component Integration Tests', () => {
         try {
           // Simulate API call
           await new Promise(resolve => setTimeout(resolve, 100));
-          
+
           if (shouldFail) {
             throw new Error('API Error');
           }
@@ -549,14 +556,14 @@ describe('Component Integration Tests', () => {
 
       return (
         <div data-testid="async-component">
-          <button 
+          <button
             onClick={() => fetchData(false)}
             data-testid="fetch-success-button"
           >
             Fetch Data (Success)
           </button>
-          
-          <button 
+
+          <button
             onClick={() => fetchData(true)}
             data-testid="fetch-error-button"
           >
@@ -565,7 +572,7 @@ describe('Component Integration Tests', () => {
 
           {loading && <div data-testid="loading">Loading...</div>}
           {error && <div data-testid="error">Error: {error}</div>}
-          
+
           {data.length > 0 && (
             <div data-testid="data-container">
               {data.map(item => (
@@ -620,4 +627,4 @@ describe('Component Integration Tests', () => {
       expect(screen.getByTestId('error')).toHaveTextContent('Error: API Error');
     });
   });
-}); 
+});

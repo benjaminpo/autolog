@@ -45,10 +45,10 @@ export interface CurrencyBreakdown {
  */
 export function convertCurrency(amount: number, fromCurrency: string, toCurrency: string): number {
   if (fromCurrency === toCurrency) return amount;
-  
+
   const fromRate = exchangeRates[fromCurrency] || 1.0;
   const toRate = exchangeRates[toCurrency] || 1.0;
-  
+
   // Convert to USD first, then to target currency
   const usdAmount = amount / fromRate;
   return usdAmount * toRate;
@@ -80,7 +80,7 @@ export function calculateCurrencyStats(
   fuelEntries.forEach(entry => {
     const currency = entry.currency;
     const cost = Number(entry.cost);
-    
+
     if (!isNaN(cost) && currencyMap.has(currency)) {
       const stats = currencyMap.get(currency)!;
       stats.totalFuelCost += cost;
@@ -92,7 +92,7 @@ export function calculateCurrencyStats(
   expenseEntries.forEach(entry => {
     const currency = entry.currency;
     const amount = Number(entry.amount);
-    
+
     if (!isNaN(amount) && currencyMap.has(currency)) {
       const stats = currencyMap.get(currency)!;
       stats.totalExpenseCost += amount;
@@ -104,7 +104,7 @@ export function calculateCurrencyStats(
   incomeEntries.forEach(entry => {
     const currency = entry.currency;
     const amount = Number(entry.amount);
-    
+
     if (!isNaN(amount) && currencyMap.has(currency)) {
       const stats = currencyMap.get(currency)!;
       stats.totalIncome += amount;
@@ -121,7 +121,7 @@ export function calculateCurrencyStats(
     if (stats.entryCount > 0) {
       stats.netCost = stats.totalFuelCost + stats.totalExpenseCost - stats.totalIncome;
       byCurrency.push(stats);
-      
+
       // Convert to base currency for total calculation
       totalInBaseCurrency += convertCurrency(stats.netCost, currency, baseCurrency);
     }
@@ -146,6 +146,7 @@ export function formatCurrency(amount: number, currency: string, locale: string 
       maximumFractionDigits: 2,
     }).format(amount);
   } catch (error) {
+    console.warn('Currency formatting failed for', currency, error);
     // Fallback formatting if currency is not supported
     return `${currency} ${amount.toFixed(2)}`;
   }
@@ -177,7 +178,7 @@ export function getCurrencyName(code: string): string {
     NOK: 'Norwegian Krone',
     DKK: 'Danish Krone'
   };
-  
+
   return currencyNames[code] || code;
 }
 
@@ -189,13 +190,13 @@ export function calculateCostPerDistance(
   currency: string
 ): { totalCost: number; totalDistance: number; costPerDistance: number | null } {
   const relevantEntries = fuelEntries.filter(entry => entry.currency === currency);
-  
+
   if (relevantEntries.length < 2) {
     return { totalCost: 0, totalDistance: 0, costPerDistance: null };
   }
 
   const sortedEntries = relevantEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  
+
   let totalCost = 0;
   let totalDistance = 0;
 
@@ -224,4 +225,4 @@ export function calculateCostPerDistance(
     totalDistance,
     costPerDistance
   };
-} 
+}

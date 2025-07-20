@@ -20,15 +20,18 @@ describe('Enhanced Form Validation Tests', () => {
           }
         };
 
+        const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const value = e.target.value;
+          setEmail(value);
+          validateEmail(value);
+        };
+
         return (
           <form>
             <input
               type="email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                validateEmail(e.target.value);
-              }}
+              onChange={handleEmailChange}
               data-testid="email-input"
             />
             {emailError && <span data-testid="email-error">{emailError}</span>}
@@ -91,15 +94,18 @@ describe('Enhanced Form Validation Tests', () => {
           setStrength({ score, feedback });
         };
 
+        const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const value = e.target.value;
+          setPassword(value);
+          checkPasswordStrength(value);
+        };
+
         return (
           <form>
             <input
               type="password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                checkPasswordStrength(e.target.value);
-              }}
+              onChange={handlePasswordChange}
               data-testid="password-input"
             />
             <div data-testid="password-strength">{strength.feedback}</div>
@@ -159,12 +165,20 @@ describe('Enhanced Form Validation Tests', () => {
           }
         };
 
+        const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, email: e.target.value });
+        };
+
+        const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, password: e.target.value });
+        };
+
         return (
           <form onSubmit={handleSubmit}>
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={handleEmailInputChange}
               data-testid="email-input"
             />
             {errors.email && <span data-testid="email-error">{errors.email}</span>}
@@ -172,7 +186,7 @@ describe('Enhanced Form Validation Tests', () => {
             <input
               type="password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={handlePasswordInputChange}
               data-testid="password-input"
             />
             {errors.password && <span data-testid="password-error">{errors.password}</span>}
@@ -267,20 +281,27 @@ describe('Enhanced Form Validation Tests', () => {
         const [activeIndex, setActiveIndex] = React.useState(0);
         const inputs = ['input1', 'input2', 'input3'];
 
+        const handleArrowDown = () => {
+          setActiveIndex(prev => Math.min(prev + 1, inputs.length - 1));
+        };
+
+        const handleArrowUp = () => {
+          setActiveIndex(prev => Math.max(prev - 1, 0));
+        };
+
         const handleKeyDown = (e: React.KeyboardEvent) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setActiveIndex(prev => Math.min(prev + 1, inputs.length - 1));
+            handleArrowDown();
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setActiveIndex(prev => Math.max(prev - 1, 0));
+            handleArrowUp();
           }
         };
 
         return (
-          <div 
-            onKeyDown={handleKeyDown} 
-            tabIndex={0} 
+          <div
+            onKeyDown={handleKeyDown}
             data-testid="form-container"
             role="group"
             aria-label="Interactive form container"
@@ -376,11 +397,19 @@ describe('Enhanced Form Validation Tests', () => {
       const ConditionalForm = () => {
         const [formData, setFormData] = React.useState({ userType: '', companyName: '' });
 
+        const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+          setFormData({ ...formData, userType: e.target.value });
+        };
+
+        const handleCompanyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, companyName: e.target.value });
+        };
+
         return (
           <form>
             <select
               value={formData.userType}
-              onChange={(e) => setFormData({ ...formData, userType: e.target.value })}
+              onChange={handleUserTypeChange}
               data-testid="user-type-select"
             >
               <option value="">Select user type</option>
@@ -393,7 +422,7 @@ describe('Enhanced Form Validation Tests', () => {
                 type="text"
                 placeholder="Company Name"
                 value={formData.companyName}
-                onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                onChange={handleCompanyNameChange}
                 data-testid="company-name-input"
               />
             )}
@@ -431,18 +460,26 @@ describe('Enhanced Form Validation Tests', () => {
           setFormData({ name: '', email: '' });
         };
 
+        const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, name: e.target.value });
+        };
+
+        const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setFormData({ ...formData, email: e.target.value });
+        };
+
         return (
           <form>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              onChange={handleNameChange}
               data-testid="name-input"
             />
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={handleEmailChange}
               data-testid="email-input"
             />
             <button type="button" onClick={handleReset} data-testid="reset-button">
@@ -488,10 +525,14 @@ describe('Enhanced Form Validation Tests', () => {
           return () => clearTimeout(timer);
         }, [formData]);
 
+        const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+          setFormData({ content: e.target.value });
+        };
+
         return (
           <textarea
             value={formData.content}
-            onChange={(e) => setFormData({ content: e.target.value })}
+            onChange={handleContentChange}
             data-testid="content-textarea"
           />
         );
@@ -563,4 +604,4 @@ describe('Form validation edge cases', () => {
     expect(validateRequired(null)).toBe(false);
     expect(validateRequired(undefined)).toBe(false);
   });
-}); 
+});

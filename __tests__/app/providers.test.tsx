@@ -5,28 +5,26 @@ import { NextAuthProvider } from '../../app/providers';
 
 // Mock all the context providers
 jest.mock('next-auth/react', () => ({
-  SessionProvider: ({ children }: { children: React.ReactNode }) => 
+  SessionProvider: ({ children }: { children: React.ReactNode }) =>
     <div data-testid="session-provider">{children}</div>
 }));
 
 jest.mock('../../app/context/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => 
+  AuthProvider: ({ children }: { children: React.ReactNode }) =>
     <div data-testid="auth-provider">{children}</div>
 }));
 
 jest.mock('../../app/context/LanguageContext', () => ({
-  LanguageProvider: ({ children }: { children: React.ReactNode }) => 
+  LanguageProvider: ({ children }: { children: React.ReactNode }) =>
     <div data-testid="language-provider">{children}</div>
 }));
 
 jest.mock('../../app/context/ThemeContext', () => ({
-  ThemeProvider: ({ children }: { children: React.ReactNode }) => 
+  ThemeProvider: ({ children }: { children: React.ReactNode }) =>
     <div data-testid="theme-provider">{children}</div>
 }));
 
 describe('NextAuthProvider', () => {
-  const TestComponent = () => <div data-testid="test-child">Test Child</div>;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -182,7 +180,7 @@ describe('NextAuthProvider', () => {
 
     it('should accept children prop', () => {
       const TestComponent = () => <div>Test</div>;
-      
+
       expect(() => {
         render(
           <NextAuthProvider>
@@ -194,7 +192,7 @@ describe('NextAuthProvider', () => {
 
     it('should render without crashing when no children provided', () => {
       expect(() => {
-        render(<NextAuthProvider children={null} />);
+        render(<NextAuthProvider><div /></NextAuthProvider>);
       }).not.toThrow();
     });
   });
@@ -304,4 +302,4 @@ describe('NextAuthProvider', () => {
       }).toThrow('Test error'); // Should throw as expected, but component should handle it gracefully in real scenarios
     });
   });
-}); 
+});

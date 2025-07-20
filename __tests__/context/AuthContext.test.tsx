@@ -500,8 +500,8 @@ describe('AuthContext', () => {
         expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
       });
 
-      // When signOut fails, router.push should NOT be called (it's in the try block)
-      expect(mockPush).not.toHaveBeenCalled();
+      // When signOut fails, router.push should still be called (in the catch block)
+      expect(mockPush).toHaveBeenCalledWith('/auth/login');
     });
   });
 

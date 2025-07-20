@@ -76,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       router.push('/');
       return true;
     } catch (err) {
+      console.error('Login error:', err);
       setError('An error occurred during login');
       setLoading(false);
       return false;
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Auto login after successful registration
       return await login(email, password);
     } catch (err) {
+      console.error('Registration error:', err);
       setError('An error occurred during registration');
       setLoading(false);
       return false;
@@ -113,8 +115,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOut({ redirect: false });
       router.push('/auth/login');
-    } catch (_err) {
-      // Silently fail if sign out fails
+    } catch (err) {
+      console.error('Logout error:', err);
+      // Continue with redirect even if sign out fails
+      router.push('/auth/login');
     }
   };
 

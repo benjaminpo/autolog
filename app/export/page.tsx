@@ -86,7 +86,7 @@ interface IncomeCategoryItem {
 
 export default function ExportPage() {
   const { user, loading } = useAuth();
-  const { language } = useLanguage();
+  useLanguage();
   const { t } = useTranslation();
 
   const [exportType, setExportType] = useState<'fuel' | 'expenses' | 'income'>('fuel');
@@ -245,7 +245,7 @@ export default function ExportPage() {
       const sampleData = `Car Name,Date,Time,Fuel Company,Fuel Type,Mileage,Distance Unit,Volume,Volume Unit,Cost,Currency,Location,Partial Fuel Up,Payment Type,Tyre Pressure,Tyre Pressure Unit,Tags,Notes
 My Car,2024-01-15,14:30,Shell,Petrol,15000,km,45,liters,350,HKD,Central,No,Credit Card,32,psi,highway; city,Regular fill-up
 My Car,2024-01-20,09:15,Caltex,Petrol,15250,km,40,liters,320,HKD,Tsim Sha Tsui,No,Cash,32,psi,city,Morning commute`;
-      
+
       const blob = new Blob([sampleData], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -260,7 +260,7 @@ My Car,2024-01-20,09:15,Caltex,Petrol,15250,km,40,liters,320,HKD,Tsim Sha Tsui,N
 My Car,2024-01-15,Service,500,HKD,Oil change and filter replacement
 My Car,2024-01-20,Parking,50,HKD,Shopping mall parking
 My Car,2024-01-25,Insurance,2000,HKD,Annual insurance premium`;
-      
+
       const blob = new Blob([sampleData], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -275,7 +275,7 @@ My Car,2024-01-25,Insurance,2000,HKD,Annual insurance premium`;
 My Car,2024-01-15,Ride Sharing,800,HKD,Uber driving earnings
 My Car,2024-01-20,Delivery Services,450,HKD,Food delivery income
 My Car,2024-01-25,Mileage Reimbursement,300,HKD,Business trip reimbursement`;
-      
+
       const blob = new Blob([sampleData], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -388,8 +388,8 @@ My Car,2024-01-25,Mileage Reimbursement,300,HKD,Business trip reimbursement`;
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <h3 className="font-semibold text-purple-800">{(t as any)?.export?.dateRange || 'Date Range'}</h3>
                   <p className="text-sm text-purple-600">
-                    {exportStats.dateRange ? 
-                      `${exportStats.dateRange.start} to ${exportStats.dateRange.end}` : 
+                    {exportStats.dateRange ?
+                      `${exportStats.dateRange.start} to ${exportStats.dateRange.end}` :
                       (t as any)?.export?.noData || 'No data'
                     }
                   </p>
@@ -401,7 +401,7 @@ My Car,2024-01-25,Mileage Reimbursement,300,HKD,Business trip reimbursement`;
           {/* Export Options */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.export?.exportOptions || 'Export Options'}</h2>
-            
+
             {/* Quick Export */}
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">{(t as any)?.export?.quickExport || 'Quick Export'}</h3>
@@ -414,7 +414,7 @@ My Car,2024-01-25,Mileage Reimbursement,300,HKD,Business trip reimbursement`;
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  {exportType === 'fuel' 
+                  {exportType === 'fuel'
                     ? ((t as any)?.export?.exportAllFuelEntries || 'Export All Fuel Entries')
                     : exportType === 'expenses'
                       ? ((t as any)?.export?.exportAllExpenseEntries || 'Export All Expense Entries')
@@ -554,4 +554,4 @@ My Car,2024-01-25,Mileage Reimbursement,300,HKD,Business trip reimbursement`;
       </main>
     </div>
   );
-} 
+}

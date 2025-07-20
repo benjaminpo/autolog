@@ -132,14 +132,14 @@ describe('Format Utilities', () => {
 
     const formatFileSize = (bytes: number): string => {
       if (bytes === 0) return '0 Bytes';
-      
+
       const sign = bytes < 0 ? '-' : '';
       const absBytes = Math.abs(bytes);
-      
+
       const k = 1024;
       const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
       const i = Math.floor(Math.log(absBytes) / Math.log(k));
-      
+
       return sign + parseFloat((absBytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
@@ -187,7 +187,7 @@ describe('Format Utilities', () => {
         .trim()
         .replace(/[^\w\s-]/g, '')
         .replace(/[\s_-]+/g, '-')
-        .replace(/^(-+)|(-+)$/g, '');
+        .replace(/^((-+)|(-+))$/g, '');
     };
 
     const formatVehicleName = (make: string, model: string, year?: number): string => {
@@ -317,4 +317,4 @@ describe('Format Utilities', () => {
       expect(isValidLicensePlate('TOOLONGPLATE')).toBe(false); // Too long
     });
   });
-}); 
+});

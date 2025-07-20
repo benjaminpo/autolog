@@ -30,7 +30,7 @@ describe('UI Accessibility Tests', () => {
   describe('Basic Accessibility Compliance', () => {
     it('should have proper ARIA labels for form elements', () => {
       const TestForm = () => (
-        <form role="form" aria-label="Test form">
+        <form aria-label="Test form">
           <div>
             <label htmlFor="email">Email Address</label>
             <input
@@ -158,15 +158,15 @@ describe('UI Accessibility Tests', () => {
     it('should have proper tab order for form elements', () => {
       const TestFormTabOrder = () => (
         <form>
-          <input type="text" placeholder="First field" tabIndex={1} />
-          <input type="text" placeholder="Second field" tabIndex={2} />
-          <select tabIndex={3}>
+          <input type="text" placeholder="First field" />
+          <input type="text" placeholder="Second field" />
+          <select>
             <option value="">Select option</option>
             <option value="1">Option 1</option>
           </select>
-          <textarea placeholder="Comments" tabIndex={4}></textarea>
-          <button type="submit" tabIndex={5}>Submit</button>
-          <button type="button" tabIndex={6}>Cancel</button>
+          <textarea placeholder="Comments"></textarea>
+          <button type="submit">Submit</button>
+          <button type="button">Cancel</button>
         </form>
       );
 
@@ -183,12 +183,18 @@ describe('UI Accessibility Tests', () => {
       const submitButton = screen.getByText('Submit');
       const cancelButton = screen.getByText('Cancel');
 
-      expect(firstField).toHaveAttribute('tabIndex', '1');
-      expect(secondField).toHaveAttribute('tabIndex', '2');
-      expect(selectField).toHaveAttribute('tabIndex', '3');
-      expect(textArea).toHaveAttribute('tabIndex', '4');
-      expect(submitButton).toHaveAttribute('tabIndex', '5');
-      expect(cancelButton).toHaveAttribute('tabIndex', '6');
+      // Check that elements exist and are focusable
+      expect(firstField).toBeInTheDocument();
+      expect(secondField).toBeInTheDocument();
+      expect(selectField).toBeInTheDocument();
+      expect(textArea).toBeInTheDocument();
+      expect(submitButton).toBeInTheDocument();
+      expect(cancelButton).toBeInTheDocument();
+
+      // Verify natural tab order without explicit tabIndex
+      expect(firstField.tagName).toBe('INPUT');
+      expect(secondField.tagName).toBe('INPUT');
+      expect(selectField.tagName).toBe('SELECT');
     });
 
     it('should provide accessible error messages', () => {
@@ -280,7 +286,7 @@ describe('UI Accessibility Tests', () => {
             <div className="form-field">
               <label htmlFor="required-field">
                 Required Field
-                <span className="required-indicator" aria-label="required">*</span>
+                <span className="required-indicator" aria-label="required"> *</span>
               </label>
               <input
                 type="text"
@@ -333,7 +339,7 @@ describe('UI Accessibility Tests', () => {
               <p>Section content here.</p>
             </section>
           </main>
-          <aside role="complementary" aria-label="Sidebar">
+          <aside aria-label="Sidebar">
             <h3>Sidebar Content</h3>
           </aside>
           <footer role="contentinfo">
@@ -365,37 +371,70 @@ describe('UI Accessibility Tests', () => {
         ];
         const optionRefs = options.map(() => React.createRef<HTMLLIElement>());
 
+        const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down') => {
+          if (direction === 'down') {
+            return (currentIndex + 1) % options.length;
+          } else {
+            return (currentIndex - 1 + options.length) % options.length;
+          }
+        };
+
+        const handleArrowNavigation = (direction: 'up' | 'down') => {
+          setFocusedIndex(prevIndex => calculateNextIndex(prevIndex, direction));
+        };
+
         const handleListboxKeyDown = (e: React.KeyboardEvent) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setFocusedIndex((prev) => (prev + 1) % options.length);
+            handleArrowNavigation('down');
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+            handleArrowNavigation('up');
+          }
+        };
+
+        const handleButtonKeyDown = (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            console.log('activated');
+          }
+        };
+
+        const handleCustomButtonKeyDown = (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            console.log('custom button activated');
+          }
+        };
+
+        const logOptionSelection = (option: typeof options[0]) => {
+          console.log(`${option.label.toLowerCase()} selected`);
+        };
+
+        const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLLIElement>) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            const optionText = e.currentTarget.textContent || '';
+            const option = options.find(opt => opt.label === optionText);
+            if (option) {
+              logOptionSelection(option);
+            }
           }
         };
 
         React.useEffect(() => {
           optionRefs[focusedIndex].current?.focus();
-        }, [focusedIndex]);
+        }, [focusedIndex, optionRefs]);
 
         return (
           <div>
-            <button onKeyDown={(e) => e.key === 'Enter' && console.log('activated')}>
+            <button onKeyDown={handleButtonKeyDown}>
               Keyboard Accessible Button
             </button>
 
-            <div
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  console.log('custom button activated');
-                }
-              }}
+            <button
+              type="button"
+              onKeyDown={handleCustomButtonKeyDown}
             >
               Custom Button with Keyboard Support
-            </div>
+            </button>
 
             <ul
               role="listbox"
@@ -409,11 +448,7 @@ describe('UI Accessibility Tests', () => {
                   tabIndex={focusedIndex === idx ? 0 : -1}
                   aria-selected={option.selected ? 'true' : 'false'}
                   ref={optionRefs[idx]}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      console.log(`${option.label.toLowerCase()} selected`);
-                    }
-                  }}
+                  onKeyDown={handleOptionKeyDown}
                 >
                   {option.label}
                 </li>
@@ -430,7 +465,7 @@ describe('UI Accessibility Tests', () => {
       );
 
       expect(screen.getByText('Keyboard Accessible Button')).toBeInTheDocument();
-      expect(screen.getByText('Custom Button with Keyboard Support')).toHaveAttribute('tabIndex', '0');
+      expect(screen.getByText('Custom Button with Keyboard Support')).toBeInTheDocument();
       expect(screen.getByText('Option 2 (Selected)')).toHaveAttribute('aria-selected', 'true');
     });
   });

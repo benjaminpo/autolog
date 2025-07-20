@@ -3,10 +3,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Mock components for testing accessibility features
-const AccessibleButton = ({ 
-  onClick, 
-  disabled = false, 
-  ariaLabel, 
+const AccessibleButton = ({
+  onClick,
+  disabled = false,
+  ariaLabel,
   children,
   type = 'button',
   ...rest
@@ -30,9 +30,9 @@ const AccessibleButton = ({
 );
 
 const AccessibleForm = () => (
-  <form role="form" aria-labelledby="form-title">
+  <form aria-labelledby="form-title">
     <h2 id="form-title">Contact Form</h2>
-    
+
     <div>
       <label htmlFor="name">Name (required)</label>
       <input
@@ -44,7 +44,7 @@ const AccessibleForm = () => (
       />
       <div id="name-error" role="alert" aria-live="polite"></div>
     </div>
-    
+
     <div>
       <label htmlFor="email">Email</label>
       <input
@@ -54,7 +54,7 @@ const AccessibleForm = () => (
       />
       <div id="email-help">We'll never share your email</div>
     </div>
-    
+
     <fieldset>
       <legend>Preferred Contact Method</legend>
       <div>
@@ -66,7 +66,7 @@ const AccessibleForm = () => (
         <label htmlFor="contact-phone">Phone</label>
       </div>
     </fieldset>
-    
+
     <AccessibleButton type="submit">Submit</AccessibleButton>
   </form>
 );
@@ -80,16 +80,30 @@ const AccessibleModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
       const firstFocusableElement = focusableContent?.[0] as HTMLElement;
       const lastFocusableElement = focusableContent?.[focusableContent.length - 1] as HTMLElement;
 
+      const handleShiftTab = () => {
+        if (document.activeElement === firstFocusableElement) {
+          lastFocusableElement?.focus();
+          return true; // preventDefault needed
+        }
+        return false;
+      };
+
+      const handleForwardTab = () => {
+        if (document.activeElement === lastFocusableElement) {
+          firstFocusableElement?.focus();
+          return true; // preventDefault needed
+        }
+        return false;
+      };
+
       const handleTabKey = (e: KeyboardEvent) => {
         if (e.key === 'Tab') {
           if (e.shiftKey) {
-            if (document.activeElement === firstFocusableElement) {
-              lastFocusableElement?.focus();
+            if (handleShiftTab()) {
               e.preventDefault();
             }
           } else {
-            if (document.activeElement === lastFocusableElement) {
-              firstFocusableElement?.focus();
+            if (handleForwardTab()) {
               e.preventDefault();
             }
           }
@@ -155,7 +169,7 @@ describe('Advanced Accessibility Tests', () => {
   describe('Keyboard Navigation', () => {
     it('should support tab navigation through interactive elements', async () => {
       const user = userEvent.setup();
-      
+
       render(
         <div>
           <button data-testid="button1">Button 1</button>
@@ -199,7 +213,7 @@ describe('Advanced Accessibility Tests', () => {
 
     it('should support arrow key navigation in radio button groups', async () => {
       const user = userEvent.setup();
-      
+
       render(<AccessibleForm />);
 
       const emailRadio = screen.getByLabelText('Email', { selector: 'input[type="radio"]' });
@@ -290,7 +304,7 @@ describe('Advanced Accessibility Tests', () => {
 
     it('should provide accessible button labels', () => {
       const mockOnClick = jest.fn();
-      
+
       render(
         <div>
           <AccessibleButton onClick={mockOnClick} ariaLabel="Close navigation menu">
@@ -311,15 +325,15 @@ describe('Advanced Accessibility Tests', () => {
 
     it('should announce form validation errors', async () => {
       const user = userEvent.setup();
-      
+
       const FormWithValidation = () => {
         const [error, setError] = React.useState('');
-        
+
         const handleSubmit = (e: React.FormEvent) => {
           e.preventDefault();
           const formData = new FormData(e.target as HTMLFormElement);
           const name = formData.get('name') as string;
-          
+
           if (!name) {
             setError('Name is required');
           } else {
@@ -376,7 +390,7 @@ describe('Advanced Accessibility Tests', () => {
 
     it('should manage focus when content changes dynamically', async () => {
       const user = userEvent.setup();
-      
+
       const DynamicContent = () => {
         const [showContent, setShowContent] = React.useState(false);
         const contentRef = React.useRef<HTMLDivElement>(null);
@@ -427,7 +441,7 @@ describe('Advanced Accessibility Tests', () => {
 
       const errorMessage = screen.getByLabelText(/error: invalid input/i);
       const successMessage = screen.getByLabelText(/success: form submitted/i);
-      
+
       expect(errorMessage).toHaveTextContent('⚠️');
       expect(successMessage).toHaveTextContent('✓');
     });
@@ -464,4 +478,4 @@ describe('Advanced Accessibility Tests', () => {
       Object.defineProperty(window, 'innerHeight', { value: originalInnerHeight });
     });
   });
-}); 
+});
