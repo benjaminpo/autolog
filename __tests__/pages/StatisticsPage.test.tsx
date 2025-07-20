@@ -54,15 +54,15 @@ jest.mock('../../app/components/ThemeToggle', () => ({
 const MockStatisticsPage = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
-  
+
   if (!user) return null;
-  
+
   return (
     <div>
       <nav data-testid="navigation">Navigation</nav>
       <button data-testid="auth-button">Auth Button</button>
       <h1>Vehicle Statistics</h1>
-      
+
       {/* Summary Cards */}
       <div className="stats-summary" data-testid="stats-summary">
         <div className="stat-card">
@@ -89,12 +89,12 @@ const MockStatisticsPage = () => {
           <h3>Monthly Fuel Costs</h3>
           <div data-testid="bar-chart-placeholder">Chart Placeholder</div>
         </div>
-        
+
         <div className="chart-section">
           <h3>Fuel Economy Trend</h3>
           <div data-testid="line-chart-placeholder">Chart Placeholder</div>
         </div>
-        
+
         <div className="chart-section">
           <h3>Fuel Type Distribution</h3>
           <div data-testid="pie-chart-placeholder">Chart Placeholder</div>
@@ -556,7 +556,7 @@ describe('StatisticsPage Additional Tests', () => {
     it('should filter data by custom date range', () => {
       const startDate = new Date('2023-01-01');
       const endDate = new Date('2023-03-31');
-      
+
       const expenses = [
         { date: '2022-12-15', amount: 100 },
         { date: '2023-02-10', amount: 150 },
@@ -575,7 +575,7 @@ describe('StatisticsPage Additional Tests', () => {
     it('should handle year-to-date filtering', () => {
       const currentYear = new Date().getFullYear();
       const startOfYear = new Date(currentYear, 0, 1);
-      
+
       expect(startOfYear.getMonth()).toBe(0);
       expect(startOfYear.getDate()).toBe(1);
     });
@@ -583,10 +583,10 @@ describe('StatisticsPage Additional Tests', () => {
     it('should handle last 30 days filtering', () => {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
+
       const testDate = new Date();
       testDate.setDate(testDate.getDate() - 15);
-      
+
       expect(testDate > thirtyDaysAgo).toBe(true);
     });
   });
@@ -635,7 +635,7 @@ describe('StatisticsPage Additional Tests', () => {
       ];
 
       const avgCostPerKm = trips.reduce((sum, trip) => sum + (trip.cost / trip.distance), 0) / trips.length;
-      
+
       expect(avgCostPerKm).toBeCloseTo(0.147);
     });
 
@@ -647,7 +647,7 @@ describe('StatisticsPage Additional Tests', () => {
       ];
 
       const avgConsumption = fuelEntries.reduce((sum, entry) => sum + (entry.amount / entry.distance * 100), 0) / fuelEntries.length;
-      
+
       expect(avgConsumption).toBeCloseTo(9.11);
     });
 
@@ -678,9 +678,9 @@ describe('StatisticsPage Additional Tests', () => {
         { amount: 100, category: null },
       ];
 
-      const validExpenses = invalidExpenses.filter(expense => 
-        typeof expense.amount === 'number' && 
-        expense.amount > 0 && 
+      const validExpenses = invalidExpenses.filter(expense =>
+        typeof expense.amount === 'number' &&
+        expense.amount > 0 &&
         typeof expense.category === 'string'
       );
 
@@ -690,10 +690,10 @@ describe('StatisticsPage Additional Tests', () => {
     it('should handle empty datasets', () => {
       const expenses: any[] = [];
       const fuelEntries: any[] = [];
-      
+
       const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-      const avgFuelConsumption = fuelEntries.length > 0 
-        ? fuelEntries.reduce((sum, entry) => sum + entry.amount, 0) / fuelEntries.length 
+      const avgFuelConsumption = fuelEntries.length > 0
+        ? fuelEntries.reduce((sum, entry) => sum + entry.amount, 0) / fuelEntries.length
         : 0;
 
       expect(totalExpenses).toBe(0);
@@ -826,15 +826,15 @@ describe('StatisticsPage Additional Tests', () => {
       // Test that currency conversion utilities work as expected
       const usdAmount = 100;
       const eurAmount = 85; // Approximate conversion rate
-      
+
       // Verify that amounts in different currencies are handled separately
       expect(usdAmount).toBe(100);
       expect(eurAmount).toBe(85);
-      
+
       // Verify that we can distinguish between currencies
       const usdEntry = { cost: usdAmount, currency: 'USD' };
       const eurEntry = { cost: eurAmount, currency: 'EUR' };
-      
+
       expect(usdEntry.currency).toBe('USD');
       expect(eurEntry.currency).toBe('EUR');
       expect(usdEntry.cost).toBe(100);
@@ -868,11 +868,11 @@ describe('StatisticsPage Additional Tests', () => {
 
       // Group by currency
       const fuelPricesByCurrency: { [currency: string]: any[] } = {};
-      
+
       mockFuelEntries.forEach(entry => {
         const volume = entry.volumeUnit === 'liters' ? Number(entry.volume) : Number(entry.volume) * 3.78541;
         const pricePerLiter = volume > 0 ? Number(entry.cost) / volume : 0;
-        
+
         if (pricePerLiter > 0) {
           if (!fuelPricesByCurrency[entry.currency]) {
             fuelPricesByCurrency[entry.currency] = [];
@@ -946,14 +946,14 @@ describe('StatisticsPage Additional Tests', () => {
       const monthlyTrendsByCurrency: { [currency: string]: any[] } = {};
       const entriesByCurrency: { [currency: string]: any[] } = {};
       const expensesByCurrency: { [currency: string]: any[] } = {};
-      
+
       mockFuelEntries.forEach(entry => {
         if (!entriesByCurrency[entry.currency]) {
           entriesByCurrency[entry.currency] = [];
         }
         entriesByCurrency[entry.currency].push(entry);
       });
-      
+
       mockExpenses.forEach(expense => {
         if (!expensesByCurrency[expense.currency]) {
           expensesByCurrency[expense.currency] = [];
@@ -965,10 +965,10 @@ describe('StatisticsPage Additional Tests', () => {
       Object.keys(entriesByCurrency).forEach(currency => {
         const currencyEntries = entriesByCurrency[currency];
         const currencyExpenses = expensesByCurrency[currency] || [];
-        
+
         // Group by month
         const monthlyData: { [month: string]: any } = {};
-        
+
         // Process fuel entries
         currencyEntries.forEach(entry => {
           const month = entry.date.substring(0, 7);
@@ -981,12 +981,12 @@ describe('StatisticsPage Additional Tests', () => {
               fillUps: 0
             };
           }
-          
+
           monthlyData[month].fuelCost += Number(entry.cost);
           monthlyData[month].totalCost += Number(entry.cost);
           monthlyData[month].fillUps += 1;
         });
-        
+
         // Process expenses
         currencyExpenses.forEach(expense => {
           const month = expense.date.substring(0, 7);
@@ -999,11 +999,11 @@ describe('StatisticsPage Additional Tests', () => {
               fillUps: 0
             };
           }
-          
+
           monthlyData[month].expenseCost += Number(expense.amount);
           monthlyData[month].totalCost += Number(expense.amount);
         });
-        
+
         // Convert to array and sort by month
         monthlyTrendsByCurrency[currency] = Object.values(monthlyData)
           .sort((a, b) => a.month.localeCompare(b.month));

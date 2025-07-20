@@ -20,15 +20,18 @@ describe('Enhanced Form Validation Tests', () => {
           }
         };
 
+        const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const value = e.target.value;
+          setEmail(value);
+          validateEmail(value);
+        };
+
         return (
           <form>
             <input
               type="email"
               value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                validateEmail(e.target.value);
-              }}
+              onChange={handleEmailChange}
               data-testid="email-input"
             />
             {emailError && <span data-testid="email-error">{emailError}</span>}
@@ -91,15 +94,18 @@ describe('Enhanced Form Validation Tests', () => {
           setStrength({ score, feedback });
         };
 
+        const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          const value = e.target.value;
+          setPassword(value);
+          checkPasswordStrength(value);
+        };
+
         return (
           <form>
             <input
               type="password"
               value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                checkPasswordStrength(e.target.value);
-              }}
+              onChange={handlePasswordChange}
               data-testid="password-input"
             />
             <div data-testid="password-strength">{strength.feedback}</div>
@@ -267,20 +273,28 @@ describe('Enhanced Form Validation Tests', () => {
         const [activeIndex, setActiveIndex] = React.useState(0);
         const inputs = ['input1', 'input2', 'input3'];
 
+        const handleArrowDown = () => {
+          setActiveIndex(prev => Math.min(prev + 1, inputs.length - 1));
+        };
+
+        const handleArrowUp = () => {
+          setActiveIndex(prev => Math.max(prev - 1, 0));
+        };
+
         const handleKeyDown = (e: React.KeyboardEvent) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setActiveIndex(prev => Math.min(prev + 1, inputs.length - 1));
+            handleArrowDown();
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setActiveIndex(prev => Math.max(prev - 1, 0));
+            handleArrowUp();
           }
         };
 
         return (
-          <div 
-            onKeyDown={handleKeyDown} 
-            tabIndex={0} 
+          <div
+            onKeyDown={handleKeyDown}
+            tabIndex={0}
             data-testid="form-container"
             role="group"
             aria-label="Interactive form container"
@@ -563,4 +577,4 @@ describe('Form validation edge cases', () => {
     expect(validateRequired(null)).toBe(false);
     expect(validateRequired(undefined)).toBe(false);
   });
-}); 
+});

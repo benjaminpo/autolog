@@ -371,13 +371,39 @@ describe('UI Accessibility Tests', () => {
         ];
         const optionRefs = options.map(() => React.createRef<HTMLLIElement>());
 
+        const handleArrowNavigation = (direction: 'up' | 'down') => {
+          if (direction === 'down') {
+            setFocusedIndex((prev) => (prev + 1) % options.length);
+          } else {
+            setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+          }
+        };
+
         const handleListboxKeyDown = (e: React.KeyboardEvent) => {
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setFocusedIndex((prev) => (prev + 1) % options.length);
+            handleArrowNavigation('down');
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setFocusedIndex((prev) => (prev - 1 + options.length) % options.length);
+            handleArrowNavigation('up');
+          }
+        };
+
+        const handleButtonKeyDown = (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            console.log('activated');
+          }
+        };
+
+        const handleCustomButtonKeyDown = (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            console.log('custom button activated');
+          }
+        };
+
+        const handleOptionKeyDown = (option: typeof options[0]) => (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            console.log(`${option.label.toLowerCase()} selected`);
           }
         };
 
@@ -387,18 +413,14 @@ describe('UI Accessibility Tests', () => {
 
         return (
           <div>
-            <button onKeyDown={(e) => e.key === 'Enter' && console.log('activated')}>
+            <button onKeyDown={handleButtonKeyDown}>
               Keyboard Accessible Button
             </button>
 
             <div
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  console.log('custom button activated');
-                }
-              }}
+              onKeyDown={handleCustomButtonKeyDown}
             >
               Custom Button with Keyboard Support
             </div>
@@ -415,11 +437,7 @@ describe('UI Accessibility Tests', () => {
                   tabIndex={focusedIndex === idx ? 0 : -1}
                   aria-selected={option.selected ? 'true' : 'false'}
                   ref={optionRefs[idx]}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      console.log(`${option.label.toLowerCase()} selected`);
-                    }
-                  }}
+                  onKeyDown={handleOptionKeyDown(option)}
                 >
                   {option.label}
                 </li>
