@@ -3,132 +3,135 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
+// Helper validation functions
+const validateEmail = (value: string, setEmailError: (error: string) => void) => {
+  if (!value) {
+    setEmailError('Email is required');
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    setEmailError('Invalid email format');
+  } else {
+    setEmailError('');
+  }
+};
+
+const validatePassword = (value: string, setPasswordError: (error: string) => void, setPasswordStrength: (strength: string) => void) => {
+  if (!value) {
+    setPasswordError('Password is required');
+    setPasswordStrength('');
+  } else if (value.length < 8) {
+    setPasswordError('Password must be at least 8 characters');
+    setPasswordStrength('weak');
+  } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+    setPasswordError('Password must contain uppercase, lowercase, and number');
+    setPasswordStrength('medium');
+  } else {
+    setPasswordError('');
+    setPasswordStrength('strong');
+  }
+};
+
+// Extract validation form to reduce nesting
+const ValidationFormComponent = () => {
+  const [email, setEmail] = React.useState('');
+  const [emailError, setEmailError] = React.useState('');
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    validateEmail(value, setEmailError);
+  };
+
+  return (
+    <form>
+      <div>
+        <label htmlFor="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          value={email}
+          onChange={handleEmailChange}
+          aria-describedby="email-error"
+        />
+        <div id="email-error" role="alert">
+          {emailError}
+        </div>
+      </div>
+    </form>
+  );
+};
+
+// Extract password validation form
+const PasswordValidationForm = () => {
+  const [password, setPassword] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState('');
+  const [passwordStrength, setPasswordStrength] = React.useState('');
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    validatePassword(value, setPasswordError, setPasswordStrength);
+  };
+
+  return (
+    <form>
+      <div>
+        <label htmlFor="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          value={password}
+          onChange={handlePasswordChange}
+          aria-describedby="password-error"
+        />
+        <div id="password-error" role="alert">
+          {passwordError}
+        </div>
+        <div data-testid="password-strength">
+          Strength: {passwordStrength}
+        </div>
+      </div>
+    </form>
+  );
+};
+
 describe('Enhanced Form Validation Tests', () => {
   describe('Form Input Validation', () => {
     it('should validate form inputs in real-time', async () => {
-      const TestForm = () => {
-        const [email, setEmail] = React.useState('');
-        const [emailError, setEmailError] = React.useState('');
+      render(<ValidationFormComponent />);
 
-        const validateEmail = (value: string) => {
-          if (!value) {
-            setEmailError('Email is required');
-          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            setEmailError('Invalid email format');
-          } else {
-            setEmailError('');
-          }
-        };
-
-        const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          const value = e.target.value;
-          setEmail(value);
-          validateEmail(value);
-        };
-
-        return (
-          <form>
-            <input
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              data-testid="email-input"
-            />
-            {emailError && <span data-testid="email-error">{emailError}</span>}
-          </form>
-        );
-      };
-
-      render(<TestForm />);
-
-      const emailInput = screen.getByTestId('email-input');
+      const emailInput = screen.getByLabelText('Email');
 
       // Test invalid email
       await userEvent.type(emailInput, 'invalid-email');
       await waitFor(() => {
-        expect(screen.getByTestId('email-error')).toHaveTextContent('Invalid email format');
+        expect(screen.getByRole('alert')).toHaveTextContent('Invalid email format');
       });
 
       // Test valid email
       await userEvent.clear(emailInput);
       await userEvent.type(emailInput, 'test@example.com');
       await waitFor(() => {
-        expect(screen.queryByTestId('email-error')).not.toBeInTheDocument();
+        expect(screen.queryByRole('alert')).toBeEmptyDOMElement();
       });
     });
 
     it('should validate password strength', async () => {
-      const TestPasswordForm = () => {
-        const [password, setPassword] = React.useState('');
-        const [strength, setStrength] = React.useState({ score: 0, feedback: '' });
+      render(<PasswordValidationForm />);
 
-        const checkPasswordStrength = (value: string) => {
-          let score = 0;
-          let feedback = 'Very weak';
-
-          if (value.length >= 8) score++;
-          if (/[A-Z]/.test(value)) score++;
-          if (/[a-z]/.test(value)) score++;
-          if (/\d/.test(value)) score++;
-          if (/[^A-Za-z0-9]/.test(value)) score++;
-
-          switch (score) {
-            case 0:
-            case 1:
-              feedback = 'Very weak';
-              break;
-            case 2:
-              feedback = 'Weak';
-              break;
-            case 3:
-              feedback = 'Fair';
-              break;
-            case 4:
-              feedback = 'Good';
-              break;
-            case 5:
-              feedback = 'Strong';
-              break;
-          }
-
-          setStrength({ score, feedback });
-        };
-
-        const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          const value = e.target.value;
-          setPassword(value);
-          checkPasswordStrength(value);
-        };
-
-        return (
-          <form>
-            <input
-              type="password"
-              value={password}
-              onChange={handlePasswordChange}
-              data-testid="password-input"
-            />
-            <div data-testid="password-strength">{strength.feedback}</div>
-          </form>
-        );
-      };
-
-      render(<TestPasswordForm />);
-
-      const passwordInput = screen.getByTestId('password-input');
+      const passwordInput = screen.getByLabelText('Password');
       const strengthIndicator = screen.getByTestId('password-strength');
 
       // Test weak password
       await userEvent.type(passwordInput, 'weak');
       await waitFor(() => {
-        expect(strengthIndicator).toHaveTextContent('Very weak');
+        expect(strengthIndicator).toHaveTextContent('Strength: weak');
       });
 
       // Test strong password
       await userEvent.clear(passwordInput);
       await userEvent.type(passwordInput, 'StrongPass123!');
       await waitFor(() => {
-        expect(strengthIndicator).toHaveTextContent('Strong');
+        expect(strengthIndicator).toHaveTextContent('Strength: strong');
       });
     });
 

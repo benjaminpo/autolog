@@ -165,6 +165,60 @@ const AccessibleDataTable = () => (
   </table>
 );
 
+// Extract dynamic content component to reduce nesting
+const DynamicContent = () => {
+  const [showContent, setShowContent] = React.useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (showContent && contentRef.current) {
+      contentRef.current.focus();
+    }
+  }, [showContent]);
+
+  return (
+    <div>
+      <button onClick={() => setShowContent(!showContent)}>
+        {showContent ? 'Hide' : 'Show'} Content
+      </button>
+      {showContent && (
+        <div ref={contentRef} tabIndex={-1} role="region" aria-label="Dynamic content">
+          <h2>New Content</h2>
+          <p>This content appeared dynamically</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Extract validation form component to reduce nesting
+const FormWithValidation = () => {
+  const [error, setError] = React.useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get('name') as string;
+
+    if (!name) {
+      setError('Name is required');
+    } else {
+      setError('');
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="name">Name</label>
+      <input id="name" name="name" aria-describedby="name-error" />
+      <div id="name-error" role="alert" aria-live="assertive">
+        {error}
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+  );
+};
+
 describe('Advanced Accessibility Tests', () => {
   describe('Keyboard Navigation', () => {
     it('should support tab navigation through interactive elements', async () => {
@@ -326,33 +380,6 @@ describe('Advanced Accessibility Tests', () => {
     it('should announce form validation errors', async () => {
       const user = userEvent.setup();
 
-      const FormWithValidation = () => {
-        const [error, setError] = React.useState('');
-
-        const handleSubmit = (e: React.FormEvent) => {
-          e.preventDefault();
-          const formData = new FormData(e.target as HTMLFormElement);
-          const name = formData.get('name') as string;
-
-          if (!name) {
-            setError('Name is required');
-          } else {
-            setError('');
-          }
-        };
-
-        return (
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="name">Name</label>
-            <input id="name" name="name" aria-describedby="name-error" />
-            <div id="name-error" role="alert" aria-live="assertive">
-              {error}
-            </div>
-            <button type="submit">Submit</button>
-          </form>
-        );
-      };
-
       render(<FormWithValidation />);
 
       const submitButton = screen.getByRole('button', { name: /submit/i });
@@ -390,31 +417,6 @@ describe('Advanced Accessibility Tests', () => {
 
     it('should manage focus when content changes dynamically', async () => {
       const user = userEvent.setup();
-
-      const DynamicContent = () => {
-        const [showContent, setShowContent] = React.useState(false);
-        const contentRef = React.useRef<HTMLDivElement>(null);
-
-        React.useEffect(() => {
-          if (showContent && contentRef.current) {
-            contentRef.current.focus();
-          }
-        }, [showContent]);
-
-        return (
-          <div>
-            <button onClick={() => setShowContent(!showContent)}>
-              {showContent ? 'Hide' : 'Show'} Content
-            </button>
-            {showContent && (
-              <div ref={contentRef} tabIndex={-1} role="region" aria-label="Dynamic content">
-                <h2>New Content</h2>
-                <p>This content appeared dynamically</p>
-              </div>
-            )}
-          </div>
-        );
-      };
 
       render(<DynamicContent />);
 

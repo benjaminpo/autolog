@@ -213,6 +213,44 @@ const MockFilterComponent = ({
   );
 };
 
+// Helper functions to reduce nesting
+const createIncrementHandler = (setCount: (value: number) => void, setHistory: (updater: (prev: number[]) => number[]) => void, currentCount: number) => {
+  return () => {
+    const newCount = currentCount + 1;
+    setCount(newCount);
+    setHistory((prev: number[]) => [...prev, newCount]);
+  };
+};
+
+const createDecrementHandler = (setCount: (value: number) => void, setHistory: (updater: (prev: number[]) => number[]) => void, currentCount: number) => {
+  return () => {
+    const newCount = currentCount - 1;
+    setCount(newCount);
+    setHistory((prev: number[]) => [...prev, newCount]);
+  };
+};
+
+const createResetHandler = (setCount: (value: number) => void, setHistory: (value: number[]) => void) => {
+  return () => {
+    setCount(0);
+    setHistory([0]);
+  };
+};
+
+// Helper for async data fetching
+const simulateAsyncFetch = async (shouldFail: boolean) => {
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  if (shouldFail) {
+    throw new Error('API Error');
+  }
+  
+  return [
+    { id: 1, name: 'Item 1' },
+    { id: 2, name: 'Item 2' },
+  ];
+};
+
 describe('Component Integration Tests', () => {
   describe('Form and Data Display Integration', () => {
     it('should add new items through form submission', async () => {
@@ -456,22 +494,9 @@ describe('Component Integration Tests', () => {
       const [count, setCount] = React.useState(0);
       const [history, setHistory] = React.useState<number[]>([0]);
 
-      const increment = () => {
-        const newCount = count + 1;
-        setCount(newCount);
-        setHistory(prev => [...prev, newCount]);
-      };
-
-      const decrement = () => {
-        const newCount = count - 1;
-        setCount(newCount);
-        setHistory(prev => [...prev, newCount]);
-      };
-
-      const reset = () => {
-        setCount(0);
-        setHistory([0]);
-      };
+      const increment = createIncrementHandler(setCount, setHistory, count);
+      const decrement = createDecrementHandler(setCount, setHistory, count);
+      const reset = createResetHandler(setCount, setHistory);
 
       return (
         <div data-testid="state-manager">
@@ -535,18 +560,7 @@ describe('Component Integration Tests', () => {
         setError(null);
 
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          if (shouldFail) {
-            throw new Error('API Error');
-          }
-
-          const mockData = [
-            { id: 1, name: 'Item 1' },
-            { id: 2, name: 'Item 2' },
-          ];
-
+          const mockData = await simulateAsyncFetch(shouldFail);
           setData(mockData);
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Unknown error');

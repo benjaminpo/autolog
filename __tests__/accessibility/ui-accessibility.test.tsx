@@ -26,6 +26,112 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   </ThemeProvider>
 );
 
+// Helper functions for keyboard navigation
+const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down', optionsLength: number) => {
+  if (direction === 'down') {
+    return (currentIndex + 1) % optionsLength;
+  } else {
+    return (currentIndex - 1 + optionsLength) % optionsLength;
+  }
+};
+
+const logOptionSelection = (option: { label: string; selected: boolean }) => {
+  console.log(`${option.label.toLowerCase()} selected`);
+};
+
+// Extract keyboard navigation component to reduce nesting
+const TestKeyboardNavigation = () => {
+  const [focusedIndex, setFocusedIndex] = React.useState(0);
+  const options = [
+    { label: 'Option 1', selected: false },
+    { label: 'Option 2 (Selected)', selected: true },
+    { label: 'Option 3', selected: false },
+  ];
+  const optionRefs = options.map(() => React.createRef<HTMLButtonElement>());
+
+  const handleArrowNavigation = (direction: 'up' | 'down') => {
+    setFocusedIndex(prevIndex => calculateNextIndex(prevIndex, direction, options.length));
+  };
+
+  const handleListboxKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      handleArrowNavigation('down');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      handleArrowNavigation('up');
+    }
+  };
+
+  const handleButtonKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      console.log('activated');
+    }
+  };
+
+  const handleCustomButtonKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      console.log('custom button activated');
+    }
+  };
+
+  const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const optionText = e.currentTarget.textContent || '';
+      const option = options.find(opt => opt.label === optionText);
+      if (option) {
+        logOptionSelection(option);
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (optionRefs[focusedIndex] && optionRefs[focusedIndex].current) {
+      optionRefs[focusedIndex].current?.focus();
+    }
+  }, [focusedIndex, optionRefs]);
+
+  return (
+    <div>
+      <div
+        role="listbox"
+        onKeyDown={handleListboxKeyDown}
+        tabIndex={0}
+        aria-label="Test listbox"
+      >
+        {options.map((option, index) => (
+          <button
+            key={index}
+            ref={optionRefs[index]}
+            role="option"
+            aria-selected={option.selected}
+            onKeyDown={handleOptionKeyDown}
+            tabIndex={-1}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+      
+      <button
+        onKeyDown={handleButtonKeyDown}
+        aria-label="Primary action"
+      >
+        Standard Button
+      </button>
+      
+      <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={handleCustomButtonKeyDown}
+        aria-label="Custom button implementation"
+      >
+        Custom Button
+      </div>
+    </div>
+  );
+};
+
 describe('UI Accessibility Tests', () => {
   describe('Basic Accessibility Compliance', () => {
     it('should have proper ARIA labels for form elements', () => {
@@ -362,112 +468,14 @@ describe('UI Accessibility Tests', () => {
     });
 
     it('should provide keyboard navigation support', () => {
-      const TestKeyboardNavigation = () => {
-        const [focusedIndex, setFocusedIndex] = React.useState(0);
-        const options = [
-          { label: 'Option 1', selected: false },
-          { label: 'Option 2 (Selected)', selected: true },
-          { label: 'Option 3', selected: false },
-        ];
-        const optionRefs = options.map(() => React.createRef<HTMLButtonElement>());
-
-        const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down') => {
-          if (direction === 'down') {
-            return (currentIndex + 1) % options.length;
-          } else {
-            return (currentIndex - 1 + options.length) % options.length;
-          }
-        };
-
-        const handleArrowNavigation = (direction: 'up' | 'down') => {
-          setFocusedIndex(prevIndex => calculateNextIndex(prevIndex, direction));
-        };
-
-        const handleListboxKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            handleArrowNavigation('down');
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            handleArrowNavigation('up');
-          }
-        };
-
-        const handleButtonKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'Enter') {
-            console.log('activated');
-          }
-        };
-
-        const handleCustomButtonKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            console.log('custom button activated');
-          }
-        };
-
-        const logOptionSelection = (option: typeof options[0]) => {
-          console.log(`${option.label.toLowerCase()} selected`);
-        };
-
-        const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            const optionText = e.currentTarget.textContent || '';
-            const option = options.find(opt => opt.label === optionText);
-            if (option) {
-              logOptionSelection(option);
-            }
-          }
-        };
-
-        React.useEffect(() => {
-          optionRefs[focusedIndex].current?.focus();
-        }, [focusedIndex, optionRefs]);
-
-        return (
-          <div>
-            <button onKeyDown={handleButtonKeyDown}>
-              Keyboard Accessible Button
-            </button>
-
-            <button
-              type="button"
-              onKeyDown={handleCustomButtonKeyDown}
-            >
-              Custom Button with Keyboard Support
-            </button>
-
-            <div
-              role="listbox"
-              aria-label="Options"
-              onKeyDown={handleListboxKeyDown}
-            >
-              {options.map((option, idx) => (
-                <button
-                  key={option.label}
-                  role="option"
-                  tabIndex={focusedIndex === idx ? 0 : -1}
-                  aria-selected={option.selected ? 'true' : 'false'}
-                  ref={optionRefs[idx]}
-                  onKeyDown={handleOptionKeyDown}
-                  type="button"
-                  className="option-button"
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      };
-
       render(
         <TestWrapper>
           <TestKeyboardNavigation />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Keyboard Accessible Button')).toBeInTheDocument();
-      expect(screen.getByText('Custom Button with Keyboard Support')).toBeInTheDocument();
+      expect(screen.getByText('Standard Button')).toBeInTheDocument();
+      expect(screen.getByText('Custom Button')).toBeInTheDocument();
       expect(screen.getByText('Option 2 (Selected)')).toHaveAttribute('aria-selected', 'true');
     });
   });
