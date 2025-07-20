@@ -766,14 +766,6 @@ export default function ImportPage() {
                                 <th className="px-2 py-1 border-b text-left">{t?.import?.cost || 'Cost'}</th>
                                 <th className="px-2 py-1 border-b text-left">{t?.import?.company || 'Company'}</th>
                               </>
-                            ) : importType === 'expenses' ? (
-                              <>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.car || 'Car'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.date || 'Date'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.category || 'Category'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.amount || 'Amount'}</th>
-                                <th className="px-2 py-1 border-b text-left">{t?.import?.notes || 'Notes'}</th>
-                              </>
                             ) : (
                               <>
                                 <th className="px-2 py-1 border-b text-left">{t?.import?.car || 'Car'}</th>

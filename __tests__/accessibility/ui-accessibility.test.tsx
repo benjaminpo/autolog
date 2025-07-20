@@ -429,13 +429,12 @@ describe('UI Accessibility Tests', () => {
               Keyboard Accessible Button
             </button>
 
-            <div
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onKeyDown={handleCustomButtonKeyDown}
             >
               Custom Button with Keyboard Support
-            </div>
+            </button>
 
             <ul
               role="listbox"
@@ -466,7 +465,7 @@ describe('UI Accessibility Tests', () => {
       );
 
       expect(screen.getByText('Keyboard Accessible Button')).toBeInTheDocument();
-      expect(screen.getByText('Custom Button with Keyboard Support')).toHaveAttribute('tabIndex', '0');
+      expect(screen.getByText('Custom Button with Keyboard Support')).toBeInTheDocument();
       expect(screen.getByText('Option 2 (Selected)')).toHaveAttribute('aria-selected', 'true');
     });
   });

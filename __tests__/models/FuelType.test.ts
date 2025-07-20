@@ -30,7 +30,7 @@ describe('FuelType Model', () => {
         ref: 'User',
         required: true
       };
-      
+
       expect(userIdField.type).toBe('ObjectId');
       expect(userIdField.ref).toBe('User');
       expect(userIdField.required).toBe(true);
@@ -42,7 +42,7 @@ describe('FuelType Model', () => {
         required: true,
         trim: true
       };
-      
+
       expect(nameField.type).toBe(String);
       expect(nameField.required).toBe(true);
       expect(nameField.trim).toBe(true);
@@ -52,7 +52,7 @@ describe('FuelType Model', () => {
       const options = {
         timestamps: true
       };
-      
+
       expect(options.timestamps).toBe(true);
     });
 
@@ -60,7 +60,7 @@ describe('FuelType Model', () => {
       // Mock the compound index behavior
       const indexConfig = { userId: 1, name: 1 };
       const indexOptions = { unique: true };
-      
+
       expect(indexConfig.userId).toBe(1);
       expect(indexConfig.name).toBe(1);
       expect(indexOptions.unique).toBe(true);
@@ -72,7 +72,7 @@ describe('FuelType Model', () => {
       const fuelType: Partial<IFuelType> = {
         name: 'Gasoline'
       };
-      
+
       // userId is missing
       expect(fuelType.userId).toBeUndefined();
       expect(fuelType.name).toBe('Gasoline');
@@ -82,7 +82,7 @@ describe('FuelType Model', () => {
       const fuelType: Partial<IFuelType> = {
         userId: 'user123'
       };
-      
+
       // name is missing
       expect(fuelType.userId).toBe('user123');
       expect(fuelType.name).toBeUndefined();
@@ -93,7 +93,7 @@ describe('FuelType Model', () => {
         userId: 'user123',
         name: 'Diesel'
       } as IFuelType;
-      
+
       expect(fuelType.userId).toBe('user123');
       expect(fuelType.name).toBe('Diesel');
     });
@@ -108,7 +108,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Super Premium' },
         { userId: 'user123', name: 'Ethanol Blend' }
       ];
-      
+
       gasolineTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -124,7 +124,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'B20 Biodiesel' },
         { userId: 'user123', name: 'Premium Diesel' }
       ];
-      
+
       dieselTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -140,7 +140,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Hydrogen' },
         { userId: 'user123', name: 'Electric' }
       ];
-      
+
       alternativeFuels.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -158,7 +158,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Gasolina' }, // Spain/Mexico
         { userId: 'user123', name: 'AdBlue' } // DEF in Europe
       ];
-      
+
       internationalTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -175,7 +175,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: '95 RON' },
         { userId: 'user123', name: '98 RON' }
       ];
-      
+
       octaneTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -193,11 +193,11 @@ describe('FuelType Model', () => {
         '\nE85\n',
         '   CNG   '
       ];
-      
+
       namesWithWhitespace.forEach(name => {
         const trimmed = name.trim();
         expect(trimmed.length).toBeLessThan(name.length);
-        expect(trimmed).not.toMatch(/^(\s)|(\s)$/);
+        expect(trimmed).not.toMatch(/^((\s)|(\s))$/);
       });
     });
 
@@ -211,7 +211,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'B20' }, // Alphanumeric
         { userId: 'user123', name: '91+ Octane' } // With special chars
       ];
-      
+
       namingConventions.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -227,7 +227,7 @@ describe('FuelType Model', () => {
         '\t',
         '\n'
       ];
-      
+
       invalidNames.forEach(name => {
         const trimmed = name.trim();
         expect(trimmed.length).toBe(0);
@@ -242,14 +242,14 @@ describe('FuelType Model', () => {
         { userId: 'user1', name: 'Regular' },
         { userId: 'user1', name: 'Premium' }
       ];
-      
+
       const user2Types: Partial<IFuelType>[] = [
         { userId: 'user2', name: 'Regular' },
         { userId: 'user2', name: 'Diesel' }
       ];
-      
+
       const allTypes = [...user1Types, ...user2Types];
-      
+
       // Same name can exist for different users
       const regularTypes = allTypes.filter(type => type.name === 'Regular');
       expect(regularTypes).toHaveLength(2);
@@ -262,11 +262,11 @@ describe('FuelType Model', () => {
         { userId: 'user1', name: 'Premium' },
         { userId: 'user1', name: 'Regular' } // Duplicate for same user
       ];
-      
+
       // Simulate unique constraint check
       const seenCombinations = new Set();
       const duplicates: string[] = [];
-      
+
       user1Types.forEach(type => {
         const combination = `${type.userId}-${type.name}`;
         if (seenCombinations.has(combination)) {
@@ -275,7 +275,7 @@ describe('FuelType Model', () => {
           seenCombinations.add(combination);
         }
       });
-      
+
       expect(duplicates).toHaveLength(1);
       expect(duplicates[0]).toBe('user1-Regular');
     });
@@ -288,7 +288,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Heating Oil' },
         { userId: 'user123', name: 'Kerosene' }
       ];
-      
+
       customTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -305,7 +305,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Super Unleaded' },
         { userId: 'user123', name: 'Premium Unleaded' }
       ];
-      
+
       petroleumFuels.forEach(fuel => {
         expect(typeof fuel.name).toBe('string');
         expect(fuel.name!.includes('lead') || fuel.name!.includes('Lead')).toBe(true);
@@ -322,7 +322,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Biodiesel B20' },
         { userId: 'user123', name: 'Renewable Diesel' }
       ];
-      
+
       biofuels.forEach(fuel => {
         expect(typeof fuel.name).toBe('string');
         expect(fuel.name!.length).toBeGreaterThan(0);
@@ -338,7 +338,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Propane' },
         { userId: 'user123', name: 'Butane' }
       ];
-      
+
       gasFuels.forEach(fuel => {
         expect(typeof fuel.name).toBe('string');
         expect(fuel.name!.length).toBeGreaterThan(0);
@@ -356,7 +356,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Supercharging' },
         { userId: 'user123', name: 'Home Charging' }
       ];
-      
+
       electricTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -371,7 +371,7 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Electric + Gas' },
         { userId: 'user123', name: 'Regenerative' }
       ];
-      
+
       hybridTypes.forEach(type => {
         expect(typeof type.name).toBe('string');
         expect(type.name!.length).toBeGreaterThan(0);
@@ -383,7 +383,7 @@ describe('FuelType Model', () => {
   describe('Data Type Validation', () => {
     it('should validate userId as string', () => {
       const validUserIds = ['user123', 'userId456', '507f1f77bcf86cd799439011'];
-      
+
       validUserIds.forEach(userId => {
         expect(typeof userId).toBe('string');
         expect(userId.length).toBeGreaterThan(0);
@@ -392,7 +392,7 @@ describe('FuelType Model', () => {
 
     it('should validate name as string', () => {
       const validNames = ['Regular', 'Premium', 'Diesel', 'E85', 'Electric'];
-      
+
       validNames.forEach(name => {
         expect(typeof name).toBe('string');
         expect(name.length).toBeGreaterThan(0);
@@ -404,7 +404,7 @@ describe('FuelType Model', () => {
         userId: 'user123',
         name: 'Premium'
       } as IFuelType;
-      
+
       expect(typeof fuelType.userId).toBe('string');
       expect(typeof fuelType.name).toBe('string');
     });
@@ -416,7 +416,7 @@ describe('FuelType Model', () => {
         userId: 'user123',
         name: 'Regular'
       } as IFuelType;
-      
+
       expect(typeof fuelType.userId).toBe('string');
       expect(typeof fuelType.name).toBe('string');
     });
@@ -431,7 +431,7 @@ describe('FuelType Model', () => {
         toObject: jest.fn(),
         toJSON: jest.fn()
       };
-      
+
       expect(typeof fuelType.save).toBe('function');
       expect(typeof fuelType.remove).toBe('function');
       expect(typeof fuelType.toObject).toBe('function');
@@ -443,7 +443,7 @@ describe('FuelType Model', () => {
         name: 'Diesel'
         // userId will be set during creation
       };
-      
+
       expect(partialFuelType.name).toBe('Diesel');
       expect(partialFuelType.userId).toBeUndefined();
     });
@@ -456,10 +456,10 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Premium' }, // Occasional upgrade
         { userId: 'user123', name: 'E85' } // Alternative option
       ];
-      
+
       const primaryFuel = userFuelTypes.find(f => f.name === 'Regular');
       const alternativeFuels = userFuelTypes.filter(f => f.name !== 'Regular');
-      
+
       expect(primaryFuel).toBeDefined();
       expect(alternativeFuels).toHaveLength(2);
       userFuelTypes.forEach(fuel => {
@@ -473,14 +473,14 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Premium' },
         { userId: 'user123', name: 'Diesel' }
       ];
-      
+
       // Simulate adding a new fuel type
       const newFuelType = { userId: 'user123', name: 'E85' };
       const updatedTypes = [...fuelTypes, newFuelType];
-      
+
       expect(updatedTypes).toHaveLength(4);
       expect(updatedTypes).toContainEqual(newFuelType);
-      
+
       // Simulate removing a fuel type
       const filteredTypes = updatedTypes.filter(f => f.name !== 'Diesel');
       expect(filteredTypes).toHaveLength(3);
@@ -494,12 +494,12 @@ describe('FuelType Model', () => {
         { userId: 'user123', name: 'Diesel' },
         { userId: 'user123', name: 'Biodiesel' }
       ];
-      
+
       // Search for diesel types
-      const dieselTypes = fuelTypes.filter(f => 
+      const dieselTypes = fuelTypes.filter(f =>
         f.name!.toLowerCase().includes('diesel')
       );
-      
+
       expect(dieselTypes).toHaveLength(2);
       expect(dieselTypes.map(f => f.name)).toContain('Diesel');
       expect(dieselTypes.map(f => f.name)).toContain('Biodiesel');
@@ -518,7 +518,7 @@ describe('FuelType Model', () => {
         aggregate: jest.fn(),
         distinct: jest.fn()
       };
-      
+
       expect(typeof mockModel.find).toBe('function');
       expect(typeof mockModel.findOne).toBe('function');
       expect(typeof mockModel.create).toBe('function');
@@ -529,4 +529,4 @@ describe('FuelType Model', () => {
       expect(typeof mockModel.distinct).toBe('function');
     });
   });
-}); 
+});

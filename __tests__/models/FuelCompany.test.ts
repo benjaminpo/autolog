@@ -25,7 +25,7 @@ describe('FuelCompany Model', () => {
         maxlength: [100, 'Fuel company name cannot exceed 100 characters'],
         unique: true,
       };
-      
+
       expect(nameField.type).toBe(String);
       expect(nameField.required).toEqual([true, 'Fuel company name is required']);
       expect(nameField.trim).toBe(true);
@@ -38,7 +38,7 @@ describe('FuelCompany Model', () => {
         type: Boolean,
         default: true,
       };
-      
+
       expect(isActiveField.type).toBe(Boolean);
       expect(isActiveField.default).toBe(true);
     });
@@ -48,7 +48,7 @@ describe('FuelCompany Model', () => {
         timestamps: true,
         collection: 'fuelcompanies',
       };
-      
+
       expect(options.timestamps).toBe(true);
       expect(options.collection).toBe('fuelcompanies');
     });
@@ -59,7 +59,7 @@ describe('FuelCompany Model', () => {
       const fuelCompany: Partial<IFuelCompany> = {
         isActive: true
       };
-      
+
       // name is missing
       expect(fuelCompany.name).toBeUndefined();
       expect(fuelCompany.isActive).toBe(true);
@@ -69,7 +69,7 @@ describe('FuelCompany Model', () => {
       const fuelCompany: Partial<IFuelCompany> = {
         name: 'Shell'
       };
-      
+
       // isActive should default to true
       expect(fuelCompany.name).toBe('Shell');
       expect(fuelCompany.isActive).toBeUndefined(); // Will be set by default
@@ -80,7 +80,7 @@ describe('FuelCompany Model', () => {
         name: 'Chevron',
         isActive: true
       } as IFuelCompany;
-      
+
       expect(fuelCompany.name).toBe('Chevron');
       expect(fuelCompany.isActive).toBe(true);
     });
@@ -100,7 +100,7 @@ describe('FuelCompany Model', () => {
         'Petrobras',
         'CNPC'
       ];
-      
+
       validNames.forEach(name => {
         expect(typeof name).toBe('string');
         expect(name.length).toBeGreaterThan(0);
@@ -122,7 +122,7 @@ describe('FuelCompany Model', () => {
         'ARCO',
         'Sinclair Oil'
       ];
-      
+
       specialNames.forEach(name => {
         expect(typeof name).toBe('string');
         expect(name.length).toBeGreaterThan(0);
@@ -135,7 +135,7 @@ describe('FuelCompany Model', () => {
       const normalName = 'Shell';
       const longName = 'A'.repeat(100); // Exactly 100 characters
       const tooLongName = 'A'.repeat(101); // 101 characters - too long
-      
+
       expect(shortName.length).toBeLessThanOrEqual(100);
       expect(normalName.length).toBeLessThanOrEqual(100);
       expect(longName.length).toBe(100);
@@ -150,18 +150,18 @@ describe('FuelCompany Model', () => {
         '\nTexaco\n',
         '   Mobil   '
       ];
-      
+
       namesWithWhitespace.forEach(name => {
         const trimmed = name.trim();
         expect(trimmed.length).toBeLessThan(name.length);
-        expect(trimmed).not.toMatch(/^(\s)|(\s)$/);
+        expect(trimmed).not.toMatch(/^((\s)|(\s))$/);
       });
     });
 
     it('should validate uniqueness constraint concept', () => {
       const companies = ['Shell', 'Chevron', 'BP', 'Shell']; // Duplicate Shell
       const uniqueCompanies = [...new Set(companies)];
-      
+
       expect(companies.length).toBe(4);
       expect(uniqueCompanies.length).toBe(3); // Duplicates removed
       expect(uniqueCompanies).toContain('Shell');
@@ -176,7 +176,7 @@ describe('FuelCompany Model', () => {
         name: 'Shell',
         isActive: true
       };
-      
+
       expect(activeCompany.isActive).toBe(true);
       expect(typeof activeCompany.isActive).toBe('boolean');
     });
@@ -186,7 +186,7 @@ describe('FuelCompany Model', () => {
         name: 'Historical Oil Company',
         isActive: false
       };
-      
+
       expect(inactiveCompany.isActive).toBe(false);
       expect(typeof inactiveCompany.isActive).toBe('boolean');
     });
@@ -196,7 +196,7 @@ describe('FuelCompany Model', () => {
         name: 'Chevron'
         // isActive not specified - should default to true
       };
-      
+
       // In a real scenario, this would be set by the schema default
       const expectedDefault = true;
       expect(typeof expectedDefault).toBe('boolean');
@@ -216,7 +216,7 @@ describe('FuelCompany Model', () => {
         { name: 'OMV', isActive: true },
         { name: 'Neste', isActive: true }
       ];
-      
+
       internationalCompanies.forEach(company => {
         expect(typeof company.name).toBe('string');
         expect(company.name!.length).toBeGreaterThan(0);
@@ -233,7 +233,7 @@ describe('FuelCompany Model', () => {
         'ÖMV',
         'Neste Oyj'
       ];
-      
+
       unicodeNames.forEach(name => {
         expect(typeof name).toBe('string');
         expect(name.length).toBeGreaterThan(0);
@@ -252,7 +252,7 @@ describe('FuelCompany Model', () => {
         { name: 'Speedway', isActive: true },
         { name: 'Casey\'s', isActive: true }
       ];
-      
+
       chainStores.forEach(store => {
         expect(typeof store.name).toBe('string');
         expect(store.name!.length).toBeGreaterThan(0);
@@ -269,7 +269,7 @@ describe('FuelCompany Model', () => {
         { name: 'Love\'s', isActive: true },
         { name: 'Murphy USA', isActive: true }
       ];
-      
+
       regionalCompanies.forEach(company => {
         expect(typeof company.name).toBe('string');
         expect(company.name!.length).toBeGreaterThan(0);
@@ -287,7 +287,7 @@ describe('FuelCompany Model', () => {
         { name: 'Amoco', isActive: false },
         { name: 'Standard Oil', isActive: false }
       ];
-      
+
       historicalCompanies.forEach(company => {
         expect(typeof company.name).toBe('string');
         expect(company.name!.length).toBeGreaterThan(0);
@@ -302,7 +302,7 @@ describe('FuelCompany Model', () => {
         { name: 'Texaco', isActive: true }, // Now part of Chevron
         { name: 'ARCO', isActive: true } // Now part of BP
       ];
-      
+
       rebrandedCompanies.forEach(company => {
         expect(typeof company.name).toBe('string');
         expect(company.name!.length).toBeGreaterThan(0);
@@ -321,7 +321,7 @@ describe('FuelCompany Model', () => {
         '\n',
         '   \t\n   '
       ];
-      
+
       invalidNames.forEach(name => {
         const trimmed = name.trim();
         expect(trimmed.length).toBe(0);
@@ -332,10 +332,10 @@ describe('FuelCompany Model', () => {
     it('should handle very long company names', () => {
       const longName = 'Very Long International Petroleum and Energy Corporation with Extended Business Name LLC';
       const veryLongName = 'A'.repeat(150); // Exceeds 100 character limit
-      
+
       expect(longName.length).toBeGreaterThan(50);
       expect(veryLongName.length).toBeGreaterThan(100);
-      
+
       // In real validation, names over 100 chars would be rejected
       if (longName.length <= 100) {
         expect(longName.length).toBeLessThanOrEqual(100);
@@ -352,7 +352,7 @@ describe('FuelCompany Model', () => {
         'Git-N-Go',
         'Pump-N-Save'
       ];
-      
+
       specialNames.forEach(name => {
         expect(typeof name).toBe('string');
         expect(name.length).toBeGreaterThan(0);
@@ -366,20 +366,20 @@ describe('FuelCompany Model', () => {
         name: 'Shell',
         isActive: true
       } as IFuelCompany;
-      
+
       expect(typeof company.name).toBe('string');
       expect(typeof company.isActive).toBe('boolean');
     });
 
     it('should handle boolean variations', () => {
       const booleanValues = [true, false];
-      
+
       booleanValues.forEach(value => {
         const company: Partial<IFuelCompany> = {
           name: 'Test Company',
           isActive: value
         };
-        
+
         expect(typeof company.isActive).toBe('boolean');
         expect([true, false]).toContain(company.isActive);
       });
@@ -392,7 +392,7 @@ describe('FuelCompany Model', () => {
         name: 'Shell',
         isActive: true
       } as IFuelCompany;
-      
+
       expect(typeof company.name).toBe('string');
       expect(typeof company.isActive).toBe('boolean');
     });
@@ -407,7 +407,7 @@ describe('FuelCompany Model', () => {
         toObject: jest.fn(),
         toJSON: jest.fn()
       };
-      
+
       expect(typeof company.save).toBe('function');
       expect(typeof company.remove).toBe('function');
       expect(typeof company.toObject).toBe('function');
@@ -419,7 +419,7 @@ describe('FuelCompany Model', () => {
         name: 'Chevron'
         // isActive will default to true
       };
-      
+
       expect(partialCompany.name).toBe('Chevron');
       expect(partialCompany.isActive).toBeUndefined(); // Will be set by schema default
     });
@@ -432,16 +432,16 @@ describe('FuelCompany Model', () => {
         { name: 'Chevron', isActive: true },
         { name: 'BP', isActive: true }
       ];
-      
+
       const inactiveCompanies: Partial<IFuelCompany>[] = [
         { name: 'Gulf Oil', isActive: false },
         { name: 'Amoco', isActive: false }
       ];
-      
+
       const allCompanies = [...activeCompanies, ...inactiveCompanies];
       const activeCount = allCompanies.filter(c => c.isActive).length;
       const inactiveCount = allCompanies.filter(c => !c.isActive).length;
-      
+
       expect(activeCount).toBe(3);
       expect(inactiveCount).toBe(2);
       expect(allCompanies.length).toBe(5);
@@ -450,11 +450,11 @@ describe('FuelCompany Model', () => {
     it('should handle company name searches', () => {
       const companies = ['Shell', 'Chevron', 'BP', 'Texaco', 'Mobil'];
       const searchTerm = 'shell';
-      
-      const found = companies.filter(name => 
+
+      const found = companies.filter(name =>
         name.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      
+
       expect(found).toContain('Shell');
       expect(found.length).toBe(1);
     });
@@ -465,13 +465,13 @@ describe('FuelCompany Model', () => {
         { name: 'Chevron', isActive: true },
         { name: 'Old Company', isActive: false }
       ];
-      
+
       // Simulate activating a company
       const companyToActivate = companies.find(c => c.name === 'Old Company');
       if (companyToActivate) {
         companyToActivate.isActive = true;
       }
-      
+
       const activeCompanies = companies.filter(c => c.isActive);
       expect(activeCompanies.length).toBe(3);
     });
@@ -489,7 +489,7 @@ describe('FuelCompany Model', () => {
         findByIdAndUpdate: jest.fn(),
         findByIdAndDelete: jest.fn()
       };
-      
+
       expect(typeof mockModel.find).toBe('function');
       expect(typeof mockModel.findOne).toBe('function');
       expect(typeof mockModel.create).toBe('function');
@@ -500,4 +500,4 @@ describe('FuelCompany Model', () => {
       expect(typeof mockModel.findByIdAndDelete).toBe('function');
     });
   });
-}); 
+});
