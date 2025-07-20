@@ -286,7 +286,7 @@ describe('UI Accessibility Tests', () => {
             <div className="form-field">
               <label htmlFor="required-field">
                 Required Field
-                <span className="required-indicator" aria-label="required"> *</span>
+                <span className="required-indicator" aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -369,7 +369,7 @@ describe('UI Accessibility Tests', () => {
           { label: 'Option 2 (Selected)', selected: true },
           { label: 'Option 3', selected: false },
         ];
-        const optionRefs = options.map(() => React.createRef<HTMLLIElement>());
+        const optionRefs = options.map(() => React.createRef<HTMLButtonElement>());
 
         const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down') => {
           if (direction === 'down') {
@@ -409,7 +409,7 @@ describe('UI Accessibility Tests', () => {
           console.log(`${option.label.toLowerCase()} selected`);
         };
 
-        const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLLIElement>) => {
+        const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
           if (e.key === 'Enter' || e.key === ' ') {
             const optionText = e.currentTarget.textContent || '';
             const option = options.find(opt => opt.label === optionText);
@@ -436,24 +436,26 @@ describe('UI Accessibility Tests', () => {
               Custom Button with Keyboard Support
             </button>
 
-            <ul
+            <div
               role="listbox"
               aria-label="Options"
               onKeyDown={handleListboxKeyDown}
             >
               {options.map((option, idx) => (
-                <li
+                <button
                   key={option.label}
                   role="option"
                   tabIndex={focusedIndex === idx ? 0 : -1}
                   aria-selected={option.selected ? 'true' : 'false'}
                   ref={optionRefs[idx]}
                   onKeyDown={handleOptionKeyDown}
+                  type="button"
+                  className="option-button"
                 >
                   {option.label}
-                </li>
+                </button>
               ))}
-            </ul>
+            </div>
           </div>
         );
       };

@@ -300,10 +300,9 @@ describe('Enhanced Form Validation Tests', () => {
         };
 
         return (
-          <div
+          <fieldset
             onKeyDown={handleKeyDown}
             data-testid="form-container"
-            role="group"
             aria-label="Interactive form container"
           >
             {inputs.map((input, index) => (
@@ -314,7 +313,7 @@ describe('Enhanced Form Validation Tests', () => {
               />
             ))}
             <div data-testid="active-index">{activeIndex}</div>
-          </div>
+          </fieldset>
         );
       };
 

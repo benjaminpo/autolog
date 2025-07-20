@@ -84,9 +84,7 @@ const MockModal = ({
   return (
     <div
       data-testid="modal-overlay"
-      onClick={onClose}
-      onKeyDown={(e) => e.key === 'Escape' && onClose()}
-      role="presentation"
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)' }}
     >
       <div
         data-testid="modal-content"
@@ -199,10 +197,13 @@ const MockFilterComponent = ({
         onChange={(e) => setSearchTerm(e.target.value)}
         data-testid="search-input"
       />
+      <label htmlFor="category-select">Test Select</label>
       <select
+        id="category-select"
+        data-testid="category-select"
+        title="Select an option"
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
-        data-testid="category-select"
       >
         <option value="all">All Categories</option>
         <option value="work">Work</option>
@@ -279,7 +280,7 @@ describe('Component Integration Tests', () => {
       });
     });
 
-    it('should close modal without saving when clicking overlay', async () => {
+    it('should close modal without saving when clicking close button', async () => {
       const user = userEvent.setup();
       render(<IntegratedApp />);
 
@@ -290,8 +291,8 @@ describe('Component Integration Tests', () => {
       // Fill some data
       await user.type(screen.getByTestId('name-input'), 'Test User');
 
-      // Click overlay to close
-      await user.click(screen.getByTestId('modal-overlay'));
+      // Click close button to close modal
+      await user.click(screen.getByTestId('modal-close'));
 
       // Modal should close without saving
       await waitFor(() => {
@@ -394,7 +395,7 @@ describe('Component Integration Tests', () => {
       };
 
       return (
-        <div
+        <fieldset
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
           onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
@@ -424,7 +425,7 @@ describe('Component Integration Tests', () => {
               </div>
             ))}
           </div>
-        </div>
+        </fieldset>
       );
     };
 
