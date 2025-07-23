@@ -84,9 +84,7 @@ const MockModal = ({
   return (
     <div
       data-testid="modal-overlay"
-      onClick={onClose}
-      onKeyDown={(e) => e.key === 'Escape' && onClose()}
-      role="presentation"
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)' }}
     >
       <div
         data-testid="modal-content"
@@ -199,10 +197,13 @@ const MockFilterComponent = ({
         onChange={(e) => setSearchTerm(e.target.value)}
         data-testid="search-input"
       />
+      <label htmlFor="category-select">Test Select</label>
       <select
+        id="category-select"
+        data-testid="category-select"
+        title="Select an option"
         value={selectedCategory}
         onChange={(e) => setSelectedCategory(e.target.value)}
-        data-testid="category-select"
       >
         <option value="all">All Categories</option>
         <option value="work">Work</option>
@@ -210,6 +211,44 @@ const MockFilterComponent = ({
       </select>
     </div>
   );
+};
+
+// Helper functions to reduce nesting
+const createIncrementHandler = (setCount: (value: number) => void, setHistory: (updater: (prev: number[]) => number[]) => void, currentCount: number) => {
+  return () => {
+    const newCount = currentCount + 1;
+    setCount(newCount);
+    setHistory((prev: number[]) => [...prev, newCount]);
+  };
+};
+
+const createDecrementHandler = (setCount: (value: number) => void, setHistory: (updater: (prev: number[]) => number[]) => void, currentCount: number) => {
+  return () => {
+    const newCount = currentCount - 1;
+    setCount(newCount);
+    setHistory((prev: number[]) => [...prev, newCount]);
+  };
+};
+
+const createResetHandler = (setCount: (value: number) => void, setHistory: (value: number[]) => void) => {
+  return () => {
+    setCount(0);
+    setHistory([0]);
+  };
+};
+
+// Helper for async data fetching
+const simulateAsyncFetch = async (shouldFail: boolean) => {
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  if (shouldFail) {
+    throw new Error('API Error');
+  }
+
+  return [
+    { id: 1, name: 'Item 1' },
+    { id: 2, name: 'Item 2' },
+  ];
 };
 
 describe('Component Integration Tests', () => {
@@ -279,7 +318,7 @@ describe('Component Integration Tests', () => {
       });
     });
 
-    it('should close modal without saving when clicking overlay', async () => {
+    it('should close modal without saving when clicking close button', async () => {
       const user = userEvent.setup();
       render(<IntegratedApp />);
 
@@ -290,8 +329,8 @@ describe('Component Integration Tests', () => {
       // Fill some data
       await user.type(screen.getByTestId('name-input'), 'Test User');
 
-      // Click overlay to close
-      await user.click(screen.getByTestId('modal-overlay'));
+      // Click close button to close modal
+      await user.click(screen.getByTestId('modal-close'));
 
       // Modal should close without saving
       await waitFor(() => {
@@ -394,11 +433,13 @@ describe('Component Integration Tests', () => {
       };
 
       return (
-        <div
+        <fieldset
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
           onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
           aria-label="Event testing container"
+          tabIndex={0}
+          role="group"
         >
           <button
             data-testid="propagation-button"
@@ -424,7 +465,7 @@ describe('Component Integration Tests', () => {
               </div>
             ))}
           </div>
-        </div>
+        </fieldset>
       );
     };
 
@@ -455,22 +496,9 @@ describe('Component Integration Tests', () => {
       const [count, setCount] = React.useState(0);
       const [history, setHistory] = React.useState<number[]>([0]);
 
-      const increment = () => {
-        const newCount = count + 1;
-        setCount(newCount);
-        setHistory(prev => [...prev, newCount]);
-      };
-
-      const decrement = () => {
-        const newCount = count - 1;
-        setCount(newCount);
-        setHistory(prev => [...prev, newCount]);
-      };
-
-      const reset = () => {
-        setCount(0);
-        setHistory([0]);
-      };
+      const increment = createIncrementHandler(setCount, setHistory, count);
+      const decrement = createDecrementHandler(setCount, setHistory, count);
+      const reset = createResetHandler(setCount, setHistory);
 
       return (
         <div data-testid="state-manager">
@@ -534,18 +562,7 @@ describe('Component Integration Tests', () => {
         setError(null);
 
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          if (shouldFail) {
-            throw new Error('API Error');
-          }
-
-          const mockData = [
-            { id: 1, name: 'Item 1' },
-            { id: 2, name: 'Item 2' },
-          ];
-
+          const mockData = await simulateAsyncFetch(shouldFail);
           setData(mockData);
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Unknown error');

@@ -48,7 +48,6 @@ export default function ImageModal({ isOpen, onClose, imageSrc, altText }: Image
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
-      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-label="Image viewer"
@@ -62,7 +61,7 @@ export default function ImageModal({ isOpen, onClose, imageSrc, altText }: Image
         >
           ×
         </button>
-        
+
         {/* Image */}
         <div className="relative">
           <Image
@@ -75,7 +74,7 @@ export default function ImageModal({ isOpen, onClose, imageSrc, altText }: Image
             priority
           />
         </div>
-        
+
         {/* Image info */}
         <div className="p-4 text-center">
           <p className="text-sm text-gray-600 dark:text-gray-400">{altText}</p>
@@ -83,4 +82,4 @@ export default function ImageModal({ isOpen, onClose, imageSrc, altText }: Image
       </div>
     </div>
   );
-} 
+}

@@ -40,7 +40,7 @@ const MockAddFuelPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       // Mock API call
       const response = await fetch('/api/fuel-entries', {
@@ -54,7 +54,7 @@ const MockAddFuelPage = () => {
       } else {
         setErrors({ submit: 'Failed to save fuel entry' });
       }
-    } catch (error) {
+    } catch (_error) {
       setErrors({ submit: 'Network error' });
     } finally {
       setLoading(false);
@@ -63,12 +63,12 @@ const MockAddFuelPage = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
+
     // Auto-calculate total cost
     if (field === 'fuelAmount' || field === 'pricePerUnit') {
       const amount = field === 'fuelAmount' ? parseFloat(value) : parseFloat(formData.fuelAmount);
       const price = field === 'pricePerUnit' ? parseFloat(value) : parseFloat(formData.pricePerUnit);
-      
+
       if (!isNaN(amount) && !isNaN(price)) {
         setFormData(prev => ({ ...prev, totalCost: (amount * price).toFixed(2) }));
       }
@@ -98,7 +98,7 @@ const MockAddFuelPage = () => {
   return (
     <div data-testid="add-fuel-page">
       <h1>Add Fuel Entry</h1>
-      
+
       <form onSubmit={handleSubmit} data-testid="fuel-form">
         <div>
           <label htmlFor="vehicleId">Vehicle</label>
@@ -269,7 +269,7 @@ describe('Add Fuel Page', () => {
 
   it('should render the add fuel form', () => {
     render(<MockAddFuelPage />);
-    
+
     expect(screen.getByTestId('add-fuel-page')).toBeInTheDocument();
     expect(screen.getByText('Add Fuel Entry')).toBeInTheDocument();
     expect(screen.getByTestId('fuel-form')).toBeInTheDocument();
@@ -282,13 +282,13 @@ describe('Add Fuel Page', () => {
     });
 
     render(<MockAddFuelPage />);
-    
+
     expect(screen.getByText('Please log in to add fuel entries')).toBeInTheDocument();
   });
 
   it('should render all form fields', () => {
     render(<MockAddFuelPage />);
-    
+
     expect(screen.getByLabelText('Vehicle')).toBeInTheDocument();
     expect(screen.getByLabelText('Date')).toBeInTheDocument();
     expect(screen.getByLabelText('Odometer Reading')).toBeInTheDocument();
@@ -303,7 +303,7 @@ describe('Add Fuel Page', () => {
 
   it('should populate vehicle options', async () => {
     render(<MockAddFuelPage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('2020 Toyota Camry')).toBeInTheDocument();
       expect(screen.getByText('2019 Honda Civic')).toBeInTheDocument();
@@ -312,7 +312,7 @@ describe('Add Fuel Page', () => {
 
   it('should populate fuel type options', async () => {
     render(<MockAddFuelPage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Regular')).toBeInTheDocument();
       expect(screen.getByText('Premium')).toBeInTheDocument();
@@ -321,7 +321,7 @@ describe('Add Fuel Page', () => {
 
   it('should populate fuel company options', async () => {
     render(<MockAddFuelPage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Shell')).toBeInTheDocument();
       expect(screen.getByText('Exxon')).toBeInTheDocument();
@@ -330,7 +330,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle form input changes', () => {
     render(<MockAddFuelPage />);
-    
+
     const dateInput = screen.getByLabelText('Date');
     fireEvent.change(dateInput, { target: { value: '2023-12-01' } });
     expect(dateInput).toHaveValue('2023-12-01');
@@ -342,7 +342,7 @@ describe('Add Fuel Page', () => {
 
   it('should auto-calculate total cost', () => {
     render(<MockAddFuelPage />);
-    
+
     const fuelAmountInput = screen.getByLabelText('Fuel Amount (L)');
     const pricePerUnitInput = screen.getByLabelText('Price per Liter');
     const totalCostInput = screen.getByLabelText('Total Cost');
@@ -355,7 +355,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle form submission successfully', async () => {
     render(<MockAddFuelPage />);
-    
+
     const form = screen.getByTestId('fuel-form');
     const submitButton = screen.getByTestId('submit-button');
 
@@ -382,7 +382,7 @@ describe('Add Fuel Page', () => {
     });
 
     render(<MockAddFuelPage />);
-    
+
     const form = screen.getByTestId('fuel-form');
 
     // Fill required fields
@@ -402,7 +402,7 @@ describe('Add Fuel Page', () => {
     (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
 
     render(<MockAddFuelPage />);
-    
+
     const form = screen.getByTestId('fuel-form');
 
     // Fill required fields
@@ -420,7 +420,7 @@ describe('Add Fuel Page', () => {
 
   it('should validate required fields', () => {
     render(<MockAddFuelPage />);
-    
+
     const vehicleSelect = screen.getByLabelText('Vehicle');
     const dateInput = screen.getByLabelText('Date');
     const odometerInput = screen.getByLabelText('Odometer Reading');
@@ -440,7 +440,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle optional fields', () => {
     render(<MockAddFuelPage />);
-    
+
     const locationInput = screen.getByLabelText('Location');
     const notesInput = screen.getByLabelText('Notes');
 
@@ -453,7 +453,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle vehicle selection', async () => {
     render(<MockAddFuelPage />);
-    
+
     await waitFor(() => {
       const vehicleSelect = screen.getByLabelText('Vehicle');
       fireEvent.change(vehicleSelect, { target: { value: '1' } });
@@ -463,7 +463,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle fuel type selection', async () => {
     render(<MockAddFuelPage />);
-    
+
     await waitFor(() => {
       const fuelTypeSelect = screen.getByLabelText('Fuel Type');
       fireEvent.change(fuelTypeSelect, { target: { value: '1' } });
@@ -473,7 +473,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle fuel company selection', async () => {
     render(<MockAddFuelPage />);
-    
+
     await waitFor(() => {
       const fuelCompanySelect = screen.getByLabelText('Fuel Company');
       fireEvent.change(fuelCompanySelect, { target: { value: '1' } });
@@ -483,7 +483,7 @@ describe('Add Fuel Page', () => {
 
   it('should handle decimal values correctly', () => {
     render(<MockAddFuelPage />);
-    
+
     const fuelAmountInput = screen.getByLabelText('Fuel Amount (L)');
     const pricePerUnitInput = screen.getByLabelText('Price per Liter');
 
@@ -496,7 +496,7 @@ describe('Add Fuel Page', () => {
 
   it('should reset loading state after submission', async () => {
     render(<MockAddFuelPage />);
-    
+
     const form = screen.getByTestId('fuel-form');
     const submitButton = screen.getByTestId('submit-button');
 
@@ -515,4 +515,4 @@ describe('Add Fuel Page', () => {
       expect(submitButton).not.toBeDisabled();
     });
   });
-}); 
+});

@@ -33,11 +33,6 @@ export default function FuelHistoryPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
-  // Add state for collapsible sections
-  const [showBasicInfo, setShowBasicInfo] = useState(true);
-  const [showFuelDetailsSection, setShowFuelDetailsSection] = useState(false);
-  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
-
   const loadFuelEntries = useCallback(async (offset = 0) => {
     try {
       const response = await fetch(`/api/fuel-entries?limit=${itemsPerPage}&offset=${offset}`);

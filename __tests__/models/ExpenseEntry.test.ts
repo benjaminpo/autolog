@@ -17,16 +17,6 @@ jest.mock('mongoose', () => ({
 }));
 
 describe('ExpenseEntry Model', () => {
-  const validExpenseEntryData = {
-    userId: '507f1f77bcf86cd799439011',
-    carId: 'car-123',
-    category: 'Maintenance',
-    amount: 150.75,
-    currency: 'USD',
-    date: '2023-10-15',
-    notes: 'Oil change and filter replacement'
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
   });

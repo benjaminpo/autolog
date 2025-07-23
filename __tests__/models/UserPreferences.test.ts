@@ -17,30 +17,6 @@ jest.mock('mongoose', () => ({
 }));
 
 describe('UserPreferences Model', () => {
-  const validUserPreferencesData = {
-    userId: '507f1f77bcf86cd799439011',
-    fuelCompanies: ['Shell', 'BP', 'Mobil'],
-    fuelTypes: ['Regular', 'Premium', 'Diesel'],
-    customBrands: {
-      'Car/Truck': ['Toyota', 'Honda', 'Ford'],
-      'Motorcycle': ['Harley-Davidson', 'Honda', 'Yamaha']
-    },
-    customModels: {
-      'Car/Truck': {
-        'Toyota': ['Camry', 'Corolla', 'Prius'],
-        'Honda': ['Civic', 'Accord', 'CR-V']
-      }
-    },
-    language: 'en' as const,
-    theme: 'system' as const,
-    fuelConsumptionUnit: 'L/100km' as const,
-    defaultCurrency: 'USD',
-    defaultDistanceUnit: 'km',
-    defaultVolumeUnit: 'L',
-    defaultTyrePressureUnit: 'bar',
-    defaultPaymentType: 'Credit Card'
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
   });

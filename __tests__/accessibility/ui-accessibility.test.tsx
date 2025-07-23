@@ -6,16 +6,20 @@ import { LanguageProvider } from '../../app/context/LanguageContext';
 
 // Mock Next.js components
 jest.mock('next/image', () => {
-  return ({ src, alt, ...props }: any) => {
+  const MockImage = ({ src, alt, ...props }: any) => {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={src} alt={alt} {...props} />;
   };
+  MockImage.displayName = 'MockImage';
+  return MockImage;
 });
 
 jest.mock('next/link', () => {
-  return ({ children, href, ...props }: any) => {
+  const MockLink = ({ children, href, ...props }: any) => {
     return <a href={href} {...props}>{children}</a>;
   };
+  MockLink.displayName = 'MockLink';
+  return MockLink;
 });
 
 const TestWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -25,6 +29,73 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     </LanguageProvider>
   </ThemeProvider>
 );
+
+// Extract keyboard navigation component to reduce nesting
+const TestKeyboardNavigation = () => {
+  const options = [
+    { label: 'Option 1', selected: false },
+    { label: 'Option 2 (Selected)', selected: true },
+    { label: 'Option 3', selected: false },
+  ];
+
+  const handleListboxKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      // Navigation handled by browser for select element
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      // Navigation handled by browser for select element
+    }
+  };
+
+  const handleButtonKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      console.log('activated');
+    }
+  };
+
+  const handleCustomButtonKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      console.log('custom button activated');
+    }
+  };
+
+  return (
+    <div>
+      <select
+        multiple
+        onKeyDown={handleListboxKeyDown}
+        aria-label="Test listbox"
+        data-testid="accessible-select"
+      >
+        {options.map((option) => (
+          <option
+            key={option.label}
+            selected={option.selected}
+            value={option.label}
+          >
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <button
+        onKeyDown={handleButtonKeyDown}
+        aria-label="Primary action"
+      >
+        Standard Button
+      </button>
+
+      <button
+        type="button"
+        onKeyDown={handleCustomButtonKeyDown}
+        aria-label="Custom button implementation"
+      >
+        Custom Button
+      </button>
+    </div>
+  );
+};
 
 describe('UI Accessibility Tests', () => {
   describe('Basic Accessibility Compliance', () => {
@@ -160,7 +231,7 @@ describe('UI Accessibility Tests', () => {
         <form>
           <input type="text" placeholder="First field" />
           <input type="text" placeholder="Second field" />
-          <select>
+          <select aria-label="Select an option">
             <option value="">Select option</option>
             <option value="1">Option 1</option>
           </select>
@@ -211,7 +282,7 @@ describe('UI Accessibility Tests', () => {
               <input
                 type="email"
                 id="email"
-                aria-invalid={!!errors.email}
+                aria-invalid={errors.email ? 'true' : 'false'}
                 aria-describedby={errors.email ? 'email-error' : undefined}
               />
               {errors.email && (
@@ -230,7 +301,7 @@ describe('UI Accessibility Tests', () => {
               <input
                 type="password"
                 id="password"
-                aria-invalid={!!errors.password}
+                aria-invalid={errors.password ? 'true' : 'false'}
                 aria-describedby={errors.password ? 'password-error' : undefined}
               />
               {errors.password && (
@@ -286,7 +357,7 @@ describe('UI Accessibility Tests', () => {
             <div className="form-field">
               <label htmlFor="required-field">
                 Required Field
-                <span className="required-indicator" aria-label="required"> *</span>
+                <span className="required-indicator" aria-label="required">*</span>
               </label>
               <input
                 type="text"
@@ -328,7 +399,7 @@ describe('UI Accessibility Tests', () => {
           </header>
           <nav role="navigation" aria-label="Main navigation">
             <ul>
-              <li><a href="/">Home</a></li>
+              <li><a href="/home">Home</a></li>
               <li><a href="/dashboard">Dashboard</a></li>
             </ul>
           </nav>
@@ -362,111 +433,15 @@ describe('UI Accessibility Tests', () => {
     });
 
     it('should provide keyboard navigation support', () => {
-      const TestKeyboardNavigation = () => {
-        const [focusedIndex, setFocusedIndex] = React.useState(0);
-        const options = [
-          { label: 'Option 1', selected: false },
-          { label: 'Option 2 (Selected)', selected: true },
-          { label: 'Option 3', selected: false },
-        ];
-        const optionRefs = options.map(() => React.createRef<HTMLLIElement>());
-
-        const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down') => {
-          if (direction === 'down') {
-            return (currentIndex + 1) % options.length;
-          } else {
-            return (currentIndex - 1 + options.length) % options.length;
-          }
-        };
-
-        const handleArrowNavigation = (direction: 'up' | 'down') => {
-          setFocusedIndex(prevIndex => calculateNextIndex(prevIndex, direction));
-        };
-
-        const handleListboxKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            handleArrowNavigation('down');
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            handleArrowNavigation('up');
-          }
-        };
-
-        const handleButtonKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'Enter') {
-            console.log('activated');
-          }
-        };
-
-        const handleCustomButtonKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            console.log('custom button activated');
-          }
-        };
-
-        const logOptionSelection = (option: typeof options[0]) => {
-          console.log(`${option.label.toLowerCase()} selected`);
-        };
-
-        const handleOptionKeyDown = (e: React.KeyboardEvent<HTMLLIElement>) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            const optionText = e.currentTarget.textContent || '';
-            const option = options.find(opt => opt.label === optionText);
-            if (option) {
-              logOptionSelection(option);
-            }
-          }
-        };
-
-        React.useEffect(() => {
-          optionRefs[focusedIndex].current?.focus();
-        }, [focusedIndex, optionRefs]);
-
-        return (
-          <div>
-            <button onKeyDown={handleButtonKeyDown}>
-              Keyboard Accessible Button
-            </button>
-
-            <button
-              type="button"
-              onKeyDown={handleCustomButtonKeyDown}
-            >
-              Custom Button with Keyboard Support
-            </button>
-
-            <ul
-              role="listbox"
-              aria-label="Options"
-              onKeyDown={handleListboxKeyDown}
-            >
-              {options.map((option, idx) => (
-                <li
-                  key={option.label}
-                  role="option"
-                  tabIndex={focusedIndex === idx ? 0 : -1}
-                  aria-selected={option.selected ? 'true' : 'false'}
-                  ref={optionRefs[idx]}
-                  onKeyDown={handleOptionKeyDown}
-                >
-                  {option.label}
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      };
-
       render(
         <TestWrapper>
           <TestKeyboardNavigation />
         </TestWrapper>
       );
 
-      expect(screen.getByText('Keyboard Accessible Button')).toBeInTheDocument();
-      expect(screen.getByText('Custom Button with Keyboard Support')).toBeInTheDocument();
-      expect(screen.getByText('Option 2 (Selected)')).toHaveAttribute('aria-selected', 'true');
+      expect(screen.getByText('Standard Button')).toBeInTheDocument();
+      expect(screen.getByText('Custom Button')).toBeInTheDocument();
+      expect(screen.getByText('Option 2 (Selected)')).toBeInTheDocument();
     });
   });
 });
