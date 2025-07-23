@@ -190,6 +190,7 @@ describe('Enhanced Form Validation Tests', () => {
               value={formData.email}
               onChange={handleEmailInputChange}
               data-testid="email-input"
+              placeholder="Email"
             />
             {errors.email && <span data-testid="email-error">{errors.email}</span>}
 
@@ -198,6 +199,7 @@ describe('Enhanced Form Validation Tests', () => {
               value={formData.password}
               onChange={handlePasswordInputChange}
               data-testid="password-input"
+              placeholder="Password"
             />
             {errors.password && <span data-testid="password-error">{errors.password}</span>}
 
@@ -245,6 +247,7 @@ describe('Enhanced Form Validation Tests', () => {
           <form>
             <input
               data-testid="input1"
+              placeholder="Input 1"
               onFocus={() => setFocused('input1')}
               onBlur={() => {
                 setFocused('');
@@ -253,6 +256,7 @@ describe('Enhanced Form Validation Tests', () => {
             />
             <input
               data-testid="input2"
+              placeholder="Input 2"
               onFocus={() => setFocused('input2')}
               onBlur={() => {
                 setFocused('');
@@ -372,14 +376,14 @@ describe('Enhanced Form Validation Tests', () => {
             {config.map(field => (
               <div key={field.name}>
                 <label htmlFor={field.name}>{field.label}</label>
-            <input
-              id={field.name}
-              type={field.type}
-              required={field.required}
-              onChange={(e) => handleChange(field.name, e.target.value)}
-              data-testid={`${field.name}-input`}
-              placeholder={field.label}
-            />
+                <input
+                  id={field.name}
+                  type={field.type}
+                  required={field.required}
+                  onChange={(e) => handleChange(field.name, e.target.value)}
+                  data-testid={`${field.name}-input`}
+                  placeholder={field.label}
+                />
               </div>
             ))}
             <div data-testid="form-data">{JSON.stringify(formData)}</div>
