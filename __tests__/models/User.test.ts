@@ -34,7 +34,6 @@ describe('User Model', () => {
 
   describe('Schema Definition', () => {
     it('should have required name field with proper validation', () => {
-      const schema = new (require('mongoose').Schema)({});
       const nameField = {
         type: String,
         required: [true, 'Please provide a name'],
@@ -129,8 +128,6 @@ describe('User Model', () => {
       (mockUser.isModified as jest.Mock).mockReturnValue(true);
       
       // Simulate pre-save hook
-      const next = jest.fn();
-      
       // Mock the pre-save logic
       if (mockUser.password && (mockUser.isModified as jest.Mock)('password')) {
         const salt = await mockBcrypt.genSalt(10);

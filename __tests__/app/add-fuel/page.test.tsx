@@ -54,7 +54,7 @@ const MockAddFuelPage = () => {
       } else {
         setErrors({ submit: 'Failed to save fuel entry' });
       }
-    } catch (error) {
+    } catch (_error) {
       setErrors({ submit: 'Network error' });
     } finally {
       setLoading(false);

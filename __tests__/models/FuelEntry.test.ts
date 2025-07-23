@@ -17,26 +17,6 @@ jest.mock('mongoose', () => ({
 }));
 
 describe('FuelEntry Model', () => {
-  const validFuelEntryData = {
-    userId: '507f1f77bcf86cd799439011',
-    carId: 'car-123',
-    fuelCompany: 'Shell',
-    fuelType: 'Diesel',
-    mileage: 50000,
-    distanceUnit: 'km',
-    volume: 45.5,
-    volumeUnit: 'L',
-    cost: 75.25,
-    currency: 'USD',
-    date: '2023-10-15',
-    paymentType: 'Credit Card',
-    location: 'Main Street Station',
-    partialFuelUp: false,
-    tyrePressure: 32,
-    tyrePressureUnit: 'psi',
-    tags: ['highway', 'long-trip'],
-    notes: 'Full tank for road trip'
-  };
 
   beforeEach(() => {
     jest.clearAllMocks();

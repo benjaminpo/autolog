@@ -75,7 +75,7 @@ describe('useTranslation', () => {
     
     // Should not throw when accessing non-existent keys
     expect(() => {
-      const nonExistent = result.current.t.nonExistent?.key
+      const _nonExistent = result.current.t.nonExistent?.key
     }).not.toThrow()
   })
 }) 

@@ -518,7 +518,8 @@ describe('ListsTab', () => {
             return;
           }
         } catch (error) {
-          // Continue to next button
+          // Continue to next button if this one fails
+          console.debug('Delete button click failed, trying next:', error);
         }
       }
       

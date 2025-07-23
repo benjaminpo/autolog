@@ -192,11 +192,6 @@ describe('FuelCompany Model', () => {
     });
 
     it('should default to active when not specified', () => {
-      const defaultCompany: Partial<IFuelCompany> = {
-        name: 'Chevron'
-        // isActive not specified - should default to true
-      };
-
       // In a real scenario, this would be set by the schema default
       const expectedDefault = true;
       expect(typeof expectedDefault).toBe('boolean');

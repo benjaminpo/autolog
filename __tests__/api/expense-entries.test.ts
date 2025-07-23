@@ -217,7 +217,6 @@ describe('/api/expense-entries API Logic Tests', () => {
         user: { id: 'user123', email: 'test@example.com' },
       });
 
-      const invalidEntry = { ...validEntry, amount: -10 };
       const validationError = new Error('Amount must be positive');
       mockExpenseEntry.save.mockRejectedValue(validationError);
 
