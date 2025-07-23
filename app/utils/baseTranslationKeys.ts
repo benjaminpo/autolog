@@ -1,4 +1,9 @@
 // Shared translation keys for merging in language files
+import {
+  validateEmailString,
+  validatePasswordString
+} from './validationHelpers';
+
 export const baseTranslationKeys = {
   title: 'AutoLog',
   loading: 'Loading...',
@@ -10,7 +15,7 @@ export const baseTranslationKeys = {
   close: 'Close',
   confirm: 'Confirm',
   submit: 'Submit',
-  required: 'Required',
+  required: validateEmailString(''), // 'Email is required'
   optional: 'Optional',
   search: 'Search',
   filter: 'Filter',
@@ -28,5 +33,6 @@ export const baseTranslationKeys = {
   warning: 'Warning',
   info: 'Info',
   income: 'Income',
+  passwordRequired: validatePasswordString(''), // 'Password is required'
   // ...add more as needed
 };
