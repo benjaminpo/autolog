@@ -2,31 +2,30 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
+import {
+  validateEmailString,
+  validatePasswordString,
+  validateRequired,
+  validateMaxLength,
+  validateMinValue,
+  validateMaxValue
+} from '../../app/utils/validationHelpers';
 
 // Helper validation functions
 const validateEmail = (value: string, setEmailError: (error: string) => void) => {
-  if (!value) {
-    setEmailError('Email is required');
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-    setEmailError('Invalid email format');
-  } else {
-    setEmailError('');
-  }
+  setEmailError(validateEmailString(value));
 };
 
 const validatePassword = (value: string, setPasswordError: (error: string) => void, setPasswordStrength: (strength: string) => void) => {
-  if (!value) {
-    setPasswordError('Password is required');
-    setPasswordStrength('');
-  } else if (value.length < 8) {
-    setPasswordError('Password must be at least 8 characters');
-    setPasswordStrength('weak');
+  const error = validatePasswordString(value);
+  setPasswordError(error);
+  if (error) {
+    setPasswordStrength(value.length < 8 ? 'weak' : 'medium');
   } else {
     // Safe password validation without vulnerable regex
     const hasLowercase = /[a-z]/.test(value);
     const hasUppercase = /[A-Z]/.test(value);
     const hasDigit = /\d/.test(value);
-
     if (!hasLowercase || !hasUppercase || !hasDigit) {
       setPasswordError('Password must contain uppercase, lowercase, and number');
       setPasswordStrength('medium');
@@ -142,73 +141,64 @@ describe('Enhanced Form Validation Tests', () => {
       });
     });
 
-    it('should handle form submission with validation', async () => {
-      const mockSubmit = jest.fn();
+    // Helper functions for TestSubmitForm
+    const validateSubmitForm = (formData: { email: string; password: string }, setErrors: (errors: Record<string, string>) => void) => {
+      const newErrors: Record<string, string> = {};
+      const emailError = validateEmailString(formData.email);
+      if (emailError) newErrors.email = emailError;
+      const passwordError = validatePasswordString(formData.password);
+      if (passwordError) newErrors.password = passwordError;
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
 
-      const TestSubmitForm = () => {
-        const [formData, setFormData] = React.useState({ email: '', password: '' });
-        const [errors, setErrors] = React.useState<Record<string, string>>({});
+    const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement>, formData: { email: string; password: string }, setFormData: (data: { email: string; password: string }) => void) => {
+      setFormData({ ...formData, email: e.target.value });
+    };
 
-        const validate = () => {
-          const newErrors: Record<string, string> = {};
+    const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>, formData: { email: string; password: string }, setFormData: (data: { email: string; password: string }) => void) => {
+      setFormData({ ...formData, password: e.target.value });
+    };
 
-          if (!formData.email) {
-            newErrors.email = 'Email is required';
-          } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'Invalid email format';
-          }
+    const TestSubmitForm = ({ mockSubmit }: { mockSubmit: (data: { email: string; password: string }) => void }) => {
+      const [formData, setFormData] = React.useState({ email: '', password: '' });
+      const [errors, setErrors] = React.useState<Record<string, string>>({});
 
-          if (!formData.password) {
-            newErrors.password = 'Password is required';
-          } else if (formData.password.length < 8) {
-            newErrors.password = 'Password must be at least 8 characters';
-          }
-
-          setErrors(newErrors);
-          return Object.keys(newErrors).length === 0;
-        };
-
-        const handleSubmit = (e: React.FormEvent) => {
-          e.preventDefault();
-          if (validate()) {
-            mockSubmit(formData);
-          }
-        };
-
-        const handleEmailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          setFormData({ ...formData, email: e.target.value });
-        };
-
-        const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          setFormData({ ...formData, password: e.target.value });
-        };
-
-        return (
-          <form onSubmit={handleSubmit}>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={handleEmailInputChange}
-              data-testid="email-input"
-              placeholder="Email"
-            />
-            {errors.email && <span data-testid="email-error">{errors.email}</span>}
-
-            <input
-              type="password"
-              value={formData.password}
-              onChange={handlePasswordInputChange}
-              data-testid="password-input"
-              placeholder="Password"
-            />
-            {errors.password && <span data-testid="password-error">{errors.password}</span>}
-
-            <button type="submit" data-testid="submit-button">Submit</button>
-          </form>
-        );
+      const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (validateSubmitForm(formData, setErrors)) {
+          mockSubmit(formData);
+        }
       };
 
-      render(<TestSubmitForm />);
+      return (
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={e => handleEmailInputChange(e, formData, setFormData)}
+            data-testid="email-input"
+            placeholder="Email"
+          />
+          {errors.email && <span data-testid="email-error">{errors.email}</span>}
+
+          <input
+            type="password"
+            value={formData.password}
+            onChange={e => handlePasswordInputChange(e, formData, setFormData)}
+            data-testid="password-input"
+            placeholder="Password"
+          />
+          {errors.password && <span data-testid="password-error">{errors.password}</span>}
+
+          <button type="submit" data-testid="submit-button">Submit</button>
+        </form>
+      );
+    };
+
+    it('should handle form submission with validation', async () => {
+      const mockSubmit = jest.fn();
+      render(<TestSubmitForm mockSubmit={mockSubmit} />);
 
       const submitButton = screen.getByTestId('submit-button');
 
@@ -574,29 +564,7 @@ describe('Enhanced Form Validation Tests', () => {
 });
 
 describe('Form validation edge cases', () => {
-  const validateRequired = (value: any): boolean => {
-    if (value === null || value === undefined) return false;
-    if (typeof value === 'string') return value.trim() !== '';
-    if (Array.isArray(value)) return value.length > 0;
-    if (typeof value === 'object') return Object.keys(value).length > 0;
-    return true;
-  };
-
-  const validateMaxLength = (value: string, maxLength: number): boolean => {
-    return value.length <= maxLength;
-  };
-
-  const validateEmail = (value: string): boolean => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
-
-  const validateMinValue = (value: number, minValue: number): boolean => {
-    return value >= minValue;
-  };
-
-  const validateMaxValue = (value: number, maxValue: number): boolean => {
-    return value <= maxValue;
-  };
+  // ...existing code...
 
   it('should handle very long input strings', () => {
     const longString = 'a'.repeat(10000);
@@ -607,8 +575,8 @@ describe('Form validation edge cases', () => {
   it('should handle special characters in input', () => {
     const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
     expect(validateRequired(specialChars)).toBe(true);
-    expect(validateEmail('test@example.com')).toBe(true);
-    expect(validateEmail('test@example')).toBe(false);
+    expect(validateEmailString('test@example.com')).toBe('');
+    expect(validateEmailString('test@example')).toBe('Invalid email format');
   });
 
   it('should handle boundary values for numbers', () => {
