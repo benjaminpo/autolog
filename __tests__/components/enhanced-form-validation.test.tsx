@@ -299,22 +299,12 @@ describe('Enhanced Form Validation Tests', () => {
           setActiveIndex(prev => Math.max(prev - 1, 0));
         };
 
-        const handleKeyDown = (e: React.KeyboardEvent) => {
-          if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            handleArrowDown();
-          } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            handleArrowUp();
-          }
-        };
-
+        // Use a div with role="group" and tabIndex only if it is truly interactive
+        // Otherwise, use a semantic interactive element like <fieldset> without tabIndex
         return (
           <fieldset
-            onKeyDown={handleKeyDown}
             data-testid="form-container"
             aria-label="Interactive form container"
-            tabIndex={0}
             role="group"
           >
             {inputs.map((input, index) => (
@@ -322,6 +312,16 @@ describe('Enhanced Form Validation Tests', () => {
                 key={input}
                 data-testid={input}
                 className={index === activeIndex ? 'active' : ''}
+                placeholder={input}
+                onKeyDown={e => {
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    handleArrowDown();
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    handleArrowUp();
+                  }
+                }}
               />
             ))}
             <div data-testid="active-index">{activeIndex}</div>
@@ -372,13 +372,14 @@ describe('Enhanced Form Validation Tests', () => {
             {config.map(field => (
               <div key={field.name}>
                 <label htmlFor={field.name}>{field.label}</label>
-                <input
-                  id={field.name}
-                  type={field.type}
-                  required={field.required}
-                  onChange={(e) => handleChange(field.name, e.target.value)}
-                  data-testid={`${field.name}-input`}
-                />
+            <input
+              id={field.name}
+              type={field.type}
+              required={field.required}
+              onChange={(e) => handleChange(field.name, e.target.value)}
+              data-testid={`${field.name}-input`}
+              placeholder={field.label}
+            />
               </div>
             ))}
             <div data-testid="form-data">{JSON.stringify(formData)}</div>
@@ -422,6 +423,7 @@ describe('Enhanced Form Validation Tests', () => {
               value={formData.userType}
               onChange={handleUserTypeChange}
               data-testid="user-type-select"
+              title="User Type"
             >
               <option value="">Select user type</option>
               <option value="individual">Individual</option>
@@ -486,12 +488,14 @@ describe('Enhanced Form Validation Tests', () => {
               value={formData.name}
               onChange={handleNameChange}
               data-testid="name-input"
+              placeholder="Name"
             />
             <input
               type="email"
               value={formData.email}
               onChange={handleEmailChange}
               data-testid="email-input"
+              placeholder="Email"
             />
             <button type="button" onClick={handleReset} data-testid="reset-button">
               Reset
@@ -545,6 +549,7 @@ describe('Enhanced Form Validation Tests', () => {
             value={formData.content}
             onChange={handleContentChange}
             data-testid="content-textarea"
+            placeholder="Content"
           />
         );
       };
