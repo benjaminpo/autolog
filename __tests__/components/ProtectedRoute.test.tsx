@@ -32,21 +32,15 @@ describe('ProtectedRoute', () => {
     setError: jest.fn(),
   });
 
-  const createMockUser = () => ({
-    id: '1',
-    name: 'Test User',
-    email: 'test@example.com',
-  });
-
   const mockUser2 = {
     id: 'user-456',
-    name: 'Jane Smith', 
+    name: 'Jane Smith',
     email: 'jane@example.com'
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockUseRouter.mockReturnValue({
       push: mockPush,
       back: jest.fn(),
@@ -105,7 +99,7 @@ describe('ProtectedRoute', () => {
   describe('Authentication States', () => {
     it('should render children when user is authenticated and not loading', () => {
       const mockUser = createMockUser();
-      
+
       mockUseAuth.mockReturnValue({
         user: mockUser,
         loading: false,
@@ -344,7 +338,7 @@ describe('ProtectedRoute', () => {
   describe('Children Rendering', () => {
     it('should render multiple children correctly', () => {
       const mockUser = createMockUser();
-      
+
       mockUseAuth.mockReturnValue({
         user: mockUser,
         loading: false,
@@ -367,7 +361,7 @@ describe('ProtectedRoute', () => {
 
     it('should render complex nested components', () => {
       const mockUser = createMockUser();
-      
+
       mockUseAuth.mockReturnValue({
         user: mockUser,
         loading: false,
@@ -401,7 +395,7 @@ describe('ProtectedRoute', () => {
 
     it('should handle empty children', () => {
       const mockUser = createMockUser();
-      
+
       mockUseAuth.mockReturnValue({
         user: mockUser,
         loading: false,
@@ -445,7 +439,7 @@ describe('ProtectedRoute', () => {
           <div>Test content</div>
         </ProtectedRoute>
       );
-      
+
       expect(container).toBeInTheDocument();
     });
   });
@@ -470,7 +464,7 @@ describe('ProtectedRoute', () => {
 
     it('should handle router errors gracefully', async () => {
       const mockPushWithError = jest.fn();
-      
+
       mockUseRouter.mockReturnValue({
         push: mockPushWithError,
         back: jest.fn(),
@@ -484,9 +478,9 @@ describe('ProtectedRoute', () => {
         user: null,
         loading: false,
         login: jest.fn(),
-        logout: jest.fn(), 
-        error: null, 
-        setError: jest.fn(), 
+        logout: jest.fn(),
+        error: null,
+        setError: jest.fn(),
         register: jest.fn(),
       });
 
@@ -501,7 +495,7 @@ describe('ProtectedRoute', () => {
 
       // Wait for the effect to run
       await new Promise(resolve => setTimeout(resolve, 0));
-      
+
       expect(mockPushWithError).toHaveBeenCalledWith('/auth/login');
     });
   });
@@ -528,7 +522,7 @@ describe('ProtectedRoute', () => {
 
     it('should preserve accessibility of children when authenticated', () => {
       const mockUser = createMockUser();
-      
+
       mockUseAuth.mockReturnValue({
         user: mockUser,
         loading: false,
@@ -558,7 +552,7 @@ describe('ProtectedRoute', () => {
       };
 
       const mockUser = createMockUser();
-      
+
       mockUseAuth.mockReturnValue({
         user: mockUser,
         loading: false,
@@ -585,4 +579,4 @@ describe('ProtectedRoute', () => {
       expect(renderCount).toBe(initialRenderCount + 1);
     });
   });
-}); 
+});

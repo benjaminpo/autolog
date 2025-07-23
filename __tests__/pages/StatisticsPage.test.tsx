@@ -53,7 +53,6 @@ jest.mock('../../app/components/ThemeToggle', () => ({
 // Mock the StatisticsPage component
 const MockStatisticsPage = () => {
   const { user } = useAuth();
-  const { t } = useTranslation();
 
   if (!user) return null;
 

@@ -29,8 +29,6 @@ jest.mock('../../app/components/LanguageSelector', () => ({
 const mockUseLanguage = useLanguage as jest.MockedFunction<typeof useLanguage>;
 
 describe('GlobalLanguageSelector', () => {
-  const mockSetLanguage = jest.fn();
-
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseLanguage.mockReturnValue(createMockLanguageContext('en'));
@@ -39,7 +37,7 @@ describe('GlobalLanguageSelector', () => {
   describe('Basic Rendering', () => {
     it('should render language selector with current language', () => {
       render(<GlobalLanguageSelector />);
-      
+
       // Should show current language button
       expect(screen.getByRole('button')).toBeInTheDocument();
     });
@@ -47,7 +45,7 @@ describe('GlobalLanguageSelector', () => {
     it('should display current language correctly', () => {
       mockUseLanguage.mockReturnValue(createMockLanguageContext('en'));
       render(<GlobalLanguageSelector />);
-      
+
       // Check for English language indicator using data-testid
       expect(screen.getByTestId('current-language')).toHaveTextContent('en');
     });
@@ -55,7 +53,7 @@ describe('GlobalLanguageSelector', () => {
     it('should display Chinese language correctly', () => {
       mockUseLanguage.mockReturnValue(createMockLanguageContext('zh'));
       render(<GlobalLanguageSelector />);
-      
+
       // Check for Chinese language indicator using data-testid
       expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
     });
@@ -64,10 +62,10 @@ describe('GlobalLanguageSelector', () => {
   describe('Language Switching', () => {
     it('should show change language button when clicked', () => {
       render(<GlobalLanguageSelector />);
-      
+
       const button = screen.getByTestId('change-language');
       fireEvent.click(button);
-      
+
       // Since this is a mock component, we'll just verify the button was clicked
       expect(button).toBeInTheDocument();
     });
@@ -78,12 +76,12 @@ describe('GlobalLanguageSelector', () => {
         ...createMockLanguageContext('en'),
         setLanguage: mockSetLanguage
       });
-      
+
       render(<GlobalLanguageSelector />);
-      
+
       const button = screen.getByTestId('change-language');
       fireEvent.click(button);
-      
+
       // Since this is a mock component, verify the change language button exists
       expect(button).toBeInTheDocument();
     });
@@ -91,7 +89,7 @@ describe('GlobalLanguageSelector', () => {
     it('should display change language functionality', () => {
       mockUseLanguage.mockReturnValue(createMockLanguageContext('en'));
       render(<GlobalLanguageSelector />);
-      
+
       const changeButton = screen.getByTestId('change-language');
       expect(changeButton).toBeInTheDocument();
       expect(changeButton).toHaveTextContent('Change Language');
@@ -100,10 +98,10 @@ describe('GlobalLanguageSelector', () => {
     it('should handle language switching behavior', () => {
       mockUseLanguage.mockReturnValue(createMockLanguageContext('zh'));
       render(<GlobalLanguageSelector />);
-      
+
       const changeButton = screen.getByTestId('change-language');
       fireEvent.click(changeButton);
-      
+
       expect(changeButton).toBeInTheDocument();
     });
   });
@@ -111,17 +109,17 @@ describe('GlobalLanguageSelector', () => {
   describe('Accessibility', () => {
     it('should have proper button element', () => {
       render(<GlobalLanguageSelector />);
-      
+
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
     });
 
     it('should handle interactions', () => {
       render(<GlobalLanguageSelector />);
-      
+
       const button = screen.getByTestId('change-language');
       fireEvent.click(button);
-      
+
       expect(button).toBeInTheDocument();
     });
   });
@@ -129,23 +127,23 @@ describe('GlobalLanguageSelector', () => {
   describe('Edge Cases', () => {
     it('should handle multiple language switches', () => {
       const languages = ['en', 'zh'] as Language[];
-      
+
       languages.forEach((lang) => {
         mockUseLanguage.mockReturnValue(createMockLanguageContext(lang));
         const { rerender } = render(<GlobalLanguageSelector />);
         rerender(<GlobalLanguageSelector />);
       });
-      
+
       expect(mockUseLanguage).toHaveBeenCalled();
     });
 
     it('should maintain state across re-renders', () => {
       const currentLanguage = 'zh' as Language;
       mockUseLanguage.mockReturnValue(createMockLanguageContext(currentLanguage));
-      
+
       const { rerender } = render(<GlobalLanguageSelector />);
       rerender(<GlobalLanguageSelector />);
-      
+
       expect(screen.getByTestId('current-language')).toHaveTextContent('zh');
     });
 
@@ -154,37 +152,37 @@ describe('GlobalLanguageSelector', () => {
         'test.key': 'Test Value',
         'another.key': 'Another Value'
       };
-      
+
       const mockT = createMockTranslations(complexTranslations);
       mockUseLanguage.mockReturnValue(createMockLanguageContext('en', mockT));
-      
+
       render(<GlobalLanguageSelector />);
-      
+
       // Component should render without errors
       expect(screen.getByRole('button')).toBeInTheDocument();
     });
 
     it('should handle missing context gracefully', () => {
       mockUseLanguage.mockReturnValue(createMockLanguageContext('en'));
-      
+
       render(<GlobalLanguageSelector />);
-      
+
       expect(screen.getByRole('button')).toBeInTheDocument();
     });
 
     it('should handle rapid language switching', () => {
       mockUseLanguage.mockReturnValue(createMockLanguageContext('en'));
-      
+
       render(<GlobalLanguageSelector />);
-      
+
       const button = screen.getByTestId('change-language');
-      
+
       // Simulate rapid clicking
       fireEvent.click(button);
       fireEvent.click(button);
       fireEvent.click(button);
-      
+
       expect(button).toBeInTheDocument();
     });
   });
-}); 
+});

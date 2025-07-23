@@ -187,11 +187,14 @@ export default function ListsTab({
 
     const details = [mainDetails];
 
-    const licenseLabel = (t as any)?.system?.license || (t as any)?.license || 'License';
-    const fuelLabel = (t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel';
-
-    if (car.licensePlate) details.push(`${licenseLabel}: ${car.licensePlate}`);
-    if (car.fuelType) details.push(`${fuelLabel}: ${car.fuelType}`);
+    if (car.licensePlate) {
+      const licenseLabel = (t as any)?.system?.license || (t as any)?.license || 'License';
+      details.push(`${licenseLabel}: ${car.licensePlate}`);
+    }
+    if (car.fuelType) {
+      const fuelLabel = (t as any)?.system?.fuel || (t as any)?.fuel || 'Fuel';
+      details.push(`${fuelLabel}: ${car.fuelType}`);
+    }
 
     return details.join(', ');
   }, [t]);

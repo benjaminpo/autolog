@@ -56,7 +56,7 @@ interface FuelTypeItem {
 }
 
 export default function ManageListsPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   useLanguage();
   const { t } = useTranslation();
 
@@ -65,7 +65,6 @@ export default function ManageListsPage() {
   const [fuelTypes, setFuelTypes] = useState<string[]>([]);
   const [fullFuelCompanies, setFullFuelCompanies] = useState<FuelCompanyItem[]>([]);
   const [fullFuelTypes, setFullFuelTypes] = useState<FuelTypeItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [customBrands, setCustomBrands] = useState<{ [key: string]: string[] }>({});
   const [customModels, setCustomModels] = useState<{ [key: string]: { [brand: string]: string[] } }>({});
 
@@ -120,8 +119,6 @@ export default function ManageListsPage() {
 
   useEffect(() => {
     if (!user) return;
-
-    setIsLoading(true);
 
     // Load vehicle form preferences
     loadVehicleFormPreferences();
@@ -244,9 +241,6 @@ export default function ManageListsPage() {
             setCustomModels(data.preferences.customModels);
           }
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
       });
   }, [user, loadVehicleFormPreferences]);
 
@@ -489,10 +483,11 @@ export default function ManageListsPage() {
         method: 'DELETE',
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setCars(cars.filter(car => getObjectId(car as unknown as Record<string, unknown>) !== id));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCars(cars.filter(car => getObjectId(car as unknown as Record<string, unknown>) !== id));
+        }
       }
     } catch (error) {
       console.error('Error deleting vehicle:', error);
@@ -519,11 +514,12 @@ export default function ManageListsPage() {
         method: 'DELETE',
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setFuelCompanies(fuelCompanies.filter(c => c !== company));
-        setFullFuelCompanies(fullFuelCompanies.filter(c => c._id !== companyId));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setFuelCompanies(fuelCompanies.filter(c => c !== company));
+          setFullFuelCompanies(fullFuelCompanies.filter(c => c._id !== companyId));
+        }
       }
     } catch (error) {
       console.error('Error deleting fuel company:', error);
@@ -550,11 +546,12 @@ export default function ManageListsPage() {
         method: 'DELETE',
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setFuelTypes(fuelTypes.filter(t => t !== type));
-        setFullFuelTypes(fullFuelTypes.filter(t => t._id !== typeId));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setFuelTypes(fuelTypes.filter(t => t !== type));
+          setFullFuelTypes(fullFuelTypes.filter(t => t._id !== typeId));
+        }
       }
     } catch (error) {
       console.error('Error deleting fuel type:', error);

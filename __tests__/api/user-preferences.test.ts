@@ -111,7 +111,7 @@ describe('User Preferences API', () => {
         })
       );
 
-      const response = await mockGET(mockRequest);
+      await mockGET(mockRequest);
 
       expect(NextResponse.json).toHaveBeenCalledWith({
         success: true,
@@ -129,7 +129,7 @@ describe('User Preferences API', () => {
         )
       );
 
-      const response = await mockGET(mockRequest);
+      await mockGET(mockRequest);
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         { success: false, error: 'Failed to fetch user preferences' },
@@ -274,7 +274,7 @@ describe('User Preferences API', () => {
   describe('Input Validation', () => {
     it('should validate currency codes', async () => {
       const validCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'CAD'];
-      
+
       for (const currency of validCurrencies) {
         const putRequest = {
           ...mockRequest,
@@ -302,7 +302,7 @@ describe('User Preferences API', () => {
 
     it('should validate language codes', async () => {
       const validLanguages = ['en', 'fr', 'es', 'de', 'zh'];
-      
+
       for (const language of validLanguages) {
         const putRequest = {
           ...mockRequest,
@@ -330,7 +330,7 @@ describe('User Preferences API', () => {
 
     it('should validate theme options', async () => {
       const validThemes = ['light', 'dark', 'auto'];
-      
+
       for (const theme of validThemes) {
         const putRequest = {
           ...mockRequest,
@@ -358,7 +358,7 @@ describe('User Preferences API', () => {
 
     it('should validate date format options', async () => {
       const validFormats = ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
-      
+
       for (const dateFormat of validFormats) {
         const putRequest = {
           ...mockRequest,
@@ -606,4 +606,4 @@ describe('User Preferences API', () => {
       });
     });
   });
-}); 
+});
