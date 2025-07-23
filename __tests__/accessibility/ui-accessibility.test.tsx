@@ -30,35 +30,21 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
   </ThemeProvider>
 );
 
-// Helper functions for keyboard navigation
-const calculateNextIndex = (currentIndex: number, direction: 'up' | 'down', optionsLength: number) => {
-  if (direction === 'down') {
-    return (currentIndex + 1) % optionsLength;
-  } else {
-    return (currentIndex - 1 + optionsLength) % optionsLength;
-  }
-};
-
 // Extract keyboard navigation component to reduce nesting
 const TestKeyboardNavigation = () => {
-  const [focusedIndex, setFocusedIndex] = React.useState(0);
   const options = [
     { label: 'Option 1', selected: false },
     { label: 'Option 2 (Selected)', selected: true },
     { label: 'Option 3', selected: false },
   ];
 
-  const handleArrowNavigation = (direction: 'up' | 'down') => {
-    setFocusedIndex(prevIndex => calculateNextIndex(prevIndex, direction, options.length));
-  };
-
   const handleListboxKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      handleArrowNavigation('down');
+      // Navigation handled by browser for select element
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      handleArrowNavigation('up');
+      // Navigation handled by browser for select element
     }
   };
 
@@ -82,9 +68,9 @@ const TestKeyboardNavigation = () => {
         aria-label="Test listbox"
         data-testid="accessible-select"
       >
-        {options.map((option, index) => (
+        {options.map((option) => (
           <option
-            key={`option-${index}`}
+            key={option.label}
             selected={option.selected}
             value={option.label}
           >
