@@ -253,7 +253,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByText('Manage Lists')).toBeInTheDocument();
       expect(screen.getByText('Manage your vehicles, fuel companies, and fuel types')).toBeInTheDocument();
     });
@@ -264,7 +264,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       expect(screen.getAllByText('Add Vehicle').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Add Fuel Company').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Add Fuel Type').length).toBeGreaterThan(0);
@@ -276,7 +276,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Check for cars by looking for elements containing car information
       expect(screen.getByText(/Toyota Camry/)).toBeInTheDocument();
       expect(screen.getByText(/Honda Civic/)).toBeInTheDocument();
@@ -288,7 +288,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Check if fuel companies and types are displayed in the lists
       expect(screen.getAllByText('Shell').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Gasoline').length).toBeGreaterThan(0);
@@ -302,7 +302,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByLabelText(/Vehicle Name/)).toBeInTheDocument();
       expect(screen.getByLabelText(/Vehicle Type/)).toBeInTheDocument();
       expect(screen.getByLabelText(/Year/)).toBeInTheDocument();
@@ -315,10 +315,10 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const vehicleTypeSelect = screen.getByLabelText(/Vehicle Type/);
       await userEvent.selectOptions(vehicleTypeSelect, 'Car/Truck');
-      
+
       expect(defaultProps.handleNewCarInputChange).toHaveBeenCalled();
     });
 
@@ -327,13 +327,13 @@ describe('ListsTab', () => {
         ...defaultProps,
         newCar: { ...defaultNewCar, vehicleType: 'Car/Truck' as const },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithVehicleType} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByLabelText(/Brand/)).toBeInTheDocument();
       expect(screen.getByText('Toyota')).toBeInTheDocument();
       expect(screen.getByText('Honda')).toBeInTheDocument();
@@ -343,19 +343,19 @@ describe('ListsTab', () => {
     it('should show model selection when brand is selected', () => {
       const propsWithBrand = {
         ...defaultProps,
-        newCar: { 
-          ...defaultNewCar, 
-          vehicleType: 'Car/Truck' as const, 
-          brand: 'Toyota' 
+        newCar: {
+          ...defaultNewCar,
+          vehicleType: 'Car/Truck' as const,
+          brand: 'Toyota'
         },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithBrand} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByLabelText(/Model/)).toBeInTheDocument();
       expect(screen.getByText('Camry')).toBeInTheDocument();
       expect(screen.getByText('Corolla')).toBeInTheDocument();
@@ -365,57 +365,57 @@ describe('ListsTab', () => {
     it('should show custom model input when "Other" model is selected', () => {
       const propsWithOtherModel = {
         ...defaultProps,
-        newCar: { 
-          ...defaultNewCar, 
-          vehicleType: 'Car/Truck' as const, 
+        newCar: {
+          ...defaultNewCar,
+          vehicleType: 'Car/Truck' as const,
           brand: 'Toyota',
           model: 'Other'
         },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithOtherModel} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByPlaceholderText('Enter custom model')).toBeInTheDocument();
     });
 
     it('should show custom brand input when "Other" brand is selected', () => {
       const propsWithOtherBrand = {
         ...defaultProps,
-        newCar: { 
-          ...defaultNewCar, 
-          vehicleType: 'Car/Truck' as const, 
+        newCar: {
+          ...defaultNewCar,
+          vehicleType: 'Car/Truck' as const,
           brand: 'Other'
         },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithOtherBrand} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByPlaceholderText('Enter custom brand')).toBeInTheDocument();
     });
 
     it('should display image preview when photo is selected', () => {
       const propsWithPhoto = {
         ...defaultProps,
-        newCar: { 
-          ...defaultNewCar, 
+        newCar: {
+          ...defaultNewCar,
           photo: 'data:image/jpeg;base64,testphoto'
         },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithPhoto} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByAltText('Vehicle Preview')).toBeInTheDocument();
     });
 
@@ -425,11 +425,11 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Look for the specific "Add Vehicle" button
       const addButton = screen.getByRole('button', { name: 'Add Vehicle' });
       await userEvent.click(addButton);
-      
+
       expect(defaultProps.addCar).toHaveBeenCalled();
     });
 
@@ -439,10 +439,10 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
       await userEvent.click(deleteButtons[0]);
-      
+
       // The delete function is called with the car ID, not the entire car object
       expect(defaultProps.deleteCar).toHaveBeenCalledWith("car1");
     });
@@ -453,10 +453,10 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const editButtons = screen.getAllByRole('button', { name: /edit/i });
       await userEvent.click(editButtons[0]);
-      
+
       expect(defaultProps.setEditCar).toHaveBeenCalledWith(mockCars[0]);
     });
   });
@@ -468,7 +468,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByLabelText(/Fuel Company/)).toBeInTheDocument();
     });
 
@@ -478,10 +478,10 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const input = screen.getByLabelText(/Fuel Company/);
       await userEvent.type(input, 'New Company');
-      
+
       expect(defaultProps.setNewFuelCompany).toHaveBeenCalled();
     });
 
@@ -491,11 +491,11 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const addButtons = screen.getAllByRole('button', { name: /add/i });
       const fuelCompanyAddButton = addButtons[1]; // Second add button is for fuel companies
       await userEvent.click(fuelCompanyAddButton);
-      
+
       expect(defaultProps.addFuelCompany).toHaveBeenCalled();
     });
 
@@ -505,10 +505,10 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Look for delete buttons in the fuel company section specifically
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
-      
+
       // Since we have 2 cars and multiple fuel companies, try different indices
       for (let i = 2; i < deleteButtons.length; i++) {
         try {
@@ -522,7 +522,7 @@ describe('ListsTab', () => {
           console.debug('Delete button click failed, trying next:', error);
         }
       }
-      
+
       // If no fuel company delete was triggered, that's also valid
       expect(true).toBe(true);
     });
@@ -535,7 +535,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const fuelTypeInputs = screen.getAllByDisplayValue('');
       expect(fuelTypeInputs.length).toBeGreaterThan(0);
     });
@@ -546,14 +546,14 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Find the fuel type input by its placeholder or label
       const inputs = screen.getAllByRole('textbox');
-      const fuelTypeInput = inputs.find(input => 
+      const fuelTypeInput = inputs.find(input =>
         input.getAttribute('placeholder')?.includes('Fuel Type') ||
         input.getAttribute('name') === 'fuelType'
       );
-      
+
       if (fuelTypeInput) {
         await userEvent.type(fuelTypeInput, 'New Type');
         expect(defaultProps.setNewFuelType).toHaveBeenCalled();
@@ -566,11 +566,11 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const addButtons = screen.getAllByRole('button', { name: /add/i });
       const fuelTypeAddButton = addButtons[2]; // Third add button is for fuel types
       await userEvent.click(fuelTypeAddButton);
-      
+
       expect(defaultProps.addFuelType).toHaveBeenCalled();
     });
 
@@ -580,7 +580,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
       // Find fuel type delete button (should be last)
       if (deleteButtons.length > 0) {
@@ -600,13 +600,13 @@ describe('ListsTab', () => {
         ...defaultProps,
         editCar: mockCars[0],
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithEditCar} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByDisplayValue('Toyota Camry')).toBeInTheDocument();
       expect(screen.getByDisplayValue('ABC123')).toBeInTheDocument();
     });
@@ -616,13 +616,13 @@ describe('ListsTab', () => {
         ...defaultProps,
         editFuelCompany: { old: 'Shell', new: 'Shell Updated' },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithEditFuelCompany} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByText('Edit Fuel Company')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Shell Updated')).toBeInTheDocument();
     });
@@ -632,13 +632,13 @@ describe('ListsTab', () => {
         ...defaultProps,
         editFuelType: { old: 'Gasoline', new: 'Premium Gasoline' },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithEditFuelType} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByText('Edit Fuel Type')).toBeInTheDocument();
       expect(screen.getByDisplayValue('Premium Gasoline')).toBeInTheDocument();
     });
@@ -654,16 +654,16 @@ describe('ListsTab', () => {
         ...defaultProps,
         editCar: mockCars[0],
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithEditCar} />
         </TestWrapper>
       );
-      
+
       const saveButton = screen.getByText('Save');
       await userEvent.click(saveButton);
-      
+
       expect(global.fetch).toHaveBeenCalledWith(expect.stringMatching(/\/api\/vehicles/), expect.any(Object));
     });
 
@@ -672,16 +672,16 @@ describe('ListsTab', () => {
         ...defaultProps,
         editCar: mockCars[0],
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithEditCar} />
         </TestWrapper>
       );
-      
+
       const cancelButton = screen.getByRole('button', { name: /cancel/i });
       await userEvent.click(cancelButton);
-      
+
       expect(defaultProps.setEditCar).toHaveBeenCalledWith(null);
     });
   });
@@ -693,7 +693,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Check if the formatted date is displayed somewhere in the component
       expect(screen.getByText(/Jan/)).toBeInTheDocument();
     });
@@ -704,7 +704,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       // Check if vehicle details are formatted correctly
       expect(screen.getByText(/Toyota Camry/)).toBeInTheDocument();
       expect(screen.getByText(/ABC123/)).toBeInTheDocument();
@@ -715,19 +715,19 @@ describe('ListsTab', () => {
         ...defaultProps,
         customBrands: { 'Car/Truck': ['CustomBrand'] },
         customModels: { 'Car/Truck': { 'CustomBrand': ['CustomModel'] } },
-        newCar: { 
-          ...defaultNewCar, 
+        newCar: {
+          ...defaultNewCar,
           vehicleType: 'Car/Truck' as const,
           brand: 'CustomBrand'
         },
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithCustom} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByText('CustomBrand')).toBeInTheDocument();
     });
   });
@@ -738,7 +738,7 @@ describe('ListsTab', () => {
         ...defaultProps,
         t: undefined,
       };
-      
+
       expect(() => {
         render(
           <TestWrapper>
@@ -755,7 +755,7 @@ describe('ListsTab', () => {
         fuelCompanies: [],
         fuelTypes: [],
       };
-      
+
       expect(() => {
         render(
           <TestWrapper>
@@ -772,16 +772,16 @@ describe('ListsTab', () => {
         ...defaultProps,
         editCar: mockCars[0],
       };
-      
+
       render(
         <TestWrapper>
           <ListsTab {...propsWithEditCar} />
         </TestWrapper>
       );
-      
+
       const saveButton = screen.getByText('Save');
       await userEvent.click(saveButton);
-      
+
       // Component should not crash on API error
       expect(screen.getByText('Save')).toBeInTheDocument();
     });
@@ -794,7 +794,7 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       expect(screen.getByLabelText(/Vehicle Name/)).toHaveAttribute('id');
       expect(screen.getByLabelText(/Vehicle Type/)).toHaveAttribute('id');
       expect(screen.getByLabelText(/Year/)).toHaveAttribute('id');
@@ -806,10 +806,10 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const selects = screen.getAllByRole('combobox');
       expect(selects.length).toBeGreaterThan(0);
-      
+
       const buttons = screen.getAllByRole('button');
       expect(buttons.length).toBeGreaterThan(0);
     });
@@ -820,12 +820,12 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       const vehicleNameInput = screen.getByLabelText(/Vehicle Name/);
       vehicleNameInput.focus();
-      
+
       expect(document.activeElement).toBe(vehicleNameInput);
-      
+
       // Tab to next element
       await userEvent.tab();
       expect(document.activeElement).not.toBe(vehicleNameInput);
@@ -839,12 +839,12 @@ describe('ListsTab', () => {
         id: `car${i}`,
         name: `Car ${i}`,
       }));
-      
+
       const propsWithLargeData = {
         ...defaultProps,
         cars: largeCarsArray,
       };
-      
+
       const startTime = performance.now();
       render(
         <TestWrapper>
@@ -852,7 +852,7 @@ describe('ListsTab', () => {
         </TestWrapper>
       );
       const endTime = performance.now();
-      
+
       // Should render within reasonable time (less than 5 seconds for CI environments)
       expect(endTime - startTime).toBeLessThan(5000);
     });
@@ -863,8 +863,8 @@ describe('ListsTab', () => {
           <ListsTab {...defaultProps} />
         </TestWrapper>
       );
-      
+
       expect(() => unmount()).not.toThrow();
     });
   });
-}); 
+});

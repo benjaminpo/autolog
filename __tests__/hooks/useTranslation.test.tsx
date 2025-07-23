@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react'
 import React from 'react'
 
-// Clear the jest setup mock for this test file  
+// Clear the jest setup mock for this test file
 jest.unmock('../../app/context/LanguageContext');
 
 import { useTranslation } from '../../app/hooks/useTranslation'
@@ -54,7 +54,7 @@ describe('useTranslation', () => {
 
   it('should return translation object', () => {
     const { result } = renderHook(() => useTranslation(), { wrapper })
-    
+
     expect(result.current.t).toBeDefined()
     expect(result.current.t.app).toBeDefined()
     expect(result.current.t.actions).toBeDefined()
@@ -66,16 +66,16 @@ describe('useTranslation', () => {
       const language = useLanguage()
       return { translation, language }
     }, { wrapper })
-    
+
     expect(result.current.translation.t).toBe(result.current.language.t)
   })
 
   it('should handle missing translation keys gracefully', () => {
     const { result } = renderHook(() => useTranslation(), { wrapper })
-    
+
     // Should not throw when accessing non-existent keys
     expect(() => {
       const _nonExistent = result.current.t.nonExistent?.key
     }).not.toThrow()
   })
-}) 
+})

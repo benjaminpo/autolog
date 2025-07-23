@@ -49,7 +49,7 @@ describe('/api/expense-entries API Logic Tests', () => {
   describe('GET expense entries logic', () => {
     it('should require authentication', async () => {
       mockGetServerSession.mockResolvedValue(null);
-      
+
       const session = await mockGetServerSession();
       expect(session).toBeNull();
     });
@@ -128,9 +128,9 @@ describe('/api/expense-entries API Logic Tests', () => {
 
       await mockExpenseEntryStatic.find({ userId: 'user123', vehicleId }).sort({ date: -1 });
 
-      expect(mockExpenseEntryStatic.find).toHaveBeenCalledWith({ 
-        userId: 'user123', 
-        vehicleId: 'vehicle456' 
+      expect(mockExpenseEntryStatic.find).toHaveBeenCalledWith({
+        userId: 'user123',
+        vehicleId: 'vehicle456'
       });
     });
 
@@ -192,7 +192,7 @@ describe('/api/expense-entries API Logic Tests', () => {
 
     it('should require authentication for creation', async () => {
       mockGetServerSession.mockResolvedValue(null);
-      
+
       const session = await mockGetServerSession();
       expect(session).toBeNull();
     });
@@ -328,7 +328,7 @@ describe('/api/expense-entries API Logic Tests', () => {
     it('should parse date range filters', () => {
       const startDate = '2023-01-01';
       const endDate = '2023-01-31';
-      
+
       const dateFilter = {
         date: {
           $gte: new Date(startDate),
@@ -356,4 +356,4 @@ describe('/api/expense-entries API Logic Tests', () => {
       expect(limit).toBe(10);
     });
   });
-}); 
+});

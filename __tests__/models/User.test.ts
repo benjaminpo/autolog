@@ -40,7 +40,7 @@ describe('User Model', () => {
         trim: true,
         maxlength: [50, 'Name cannot exceed 50 characters'],
       };
-      
+
       expect(nameField.type).toBe(String);
       expect(nameField.required).toEqual([true, 'Please provide a name']);
       expect(nameField.trim).toBe(true);
@@ -55,7 +55,7 @@ describe('User Model', () => {
         trim: true,
         lowercase: true,
       };
-      
+
       expect(emailField.type).toBe(String);
       expect(emailField.required).toEqual([true, 'Please provide an email']);
       expect(emailField.unique).toBe(true);
@@ -69,7 +69,7 @@ describe('User Model', () => {
         required: false,
         minlength: [8, 'Password must be at least 8 characters'],
       };
-      
+
       expect(passwordField.type).toBe(String);
       expect(passwordField.required).toBe(false);
       expect(passwordField.minlength).toEqual([8, 'Password must be at least 8 characters']);
@@ -82,7 +82,7 @@ describe('User Model', () => {
         unique: true,
         sparse: true,
       };
-      
+
       expect(googleIdField.type).toBe(String);
       expect(googleIdField.required).toBe(false);
       expect(googleIdField.unique).toBe(true);
@@ -94,7 +94,7 @@ describe('User Model', () => {
         type: Date,
         default: Date.now,
       };
-      
+
       expect(createdAtField.type).toBe(Date);
       expect(createdAtField.default).toBe(Date.now);
     });
@@ -104,7 +104,7 @@ describe('User Model', () => {
         collection: 'users',
         timestamps: true
       };
-      
+
       expect(options.collection).toBe('users');
       expect(options.timestamps).toBe(true);
     });
@@ -119,21 +119,21 @@ describe('User Model', () => {
         isModified: jest.fn(),
         save: jest.fn()
       };
-      
+
       mockBcrypt.genSalt.mockResolvedValue('mockSalt');
       mockBcrypt.hash.mockResolvedValue('hashedPassword');
     });
 
     it('should hash password before saving when password is modified', async () => {
       (mockUser.isModified as jest.Mock).mockReturnValue(true);
-      
+
       // Simulate pre-save hook
       // Mock the pre-save logic
       if (mockUser.password && (mockUser.isModified as jest.Mock)('password')) {
         const salt = await mockBcrypt.genSalt(10);
         mockUser.password = await mockBcrypt.hash(mockUser.password, salt);
       }
-      
+
       expect(mockBcrypt.genSalt).toHaveBeenCalledWith(10);
       expect(mockBcrypt.hash).toHaveBeenCalledWith('testPassword123', 'mockSalt');
       expect(mockUser.password).toBe('hashedPassword');
@@ -141,15 +141,15 @@ describe('User Model', () => {
 
     it('should not hash password if not modified', async () => {
       (mockUser.isModified as jest.Mock).mockReturnValue(false);
-      
+
       const originalPassword = mockUser.password;
-      
+
       // Mock the pre-save logic
       if (mockUser.password && (mockUser.isModified as jest.Mock)('password')) {
         const salt = await mockBcrypt.genSalt(10);
         mockUser.password = await mockBcrypt.hash(mockUser.password, salt);
       }
-      
+
       expect(mockBcrypt.genSalt).not.toHaveBeenCalled();
       expect(mockBcrypt.hash).not.toHaveBeenCalled();
       expect(mockUser.password).toBe(originalPassword);
@@ -158,13 +158,13 @@ describe('User Model', () => {
     it('should not hash password if password is not set', async () => {
       mockUser.password = undefined;
       (mockUser.isModified as jest.Mock).mockReturnValue(true);
-      
+
       // Mock the pre-save logic
       if (mockUser.password && (mockUser.isModified as jest.Mock)('password')) {
         const salt = await mockBcrypt.genSalt(10);
         mockUser.password = await mockBcrypt.hash(mockUser.password, salt);
       }
-      
+
       expect(mockBcrypt.genSalt).not.toHaveBeenCalled();
       expect(mockBcrypt.hash).not.toHaveBeenCalled();
       expect(mockUser.password).toBeUndefined();
@@ -173,7 +173,7 @@ describe('User Model', () => {
     it('should handle hashing errors gracefully', async () => {
       (mockUser.isModified as jest.Mock).mockReturnValue(true);
       mockBcrypt.genSalt.mockRejectedValue(new Error('Hashing failed'));
-      
+
       let error: Error | undefined;
       try {
         // Mock the pre-save logic
@@ -184,7 +184,7 @@ describe('User Model', () => {
       } catch (e) {
         error = e as Error;
       }
-      
+
       expect(error).toBeInstanceOf(Error);
       expect(error?.message).toBe('Hashing failed');
     });
@@ -211,53 +211,53 @@ describe('User Model', () => {
 
     it('should return true for correct password', async () => {
       mockBcrypt.compare.mockResolvedValue(true);
-      
+
       const result = await mockUser.comparePassword!('correctPassword');
-      
+
       expect(mockBcrypt.compare).toHaveBeenCalledWith('correctPassword', 'hashedPassword');
       expect(result).toBe(true);
     });
 
     it('should return false for incorrect password', async () => {
       mockBcrypt.compare.mockResolvedValue(false);
-      
+
       const result = await mockUser.comparePassword!('incorrectPassword');
-      
+
       expect(mockBcrypt.compare).toHaveBeenCalledWith('incorrectPassword', 'hashedPassword');
       expect(result).toBe(false);
     });
 
     it('should return false for Google OAuth users (no password)', async () => {
       mockUser.password = undefined;
-      
+
       const result = await mockUser.comparePassword!('anyPassword');
-      
+
       expect(mockBcrypt.compare).not.toHaveBeenCalled();
       expect(result).toBe(false);
     });
 
     it('should return false when bcrypt comparison fails', async () => {
       mockBcrypt.compare.mockRejectedValue(new Error('Comparison failed'));
-      
+
       const result = await mockUser.comparePassword!('anyPassword');
-      
+
       expect(result).toBe(false);
     });
 
     it('should handle null password gracefully', async () => {
       mockUser.password = null as any;
-      
+
       const result = await mockUser.comparePassword!('anyPassword');
-      
+
       expect(mockBcrypt.compare).not.toHaveBeenCalled();
       expect(result).toBe(false);
     });
 
     it('should handle empty password gracefully', async () => {
       mockUser.password = '';
-      
+
       const result = await mockUser.comparePassword!('anyPassword');
-      
+
       expect(mockBcrypt.compare).not.toHaveBeenCalled();
       expect(result).toBe(false);
     });
@@ -270,7 +270,7 @@ describe('User Model', () => {
         email: 'john@example.com',
         password: 'securePassword123'
       };
-      
+
       expect(userData.name).toBe('John Doe');
       expect(userData.email).toBe('john@example.com');
       expect(userData.password).toBe('securePassword123');
@@ -283,7 +283,7 @@ describe('User Model', () => {
         email: 'jane@gmail.com',
         googleId: 'google_123456789'
       };
-      
+
       expect(userData.name).toBe('Jane Smith');
       expect(userData.email).toBe('jane@gmail.com');
       expect(userData.googleId).toBe('google_123456789');
@@ -297,7 +297,7 @@ describe('User Model', () => {
         password: 'password123',
         googleId: 'google_987654321'
       };
-      
+
       expect(userData.name).toBe('Mixed User');
       expect(userData.email).toBe('mixed@example.com');
       expect(userData.password).toBe('password123');
@@ -310,7 +310,7 @@ describe('User Model', () => {
       const shortName = 'Jo';
       const normalName = 'John Doe';
       const longName = 'A'.repeat(51); // 51 characters
-      
+
       expect(shortName.length).toBeLessThan(50);
       expect(normalName.length).toBeLessThan(50);
       expect(longName.length).toBeGreaterThan(50);
@@ -320,7 +320,7 @@ describe('User Model', () => {
       const shortPassword = '1234567'; // 7 characters
       const validPassword = '12345678'; // 8 characters
       const longPassword = 'thisIsAVeryLongPasswordThatShouldStillBeValid';
-      
+
       expect(shortPassword.length).toBeLessThan(8);
       expect(validPassword.length).toBeGreaterThanOrEqual(8);
       expect(longPassword.length).toBeGreaterThan(8);
@@ -333,7 +333,7 @@ describe('User Model', () => {
         ' user@domain.org ', // Should be trimmed
         'complex.email+tag@subdomain.example.co.uk'
       ];
-      
+
       emails.forEach(email => {
         expect(typeof email).toBe('string');
         expect(email.includes('@')).toBe(true);
@@ -348,7 +348,7 @@ describe('User Model', () => {
         'Liu Wei',
         'Müller'
       ];
-      
+
       names.forEach(name => {
         expect(typeof name).toBe('string');
         expect(name.length).toBeGreaterThan(0);
@@ -366,7 +366,7 @@ describe('User Model', () => {
         googleId: 'google_123',
         comparePassword: jest.fn()
       };
-      
+
       expect(typeof user.name).toBe('string');
       expect(typeof user.email).toBe('string');
       expect(typeof user.password).toBe('string');
@@ -381,16 +381,16 @@ describe('User Model', () => {
         password: 'password123',
         comparePassword: jest.fn()
       };
-      
+
       expect(traditionalUser.googleId).toBeUndefined();
-      
+
       const googleUser: Partial<IUser> = {
         name: 'Google User',
         email: 'google@example.com',
         googleId: 'google_456',
         comparePassword: jest.fn()
       };
-      
+
       expect(googleUser.password).toBeUndefined();
     });
   });
@@ -410,7 +410,7 @@ describe('User Model', () => {
         updateOne: jest.fn(),
         deleteOne: jest.fn()
       };
-      
+
       expect(typeof mockModel.findOne).toBe('function');
       expect(typeof mockModel.create).toBe('function');
       expect(typeof mockModel.findById).toBe('function');
@@ -418,4 +418,4 @@ describe('User Model', () => {
       expect(typeof mockModel.deleteOne).toBe('function');
     });
   });
-}); 
+});
