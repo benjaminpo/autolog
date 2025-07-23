@@ -300,6 +300,16 @@ describe('Enhanced Form Validation Tests', () => {
             data-testid="form-container"
             aria-label="Interactive form container"
             role="group"
+            onKeyDown={e => {
+              if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                handleArrowDown();
+              } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                handleArrowUp();
+              }
+            }}
+            tabIndex={0}
           >
             {inputs.map((input, index) => (
               <input
@@ -307,15 +317,6 @@ describe('Enhanced Form Validation Tests', () => {
                 data-testid={input}
                 className={index === activeIndex ? 'active' : ''}
                 placeholder={input}
-                onKeyDown={e => {
-                  if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    handleArrowDown();
-                  } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    handleArrowUp();
-                  }
-                }}
               />
             ))}
             <div data-testid="active-index">{activeIndex}</div>
@@ -327,6 +328,9 @@ describe('Enhanced Form Validation Tests', () => {
 
       const container = screen.getByTestId('form-container');
       const activeIndex = screen.getByTestId('active-index');
+
+      // Focus the container first to make it receive keyboard events
+      container.focus();
 
       // Test arrow down navigation
       fireEvent.keyDown(container, { key: 'ArrowDown' });
