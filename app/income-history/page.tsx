@@ -43,9 +43,16 @@ export default function IncomeHistoryPage() {
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadIncomes = useCallback(async (offset = 0) => {
     try {
+      if (offset === 0) {
+        setIsLoading(true);
+        setError(null);
+      }
+      
       // Use shared API utility instead of manual fetch
       const data = await incomeApi.getEntries({
         limit: itemsPerPage.toString(),
@@ -72,7 +79,13 @@ export default function IncomeHistoryPage() {
       }
     } catch (error) {
       console.error('Error fetching income entries:', error);
+      if (offset === 0) {
+        setError('Failed to load income entries. Please try again.');
+      }
     } finally {
+      if (offset === 0) {
+        setIsLoading(false);
+      }
       setIsLoadingMore(false);
     }
   }, [itemsPerPage]);
@@ -211,6 +224,25 @@ export default function IncomeHistoryPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center p-8">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600 dark:text-gray-300">{(t as any)?.common?.loading || 'Loading...'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="p-4 mx-4 mt-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-100 rounded">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <TranslatedIncomeTab
@@ -227,6 +259,7 @@ export default function IncomeHistoryPage() {
           />
         </PageContainer>
       </main>
+      )}
 
       {/* Edit Income Modal */}
       {editingIncome && (

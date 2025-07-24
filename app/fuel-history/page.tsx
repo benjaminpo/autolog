@@ -32,6 +32,8 @@ export default function FuelHistoryPage() {
   const [fuelTypes, setFuelTypes] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadFuelEntries = useCallback(async (offset = 0) => {
     try {
@@ -67,12 +69,16 @@ export default function FuelHistoryPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Fetch vehicles
+        const vehiclesResponse = await fetch('/api/vehicles');
+        const vehiclesData = await vehiclesResponse.json();
+        if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
+          const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
             const normalizedVehicle = {...vehicle};
             if (normalizedVehicle._id && !normalizedVehicle.id) {
               normalizedVehicle.id = normalizedVehicle._id.toString();
@@ -83,47 +89,48 @@ export default function FuelHistoryPage() {
           });
           setCars(normalizedVehicles);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
 
-    // Fetch fuel entries
-    loadFuelEntries();
+        // Fetch fuel entries
+        await loadFuelEntries();
 
-    // Fetch fuel companies
-    fetch('/api/fuel-companies')
-      .then(response => response.json())
-      .then(data => {
-        if (data.companies) {
-          const customCompanies = Array.isArray(data.companies) ? data.companies : [];
+        // Fetch fuel companies
+        const fuelCompaniesResponse = await fetch('/api/fuel-companies');
+        const fuelCompaniesData = await fuelCompaniesResponse.json();
+        if (fuelCompaniesData.companies) {
+          const customCompanies = Array.isArray(fuelCompaniesData.companies) ? fuelCompaniesData.companies : [];
           const customCompanyNames = customCompanies
             .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
             .map((company: any) => company.name);
           setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
+        } else {
+          setFuelCompanies(predefinedFuelCompanies);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel companies:', error);
-        setFuelCompanies(predefinedFuelCompanies);
-      });
 
-    // Fetch fuel types
-    fetch('/api/fuel-types')
-      .then(response => response.json())
-      .then(data => {
-        if (data.types) {
-          const customTypes = Array.isArray(data.types) ? data.types : [];
+        // Fetch fuel types
+        const fuelTypesResponse = await fetch('/api/fuel-types');
+        const fuelTypesData = await fuelTypesResponse.json();
+        if (fuelTypesData.types) {
+          const customTypes = Array.isArray(fuelTypesData.types) ? fuelTypesData.types : [];
           const customTypeNames = customTypes
             .filter((type: any) => !predefinedFuelTypes.includes(type.name))
             .map((type: any) => type.name);
           setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
+        } else {
+          setFuelTypes(predefinedFuelTypes);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel types:', error);
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load data');
+        // Set fallback data
+        setFuelCompanies(predefinedFuelCompanies);
         setFuelTypes(predefinedFuelTypes);
-      });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [user, loadFuelEntries]);
 
   const handleLoadMore = () => {
@@ -176,7 +183,8 @@ export default function FuelHistoryPage() {
         tags: editEntry.tags,
       };
 
-      if (user) {        try {
+      if (user) {
+        try {
           const entryId = getObjectId(editEntry as unknown as Record<string, unknown>);
 
           if (!entryId) {
@@ -287,6 +295,25 @@ export default function FuelHistoryPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center p-8">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600 dark:text-gray-300">{(t as any)?.common?.loading || 'Loading...'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="p-4 mx-4 mt-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-100 rounded">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <TranslatedFuelTab
@@ -303,6 +330,7 @@ export default function FuelHistoryPage() {
           />
         </PageContainer>
       </main>
+      )}
 
       {/* Modals */}
       <TranslatedModals

@@ -79,6 +79,8 @@ export default function FinancialAnalysisPage() {
   const [entries, setEntries] = useState<FuelEntry[]>([]);
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Helper function to match car IDs
   const matchesCarId = (entryCarId: string, targetCarId: string): boolean => {
@@ -94,12 +96,23 @@ export default function FinancialAnalysisPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.vehicles)) {
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch all data in parallel
+        const [vehiclesResponse, fuelResponse, expenseResponse, incomeResponse] = await Promise.all([
+          fetch('/api/vehicles'),
+          fetch('/api/fuel-entries'),
+          fetch('/api/expense-entries'),
+          fetch('/api/income-entries')
+        ]);
+
+        // Process vehicles
+        const vehiclesData = await vehiclesResponse.json();
+        if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
+          const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
             const normalizedVehicle = {...vehicle};
             if (normalizedVehicle._id && !normalizedVehicle.id) {
               normalizedVehicle.id = normalizedVehicle._id.toString();
@@ -110,46 +123,34 @@ export default function FinancialAnalysisPage() {
           });
           setCars(normalizedVehicles);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
 
-    // Fetch fuel entries
-    fetch('/api/fuel-entries')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setEntries(data.entries);
+        // Process fuel entries
+        const fuelData = await fuelResponse.json();
+        if (fuelData.success) {
+          setEntries(fuelData.entries);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel entries:', error);
-      });
 
-    // Fetch expense entries
-    fetch('/api/expense-entries')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setExpenses(data.expenses);
+        // Process expense entries
+        const expenseData = await expenseResponse.json();
+        if (expenseData.success) {
+          setExpenses(expenseData.expenses);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching expense entries:', error);
-      });
 
-    // Fetch income entries
-    fetch('/api/income-entries')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setIncomes(data.entries);
+        // Process income entries
+        const incomeData = await incomeResponse.json();
+        if (incomeData.success) {
+          setIncomes(incomeData.entries);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching income entries:', error);
-      });
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setError('Failed to load data. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
   }, [user]);
 
   // Calculate aggregate statistics
@@ -321,6 +322,25 @@ export default function FinancialAnalysisPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center p-8">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600 dark:text-gray-300">{(t as any)?.common?.loading || 'Loading...'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="p-4 mx-4 mt-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-100 rounded">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
@@ -547,6 +567,7 @@ export default function FinancialAnalysisPage() {
           </div>
         </PageContainer>
       </main>
+      )}
     </div>
   );
 }

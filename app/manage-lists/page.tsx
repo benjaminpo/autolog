@@ -67,6 +67,8 @@ export default function ManageListsPage() {
   const [fullFuelTypes, setFullFuelTypes] = useState<FuelTypeItem[]>([]);
   const [customBrands, setCustomBrands] = useState<{ [key: string]: string[] }>({});
   const [customModels, setCustomModels] = useState<{ [key: string]: { [brand: string]: string[] } }>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [newCar, setNewCar] = useState({
     name: '',
@@ -120,17 +122,21 @@ export default function ManageListsPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Load vehicle form preferences
-    loadVehicleFormPreferences();
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Vehicle data received:', data);
-        if (data.success && Array.isArray(data.vehicles)) {
+        // Load vehicle form preferences
+        loadVehicleFormPreferences();
+
+        // Fetch vehicles
+        const vehiclesResponse = await fetch('/api/vehicles');
+        const vehiclesData = await vehiclesResponse.json();
+        console.log('Vehicle data received:', vehiclesData);
+        if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
           // Ensure all vehicles have both id and _id properties
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
+          const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
             const normalizedVehicle = {...vehicle};
             if (normalizedVehicle._id && !normalizedVehicle.id) {
               normalizedVehicle.id = normalizedVehicle._id.toString();
@@ -142,24 +148,19 @@ export default function ManageListsPage() {
 
           console.log(`Setting ${normalizedVehicles.length} vehicles with normalized IDs`);
           setCars(normalizedVehicles);
-        } else if (data.message === 'Unauthorized') {
+        } else if (vehiclesData.message === 'Unauthorized') {
           console.log('User not authenticated, skipping vehicle fetch');
           setCars([]); // Set empty array instead of causing error
         } else {
-          console.warn('Vehicle API did not return expected format:', data);
+          console.warn('Vehicle API did not return expected format:', vehiclesData);
           setCars([]); // Set empty array as fallback
         }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
 
-    // Fetch fuel companies
-    fetch('/api/fuel-companies')
-      .then(response => response.json())
-      .then(data => {
-        if (data.companies) {
-          const customCompanies = Array.isArray(data.companies) ? data.companies : [];
+        // Fetch fuel companies
+        const fuelCompaniesResponse = await fetch('/api/fuel-companies');
+        const fuelCompaniesData = await fuelCompaniesResponse.json();
+        if (fuelCompaniesData.companies) {
+          const customCompanies = Array.isArray(fuelCompaniesData.companies) ? fuelCompaniesData.companies : [];
           setFullFuelCompanies(customCompanies);
 
           // Create predefined company objects
@@ -177,27 +178,23 @@ export default function ManageListsPage() {
 
           setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
           setFullFuelCompanies([...predefinedCompanyObjects, ...customCompanies.filter((company: any) => !predefinedFuelCompanies.includes(company.name))]);
+        } else {
+          // Set predefined companies as fallback
+          setFuelCompanies(predefinedFuelCompanies);
+          const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
+            _id: `predefined-${name}`,
+            userId: 'system',
+            name,
+            isPredefined: true
+          }));
+          setFullFuelCompanies(predefinedCompanyObjects);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel companies:', error);
-        // Set predefined companies as fallback
-        setFuelCompanies(predefinedFuelCompanies);
-        const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
-          _id: `predefined-${name}`,
-          userId: 'system',
-          name,
-          isPredefined: true
-        }));
-        setFullFuelCompanies(predefinedCompanyObjects);
-      });
 
-    // Fetch fuel types
-    fetch('/api/fuel-types')
-      .then(response => response.json())
-      .then(data => {
-        if (data.types) {
-          const customTypes = Array.isArray(data.types) ? data.types : [];
+        // Fetch fuel types
+        const fuelTypesResponse = await fetch('/api/fuel-types');
+        const fuelTypesData = await fuelTypesResponse.json();
+        if (fuelTypesData.types) {
+          const customTypes = Array.isArray(fuelTypesData.types) ? fuelTypesData.types : [];
 
           // Create predefined type objects
           const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
@@ -214,34 +211,57 @@ export default function ManageListsPage() {
 
           setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
           setFullFuelTypes([...predefinedTypeObjects, ...customTypes.filter((type: any) => !predefinedFuelTypes.includes(type.name))]);
+        } else {
+          // Set predefined types as fallback
+          setFuelTypes(predefinedFuelTypes);
+          const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
+            _id: `predefined-${name}`,
+            userId: 'system',
+            name,
+            isPredefined: true
+          }));
+          setFullFuelTypes(predefinedTypeObjects);
         }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel types:', error);
-        // Set predefined types as fallback
+
+        // Fetch custom brands and models from user preferences
+        const preferencesResponse = await fetch('/api/user-preferences');
+        const preferencesData = await preferencesResponse.json();
+        if (preferencesData.preferences) {
+          if (preferencesData.preferences.customBrands) {
+            setCustomBrands(preferencesData.preferences.customBrands);
+          }
+          if (preferencesData.preferences.customModels) {
+            setCustomModels(preferencesData.preferences.customModels);
+          }
+        }
+
+      } catch (error) {
+        console.error('Error loading data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load data');
+        
+        // Set fallback data
+        setFuelCompanies(predefinedFuelCompanies);
         setFuelTypes(predefinedFuelTypes);
+        const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
+          _id: `predefined-${name}`,
+          userId: 'system',
+          name,
+          isPredefined: true
+        }));
         const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
           _id: `predefined-${name}`,
           userId: 'system',
           name,
           isPredefined: true
         }));
+        setFullFuelCompanies(predefinedCompanyObjects);
         setFullFuelTypes(predefinedTypeObjects);
-      });
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    // Fetch custom brands and models from user preferences
-    fetch('/api/user-preferences')
-      .then(response => response.json())
-      .then(data => {
-        if (data.preferences) {
-          if (data.preferences.customBrands) {
-            setCustomBrands(data.preferences.customBrands);
-          }
-          if (data.preferences.customModels) {
-            setCustomModels(data.preferences.customModels);
-          }
-        }
-      });
+    loadData();
   }, [user, loadVehicleFormPreferences]);
 
   const saveVehicleFormPreferences = useCallback((carData: typeof newCar) => {
@@ -579,6 +599,26 @@ export default function ManageListsPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center items-center p-8">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="text-gray-600 dark:text-gray-300">{t?.common?.loading || 'Loading...'}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="p-4 mx-4 mt-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-100 rounded">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
+
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
           <TranslatedListsTab
@@ -616,6 +656,7 @@ export default function ManageListsPage() {
           />
         </PageContainer>
       </main>
+      )}
     </div>
   );
 }
