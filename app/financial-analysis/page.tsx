@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import PageContainer from '../components/PageContainer';
@@ -8,6 +8,8 @@ import { AuthButton } from '../components/AuthButton';
 import { TranslatedNavigation } from '../components/TranslatedNavigation';
 import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
+import { LoadingState } from '../components/LoadingState';
+import { ErrorState } from '../components/ErrorState';
 import { useTranslation } from '../hooks/useTranslation';
 import { getObjectId } from '../lib/idUtils';
 import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
@@ -92,66 +94,67 @@ export default function FinancialAnalysisPage() {
     return normalizedEntryId === normalizedTargetId;
   };
 
-  // Load data
-  useEffect(() => {
+  // Consolidated data loading function
+  const loadData = useCallback(async () => {
     if (!user) return;
 
-    const loadData = async () => {
-      setIsLoading(true);
-      setError(null);
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        // Fetch all data in parallel
-        const [vehiclesResponse, fuelResponse, expenseResponse, incomeResponse] = await Promise.all([
-          fetch('/api/vehicles'),
-          fetch('/api/fuel-entries'),
-          fetch('/api/expense-entries'),
-          fetch('/api/income-entries')
-        ]);
+    try {
+      // Fetch all data in parallel
+      const [vehiclesResponse, fuelResponse, expenseResponse, incomeResponse] = await Promise.all([
+        fetch('/api/vehicles'),
+        fetch('/api/fuel-entries'),
+        fetch('/api/expense-entries'),
+        fetch('/api/income-entries')
+      ]);
 
-        // Process vehicles
-        const vehiclesData = await vehiclesResponse.json();
-        if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
-          const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
-          setCars(normalizedVehicles);
-        }
-
-        // Process fuel entries
-        const fuelData = await fuelResponse.json();
-        if (fuelData.success) {
-          setEntries(fuelData.entries);
-        }
-
-        // Process expense entries
-        const expenseData = await expenseResponse.json();
-        if (expenseData.success) {
-          setExpenses(expenseData.expenses);
-        }
-
-        // Process income entries
-        const incomeData = await incomeResponse.json();
-        if (incomeData.success) {
-          setIncomes(incomeData.entries);
-        }
-
-      } catch (error) {
-        console.error('Error loading data:', error);
-        setError('Failed to load data. Please try again.');
-      } finally {
-        setIsLoading(false);
+      // Process vehicles
+      const vehiclesData = await vehiclesResponse.json();
+      if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
+        const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
+          const normalizedVehicle = {...vehicle};
+          if (normalizedVehicle._id && !normalizedVehicle.id) {
+            normalizedVehicle.id = normalizedVehicle._id.toString();
+          } else if (normalizedVehicle.id && !normalizedVehicle._id) {
+            normalizedVehicle._id = normalizedVehicle.id;
+          }
+          return normalizedVehicle;
+        });
+        setCars(normalizedVehicles);
       }
-    };
 
-    loadData();
+      // Process fuel entries
+      const fuelData = await fuelResponse.json();
+      if (fuelData.success) {
+        setEntries(fuelData.entries);
+      }
+
+      // Process expense entries
+      const expenseData = await expenseResponse.json();
+      if (expenseData.success) {
+        setExpenses(expenseData.expenses);
+      }
+
+      // Process income entries
+      const incomeData = await incomeResponse.json();
+      if (incomeData.success) {
+        setIncomes(incomeData.entries);
+      }
+
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setError('Failed to load data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [user]);
+
+  // Load data
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Calculate aggregate statistics
   const calculateAggregateStats = () => {
@@ -323,20 +326,14 @@ export default function FinancialAnalysisPage() {
       <TranslatedNavigation showTabs={false} />
 
       {/* Loading State */}
-      {isLoading && (
-        <div className="flex justify-center items-center p-8">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600 dark:text-gray-300">{(t as any)?.common?.loading || 'Loading...'}</span>
-          </div>
-        </div>
-      )}
+      {isLoading && <LoadingState message={(t as any)?.common?.loading || 'Loading...'} />}
 
       {/* Error State */}
-      {error && (
-        <div className="p-4 mx-4 mt-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-100 rounded">
-          <p><strong>Error:</strong> {error}</p>
-        </div>
+      {error && !isLoading && (
+        <ErrorState
+          error={error}
+          onRetry={loadData}
+        />
       )}
 
       {/* Main Content */}

@@ -15,6 +15,8 @@ import { expenseCategories } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
+import { LoadingState } from '../components/LoadingState';
+import { ErrorState } from '../components/ErrorState';
 
 // Wrap components with translations HOC
 const TranslatedExpenseTab = withTranslations(ExpenseTab);
@@ -289,32 +291,14 @@ export default function ExpenseHistoryPage() {
       <TranslatedNavigation showTabs={false} />
 
       {/* Loading State */}
-      {isLoading && (
-        <main className="flex-grow overflow-auto transition-colors">
-          <PageContainer className="p-3 md:p-6">
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600 dark:text-gray-400">Loading...</span>
-            </div>
-          </PageContainer>
-        </main>
-      )}
+      {isLoading && <LoadingState />}
 
       {/* Error State */}
       {error && !isLoading && (
-        <main className="flex-grow overflow-auto transition-colors">
-          <PageContainer className="p-3 md:p-6">
-            <div className="text-center py-12">
-              <div className="text-red-500 dark:text-red-400 text-lg mb-4">{error}</div>
-              <button
-                onClick={loadData}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-              >
-                Try Again
-              </button>
-            </div>
-          </PageContainer>
-        </main>
+        <ErrorState
+          error={error}
+          onRetry={loadData}
+        />
       )}
 
       {/* Main Content */}

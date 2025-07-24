@@ -15,6 +15,8 @@ import { incomeApi } from '../lib/api';
 import { getObjectId } from '../lib/idUtils';
 import { currencies } from '../lib/vehicleData';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
+import { LoadingState } from '../components/LoadingState';
+import { ErrorState } from '../components/ErrorState';
 import ImageUpload from '../components/ImageUpload';
 import { IncomeEntry } from '../types/common';
 
@@ -225,20 +227,14 @@ export default function IncomeHistoryPage() {
       <TranslatedNavigation showTabs={false} />
 
       {/* Loading State */}
-      {isLoading && (
-        <div className="flex justify-center items-center p-8">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="text-gray-600 dark:text-gray-300">{(t as any)?.common?.loading || 'Loading...'}</span>
-          </div>
-        </div>
-      )}
+      {isLoading && <LoadingState message={(t as any)?.common?.loading || 'Loading...'} />}
 
       {/* Error State */}
-      {error && (
-        <div className="p-4 mx-4 mt-4 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-100 rounded">
-          <p><strong>Error:</strong> {error}</p>
-        </div>
+      {error && !isLoading && (
+        <ErrorState
+          error={error}
+          onRetry={() => loadIncomes(0)}
+        />
       )}
 
       {/* Main Content */}
