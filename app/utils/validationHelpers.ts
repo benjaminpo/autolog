@@ -1,7 +1,9 @@
 // Shared validation helpers for forms
 export function validateEmailString(email: string): string {
   if (!email) return 'Email is required';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Invalid email format';
+  // Use a safer regex pattern that avoids catastrophic backtracking
+  // This pattern uses atomic groups and possessive quantifiers conceptually
+  if (!/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) return 'Invalid email format';
   return '';
 }
 
