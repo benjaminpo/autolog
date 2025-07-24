@@ -67,7 +67,7 @@ describe('apiClient', () => {
     it('should make successful POST request to create vehicle', async () => {
       const vehicleData = { name: 'New Car', make: 'Toyota', model: 'Camry' };
       const mockResponse = { success: true, vehicle: { id: '123', ...vehicleData } };
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 201,
@@ -89,7 +89,7 @@ describe('apiClient', () => {
 
     it('should handle POST validation errors', async () => {
       const vehicleData = { name: '', make: '', model: '' };
-      
+
       mockFetch.mockResolvedValue({
         ok: false,
         status: 400,
@@ -108,7 +108,7 @@ describe('apiClient', () => {
       const vehicleId = '123';
       const updateData = { name: 'Updated Car' };
       const mockResponse = { success: true, vehicle: { id: vehicleId, name: 'Updated Car', make: 'Toyota' } };
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -131,7 +131,7 @@ describe('apiClient', () => {
     it('should handle PUT request for non-existent resource', async () => {
       const vehicleId = 'non-existent';
       const updateData = { name: 'Updated Car' };
-      
+
       mockFetch.mockResolvedValue({
         ok: false,
         status: 404,
@@ -148,7 +148,7 @@ describe('apiClient', () => {
   describe('DELETE requests', () => {
     it('should make successful DELETE request', async () => {
       const vehicleId = '123';
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -168,7 +168,7 @@ describe('apiClient', () => {
 
     it('should handle DELETE request errors', async () => {
       const vehicleId = '123';
-      
+
       mockFetch.mockResolvedValue({
         ok: false,
         status: 403,
@@ -188,11 +188,11 @@ describe('apiClient', () => {
         { id: '1', description: 'Fuel', amount: 50, category: 'Fuel' },
         { id: '2', description: 'Maintenance', amount: 100, category: 'Maintenance' },
       ];
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ success: true, expenses: mockExpenses }),
+        json: async () => ({ success: true, entries: mockExpenses }),
       } as unknown as Response);
 
       const result = await apiClient.getExpenseEntries();
@@ -203,7 +203,7 @@ describe('apiClient', () => {
         },
       });
       expect(result.success).toBe(true);
-      expect(result.data?.expenses).toEqual(mockExpenses);
+      expect(result.data?.entries).toEqual(mockExpenses);
     });
 
     it('should create expense entry', async () => {
@@ -214,7 +214,7 @@ describe('apiClient', () => {
         date: '2023-01-01',
         vehicleId: 'vehicle123',
       };
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 201,
@@ -241,7 +241,7 @@ describe('apiClient', () => {
         { id: '1', volume: 40, cost: 50, fuelType: 'Regular' },
         { id: '2', volume: 35, cost: 45, fuelType: 'Premium' },
       ];
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -265,7 +265,7 @@ describe('apiClient', () => {
         company: 'Shell',
         mileage: 50000,
       };
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 201,
@@ -285,7 +285,7 @@ describe('apiClient', () => {
         { id: '1', description: 'Rideshare', amount: 120, category: 'Rideshare' },
         { id: '2', description: 'Delivery', amount: 80, category: 'Delivery' },
       ];
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -306,7 +306,7 @@ describe('apiClient', () => {
         date: '2023-01-01',
         vehicleId: 'vehicle123',
       };
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 201,
@@ -396,8 +396,8 @@ describe('apiClient', () => {
     });
 
     it('should handle timeout errors', async () => {
-      mockFetch.mockImplementation(() => 
-        new Promise((_, reject) => 
+      mockFetch.mockImplementation(() =>
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Request timeout')), 100)
         )
       );
@@ -458,22 +458,22 @@ describe('apiClient', () => {
 
       // Test different HTTP methods
       await apiClient.getVehicles();
-      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String), 
+      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String),
         expect.objectContaining({ headers: expect.objectContaining({ 'Content-Type': 'application/json' }) })
       );
 
       await apiClient.createVehicle({ name: 'Test', make: 'Test', model: 'Test' });
-      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String), 
+      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String),
         expect.objectContaining({ method: 'POST' })
       );
 
       await apiClient.updateVehicle('123', { name: 'Updated' });
-      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String), 
+      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String),
         expect.objectContaining({ method: 'PUT' })
       );
 
       await apiClient.deleteVehicle('123');
-      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String), 
+      expect(mockFetch).toHaveBeenLastCalledWith(expect.any(String),
         expect.objectContaining({ method: 'DELETE' })
       );
     });
@@ -487,7 +487,7 @@ describe('apiClient', () => {
 
       await apiClient.getVehicles();
 
-      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), 
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
@@ -498,7 +498,7 @@ describe('apiClient', () => {
 
     it('should serialize request body correctly', async () => {
       const testData = { name: 'Test Vehicle', make: 'Test Brand' };
-      
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 201,
@@ -507,7 +507,7 @@ describe('apiClient', () => {
 
       await apiClient.createVehicle(testData);
 
-      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), 
+      expect(mockFetch).toHaveBeenCalledWith(expect.any(String),
         expect.objectContaining({
           body: JSON.stringify(testData)
         })
@@ -573,7 +573,7 @@ describe('apiClient', () => {
       } as unknown as Response);
 
       await apiClient.getVehicles();
-      
+
       // Verify that fetch was called (implementation uses private request method)
       expect(mockFetch).toHaveBeenCalled();
     });
@@ -587,16 +587,16 @@ describe('apiClient', () => {
       } as unknown as Response);
 
       const result = await apiClient.getVehicles();
-      
+
       expect(result.success).toBe(true);
     });
   });
-}); 
+});
 
 describe('apiClient edge cases', () => {
   it('should handle network timeout', async () => {
-    global.fetch = jest.fn().mockImplementation(() => 
-      new Promise((_, reject) => 
+    global.fetch = jest.fn().mockImplementation(() =>
+      new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Network timeout')), 100)
       )
     );
@@ -673,7 +673,7 @@ describe('apiClient edge cases', () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toBe('Network error');
   });
@@ -682,7 +682,7 @@ describe('apiClient edge cases', () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('Request timeout'));
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toBe('Request timeout');
   });
@@ -691,7 +691,7 @@ describe('apiClient edge cases', () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('CORS error'));
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toBe('CORS error');
   });
@@ -705,7 +705,7 @@ describe('apiClient edge cases', () => {
     } as Response);
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(false);
     expect(result.error).toBe('Invalid JSON');
   });
@@ -738,7 +738,7 @@ describe('apiClient edge cases', () => {
 
   it('should handle very large responses', async () => {
     const largeData = Array.from({ length: 10000 }, (_, i) => ({ id: i, data: 'large data' }));
-    
+
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -747,7 +747,7 @@ describe('apiClient edge cases', () => {
     } as Response);
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(true);
     expect(result.data?.vehicles).toHaveLength(10000);
   });
@@ -760,7 +760,7 @@ describe('apiClient edge cases', () => {
       quotes: 'Single "double" quotes',
       backslashes: '\\n\\t\\r'
     };
-    
+
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -769,7 +769,7 @@ describe('apiClient edge cases', () => {
     } as Response);
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(true);
     expect(result.data?.vehicles[0]).toEqual(specialData);
   });
@@ -790,7 +790,7 @@ describe('apiClient edge cases', () => {
         }
       }
     } as any;
-    
+
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -799,7 +799,7 @@ describe('apiClient edge cases', () => {
     } as Response);
 
     const result = await apiClient.getVehicles();
-    
+
     expect(result.success).toBe(true);
     expect((result.data?.vehicles[0] as any).level1.level2.level3.level4.level5.value).toBe('deep value');
   });

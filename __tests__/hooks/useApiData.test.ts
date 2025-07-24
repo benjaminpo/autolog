@@ -48,7 +48,7 @@ describe('useApiOperation', () => {
 
   it('should initialize with default state', () => {
     const { result } = renderHook(() => useApiOperation());
-    
+
     expect(result.current.data).toBe(null);
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBe(null);
@@ -56,11 +56,11 @@ describe('useApiOperation', () => {
 
   it('should handle successful operation', async () => {
     const { result } = renderHook(() => useApiOperation());
-    
+
     const mockData = { id: '1', name: 'Test' };
-    const mockOperation = jest.fn().mockResolvedValue({ 
-      success: true, 
-      data: mockData 
+    const mockOperation = jest.fn().mockResolvedValue({
+      success: true,
+      data: mockData
     });
 
     await act(async () => {
@@ -74,10 +74,10 @@ describe('useApiOperation', () => {
 
   it('should handle failed operation', async () => {
     const { result } = renderHook(() => useApiOperation());
-    
-    const mockOperation = jest.fn().mockResolvedValue({ 
-      success: false, 
-      error: 'Operation failed' 
+
+    const mockOperation = jest.fn().mockResolvedValue({
+      success: false,
+      error: 'Operation failed'
     });
 
     await act(async () => {
@@ -91,7 +91,7 @@ describe('useApiOperation', () => {
 
   it('should handle operation exception', async () => {
     const { result } = renderHook(() => useApiOperation());
-    
+
     const mockOperation = jest.fn().mockRejectedValue(new Error('Network error'));
 
     await act(async () => {
@@ -105,7 +105,7 @@ describe('useApiOperation', () => {
 
   it('should reset state', () => {
     const { result } = renderHook(() => useApiOperation());
-    
+
     // Set some initial state
     act(() => {
       result.current.execute(() => Promise.resolve({ success: true, data: { test: true } }));
@@ -128,33 +128,33 @@ describe('useExpenseEntries', () => {
 
   it('should fetch expenses on mount', async () => {
     const mockExpenses = [
-      { 
-        id: '1', 
-        description: 'Fuel', 
-        amount: 50, 
+      {
+        id: '1',
+        description: 'Fuel',
+        amount: 50,
         category: 'Fuel',
         date: '2023-01-01',
         vehicleId: 'vehicle1',
         userId: 'user1'
       },
-      { 
-        id: '2', 
-        description: 'Maintenance', 
-        amount: 100, 
+      {
+        id: '2',
+        description: 'Maintenance',
+        amount: 100,
         category: 'Maintenance',
         date: '2023-01-02',
         vehicleId: 'vehicle1',
         userId: 'user1'
       },
     ];
-    
+
     mockApiClient.getExpenseEntries.mockResolvedValue({
       success: true,
-      data: { expenses: mockExpenses }
+      data: { entries: mockExpenses }
     });
 
     const { result } = renderHook(() => useExpenseEntries());
-    
+
     // Wait for the effect to complete
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
@@ -169,7 +169,7 @@ describe('useExpenseEntries', () => {
     mockApiClient.getExpenseEntries.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => useExpenseEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -180,27 +180,27 @@ describe('useExpenseEntries', () => {
   });
 
   it('should create expense', async () => {
-    const newExpense = { 
-      description: 'New Fuel', 
-      amount: 60, 
+    const newExpense = {
+      description: 'New Fuel',
+      amount: 60,
       category: 'Fuel',
       date: '2023-01-03',
       vehicleId: 'vehicle1'
     };
     const createdExpense = { id: '3', ...newExpense, userId: 'user1' };
-    
+
     mockApiClient.getExpenseEntries.mockResolvedValue({
       success: true,
-      data: { expenses: [] }
+      data: { entries: [] }
     });
-    
+
     mockApiClient.createExpenseEntry.mockResolvedValue({
       success: true,
       data: { expense: createdExpense }
     });
 
     const { result } = renderHook(() => useExpenseEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -215,29 +215,29 @@ describe('useExpenseEntries', () => {
   });
 
   it('should update expense', async () => {
-    const existingExpense = { 
-      id: '1', 
-      description: 'Fuel', 
-      amount: 50, 
+    const existingExpense = {
+      id: '1',
+      description: 'Fuel',
+      amount: 50,
       category: 'Fuel',
       date: '2023-01-01',
       vehicleId: 'vehicle1',
       userId: 'user1'
     };
     const updatedExpense = { ...existingExpense, amount: 75 };
-    
+
     mockApiClient.getExpenseEntries.mockResolvedValue({
       success: true,
-      data: { expenses: [existingExpense] }
+      data: { entries: [existingExpense] }
     });
-    
+
     mockApiClient.updateExpenseEntry.mockResolvedValue({
       success: true,
       data: { expense: updatedExpense }
     });
 
     const { result } = renderHook(() => useExpenseEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -252,27 +252,27 @@ describe('useExpenseEntries', () => {
   });
 
   it('should delete expense', async () => {
-    const existingExpense = { 
-      id: '1', 
-      description: 'Fuel', 
-      amount: 50, 
+    const existingExpense = {
+      id: '1',
+      description: 'Fuel',
+      amount: 50,
       category: 'Fuel',
       date: '2023-01-01',
       vehicleId: 'vehicle1',
       userId: 'user1'
     };
-    
+
     mockApiClient.getExpenseEntries.mockResolvedValue({
       success: true,
-      data: { expenses: [existingExpense] }
+      data: { entries: [existingExpense] }
     });
-    
+
     mockApiClient.deleteExpenseEntry.mockResolvedValue({
       success: true
     });
 
     const { result } = renderHook(() => useExpenseEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -294,10 +294,10 @@ describe('useFuelEntries', () => {
 
   it('should fetch fuel entries on mount', async () => {
     const mockEntries = [
-      { 
-        id: '1', 
-        volume: 40, 
-        cost: 50, 
+      {
+        id: '1',
+        volume: 40,
+        cost: 50,
         fuelType: 'Regular',
         time: '10:00',
         date: '2023-01-01',
@@ -305,10 +305,10 @@ describe('useFuelEntries', () => {
         company: 'Shell',
         mileage: 50000
       },
-      { 
-        id: '2', 
-        volume: 35, 
-        cost: 45, 
+      {
+        id: '2',
+        volume: 35,
+        cost: 45,
         fuelType: 'Premium',
         time: '15:00',
         date: '2023-01-02',
@@ -317,14 +317,14 @@ describe('useFuelEntries', () => {
         mileage: 50100
       },
     ];
-    
+
     mockApiClient.getFuelEntries.mockResolvedValue({
       success: true,
       data: { entries: mockEntries }
     });
 
     const { result } = renderHook(() => useFuelEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -338,7 +338,7 @@ describe('useFuelEntries', () => {
     mockApiClient.getFuelEntries.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => useFuelEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -349,9 +349,9 @@ describe('useFuelEntries', () => {
   });
 
   it('should create fuel entry', async () => {
-    const newEntry = { 
-      volume: 30, 
-      cost: 40, 
+    const newEntry = {
+      volume: 30,
+      cost: 40,
       fuelType: 'Regular',
       time: '12:00',
       date: '2023-01-03',
@@ -360,19 +360,19 @@ describe('useFuelEntries', () => {
       mileage: 50200
     };
     const createdEntry = { id: '3', ...newEntry };
-    
+
     mockApiClient.getFuelEntries.mockResolvedValue({
       success: true,
       data: { entries: [] }
     });
-    
+
     mockApiClient.createFuelEntry.mockResolvedValue({
       success: true,
       data: { entry: createdEntry }
     });
 
     const { result } = renderHook(() => useFuelEntries());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -397,14 +397,14 @@ describe('useVehicles', () => {
       { id: '1', name: 'Car 1', brand: 'Toyota', model: 'Camry' },
       { id: '2', name: 'Car 2', brand: 'Honda', model: 'Civic' },
     ];
-    
+
     mockApiClient.getVehicles.mockResolvedValue({
       success: true,
       data: { vehicles: mockVehicles }
     });
 
     const { result } = renderHook(() => useVehicles());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -418,7 +418,7 @@ describe('useVehicles', () => {
     mockApiClient.getVehicles.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => useVehicles());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -432,14 +432,14 @@ describe('useVehicles', () => {
     const mockVehicles = [
       { id: '1', name: 'Car 1', brand: 'Toyota', model: 'Camry' },
     ];
-    
+
     mockApiClient.getVehicles.mockResolvedValue({
       success: true,
       data: { vehicles: mockVehicles }
     });
 
     const { result } = renderHook(() => useVehicles());
-    
+
     await act(async () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
@@ -458,4 +458,4 @@ describe('useVehicles', () => {
     expect(mockApiClient.getVehicles).toHaveBeenCalledTimes(1);
     expect(result.current.vehicles).toHaveLength(2);
   });
-}); 
+});

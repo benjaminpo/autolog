@@ -97,8 +97,8 @@ class ApiClient {
   }
 
   // Expense Entries
-  async getExpenseEntries(): Promise<ApiResponse<{ expenses: ExpenseEntry[] }>> {
-    return this.request<{ expenses: ExpenseEntry[] }>('/expense-entries');
+  async getExpenseEntries(): Promise<ApiResponse<{ entries: ExpenseEntry[] }>> {
+    return this.request<{ entries: ExpenseEntry[] }>('/expense-entries');
   }
 
   async createExpenseEntry(entry: Omit<ExpenseEntry, 'id' | '_id' | 'userId'>): Promise<ApiResponse<{ expense: ExpenseEntry }>> {
@@ -228,4 +228,4 @@ class ApiClient {
 
 // Export a singleton instance
 export const apiClient = new ApiClient();
-export default apiClient; 
+export default apiClient;

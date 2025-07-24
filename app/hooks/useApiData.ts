@@ -18,7 +18,7 @@ export function useApiOperation<T>() {
 
     try {
       const response = await operation();
-      
+
       if (response.success && response.data) {
         setData(response.data);
       } else {
@@ -52,9 +52,9 @@ export function useExpenseEntries() {
 
     try {
       const response = await apiClient.getExpenseEntries();
-      
+
       if (response.success && response.data) {
-        setExpenses(response.data.expenses);
+        setExpenses(response.data.entries);
       } else {
         setError(response.error || 'Failed to fetch expenses');
       }
@@ -67,7 +67,7 @@ export function useExpenseEntries() {
 
   const createExpense = useCallback(async (expense: Omit<ExpenseEntry, 'id' | '_id' | 'userId'>) => {
     const response = await apiClient.createExpenseEntry(expense);
-    
+
     if (response.success && response.data) {
       setExpenses(prev => [response.data!.expense, ...prev]);
       return { success: true };
@@ -78,7 +78,7 @@ export function useExpenseEntries() {
 
   const updateExpense = useCallback(async (id: string, expense: Partial<ExpenseEntry>) => {
     const response = await apiClient.updateExpenseEntry(id, expense);
-    
+
     if (response.success && response.data) {
       setExpenses(prev => prev.map(e => e.id === id ? response.data!.expense : e));
       return { success: true };
@@ -89,7 +89,7 @@ export function useExpenseEntries() {
 
   const deleteExpense = useCallback(async (id: string) => {
     const response = await apiClient.deleteExpenseEntry(id);
-    
+
     if (response.success) {
       setExpenses(prev => prev.filter(e => e.id !== id));
       return { success: true };
@@ -125,7 +125,7 @@ export function useFuelEntries() {
 
     try {
       const response = await apiClient.getFuelEntries();
-      
+
       if (response.success && response.data) {
         setEntries(response.data.entries);
       } else {
@@ -140,7 +140,7 @@ export function useFuelEntries() {
 
   const createEntry = useCallback(async (entry: Omit<FuelEntry, 'id' | '_id' | 'userId'>) => {
     const response = await apiClient.createFuelEntry(entry);
-    
+
     if (response.success && response.data) {
       setEntries(prev => [response.data!.entry, ...prev]);
       return { success: true };
@@ -151,7 +151,7 @@ export function useFuelEntries() {
 
   const updateEntry = useCallback(async (id: string, entry: Partial<FuelEntry>) => {
     const response = await apiClient.updateFuelEntry(id, entry);
-    
+
     if (response.success && response.data) {
       setEntries(prev => prev.map(e => e.id === id ? response.data!.entry : e));
       return { success: true };
@@ -162,7 +162,7 @@ export function useFuelEntries() {
 
   const deleteEntry = useCallback(async (id: string) => {
     const response = await apiClient.deleteFuelEntry(id);
-    
+
     if (response.success) {
       setEntries(prev => prev.filter(e => e.id !== id));
       return { success: true };
@@ -198,7 +198,7 @@ export function useVehicles() {
 
     try {
       const response = await apiClient.getVehicles();
-      
+
       if (response.success && response.data) {
         setVehicles(response.data.vehicles);
       } else {
@@ -213,7 +213,7 @@ export function useVehicles() {
 
   const createVehicle = useCallback(async (vehicle: Omit<Vehicle, 'id' | '_id' | 'userId' | 'dateAdded'>) => {
     const response = await apiClient.createVehicle(vehicle);
-    
+
     if (response.success && response.data) {
       setVehicles(prev => [response.data!.vehicle, ...prev]);
       return { success: true };
@@ -224,7 +224,7 @@ export function useVehicles() {
 
   const updateVehicle = useCallback(async (id: string, vehicle: Partial<Vehicle>) => {
     const response = await apiClient.updateVehicle(id, vehicle);
-    
+
     if (response.success && response.data) {
       setVehicles(prev => prev.map(v => v.id === id ? response.data!.vehicle : v));
       return { success: true };
@@ -235,7 +235,7 @@ export function useVehicles() {
 
   const deleteVehicle = useCallback(async (id: string) => {
     const response = await apiClient.deleteVehicle(id);
-    
+
     if (response.success) {
       setVehicles(prev => prev.filter(v => v.id !== id));
       return { success: true };
@@ -303,4 +303,4 @@ export function useFuelTypes() {
     error,
     refetch: () => execute(() => apiClient.getFuelTypes()),
   };
-} 
+}
