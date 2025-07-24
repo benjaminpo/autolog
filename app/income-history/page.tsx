@@ -52,7 +52,7 @@ export default function IncomeHistoryPage() {
         setIsLoading(true);
         setError(null);
       }
-      
+
       // Use shared API utility instead of manual fetch
       const data = await incomeApi.getEntries({
         limit: itemsPerPage.toString(),

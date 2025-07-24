@@ -238,7 +238,7 @@ export default function ManageListsPage() {
       } catch (error) {
         console.error('Error loading data:', error);
         setError(error instanceof Error ? error.message : 'Failed to load data');
-        
+
         // Set fallback data
         setFuelCompanies(predefinedFuelCompanies);
         setFuelTypes(predefinedFuelTypes);
