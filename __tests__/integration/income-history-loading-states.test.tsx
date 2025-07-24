@@ -2,39 +2,12 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import IncomeHistoryPage from '../../app/income-history/page';
+import { setupCommonMocks } from '../utils/commonMocks';
 
-// Mock all the dependencies
-jest.mock('../../app/context/AuthContext', () => ({
-  useAuth: () => ({
-    user: { id: 'test-user', email: 'test@example.com' },
-    loading: false,
-  }),
-}));
+// Setup common mocks
+setupCommonMocks();
 
-jest.mock('../../app/context/LanguageContext', () => ({
-  useLanguage: () => {},
-}));
-
-jest.mock('../../app/hooks/useTranslation', () => ({
-  useTranslation: () => ({
-    t: {
-      navigation: { incomeHistory: 'Income History' },
-      common: { loading: 'Loading...' },
-      confirmDelete: 'Are you sure you want to delete this income entry?',
-    },
-  }),
-}));
-
-jest.mock('../../app/hooks/useVehicles', () => ({
-  useVehicles: () => ({
-    cars: [
-      { _id: '1', name: 'Test Car 1' },
-      { _id: '2', name: 'Test Car 2' },
-    ],
-    loading: false,
-  }),
-}));
-
+// Add specific mocks for this test
 jest.mock('../../app/lib/api', () => ({
   incomeApi: {
     getEntries: jest.fn(),
@@ -44,17 +17,6 @@ jest.mock('../../app/lib/api', () => ({
   },
 }));
 
-jest.mock('../../app/components/PageContainer', () => {
-  return {
-    __esModule: true,
-    default: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-      <div data-testid="page-container" className={className}>
-        {children}
-      </div>
-    ),
-  };
-});
-
 jest.mock('../../app/components/IncomeTab', () => {
   return {
     __esModule: true,
@@ -62,38 +24,8 @@ jest.mock('../../app/components/IncomeTab', () => {
   };
 });
 
-jest.mock('../../app/components/withTranslations', () => {
-  return {
-    __esModule: true,
-    default: (Component: any) => Component,
-  };
-});
-
-jest.mock('../../app/components/AuthButton', () => ({
-  AuthButton: () => <button data-testid="auth-button">Auth</button>,
-}));
-
-jest.mock('../../app/components/TranslatedNavigation', () => ({
-  TranslatedNavigation: () => <nav data-testid="navigation">Navigation</nav>,
-}));
-
-jest.mock('../../app/components/GlobalLanguageSelector', () => ({
-  GlobalLanguageSelector: () => <div data-testid="language-selector">Language</div>,
-}));
-
-jest.mock('../../app/components/ThemeToggle', () => ({
-  SimpleThemeToggle: () => <button data-testid="theme-toggle">Theme</button>,
-}));
-
-jest.mock('../../app/components/ImageUpload', () => {
-  return {
-    __esModule: true,
-    default: (props: any) => <div data-testid="image-upload">Image Upload</div>,
-  };
-});
-
 describe('IncomeHistoryPage Integration', () => {
-  const mockIncomeApi = require('../../app/lib/api').incomeApi;
+  const mockIncomeApi = jest.requireMock('../../app/lib/api').incomeApi;
 
   beforeEach(() => {
     jest.clearAllMocks();

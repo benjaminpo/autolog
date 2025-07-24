@@ -1,15 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useLanguage } from '../context/LanguageContext';
-import PageContainer from '../components/PageContainer';
-import { AuthButton } from '../components/AuthButton';
-import { TranslatedNavigation } from '../components/TranslatedNavigation';
-import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
-import { SimpleThemeToggle } from '../components/ThemeToggle';
-import { LoadingState } from '../components/LoadingState';
-import { ErrorState } from '../components/ErrorState';
+import { usePageLayout } from '../hooks/usePageLayout';
+import { PageWrapper } from '../components/PageWrapper';
+import { HeaderControls } from '../components/HeaderControls';
+import { useVehicles } from '../hooks/useVehicles';
 import { useTranslation } from '../hooks/useTranslation';
 import { getObjectId } from '../lib/idUtils';
 import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
@@ -73,11 +68,9 @@ interface IncomeEntry {
 }
 
 export default function FinancialAnalysisPage() {
-  const { user, loading } = useAuth();
-  useLanguage();
-  const { t } = useTranslation();
+  const { user, t } = usePageLayout();
+  const { cars } = useVehicles();
 
-  const [cars, setCars] = useState<Car[]>([]);
   const [entries, setEntries] = useState<FuelEntry[]>([]);
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [incomes, setIncomes] = useState<IncomeEntry[]>([]);
@@ -109,21 +102,6 @@ export default function FinancialAnalysisPage() {
         fetch('/api/expense-entries'),
         fetch('/api/income-entries')
       ]);
-
-      // Process vehicles
-      const vehiclesData = await vehiclesResponse.json();
-      if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
-        const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
-          const normalizedVehicle = {...vehicle};
-          if (normalizedVehicle._id && !normalizedVehicle.id) {
-            normalizedVehicle.id = normalizedVehicle._id.toString();
-          } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-            normalizedVehicle._id = normalizedVehicle.id;
-          }
-          return normalizedVehicle;
-        });
-        setCars(normalizedVehicles);
-      }
 
       // Process fuel entries
       const fuelData = await fuelResponse.json();
@@ -294,52 +272,33 @@ export default function FinancialAnalysisPage() {
     };
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
-
   const currency = entries.length > 0 ? entries[0].currency :
                    expenses.length > 0 ? expenses[0].currency :
                    incomes.length > 0 ? incomes[0].currency : currencies[0];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
-        <PageContainer>
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg font-bold">{(t as any)?.navigation?.financialAnalysis || 'Financial Analysis'}</h1>
-            <div className="flex items-center gap-2">
-              <SimpleThemeToggle />
-              <GlobalLanguageSelector darkMode={false} />
-              <AuthButton />
-            </div>
-          </div>
-        </PageContainer>
+    <PageWrapper
+      error={error}
+      onRetry={loadData}
+      loadingMessage={(t as any)?.common?.loading || 'Loading financial analysis...'}
+      showHeader={false}
+    >
+      {/* Custom Header with title */}
+      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-lg font-bold">{(t as any)?.navigation?.financialAnalysis || 'Financial Analysis'}</h1>
+          <HeaderControls />
+        </div>
       </div>
 
-      {/* Navigation Component */}
-      <TranslatedNavigation showTabs={false} />
-
-      {/* Loading State */}
-      {isLoading && <LoadingState message={(t as any)?.common?.loading || 'Loading...'} />}
-
-      {/* Error State */}
-      {error && !isLoading && (
-        <ErrorState
-          error={error}
-          onRetry={loadData}
-        />
-      )}
-
-      {/* Main Content */}
-      {!isLoading && !error && (
-      <main className="flex-grow overflow-auto transition-colors">
-        <PageContainer className="p-3 md:p-6">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
+          <span className="ml-3 text-gray-600 dark:text-gray-400">
+            {(t as any)?.common?.loading || 'Loading...'}
+          </span>
+        </div>
+      ) : (
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>
 
@@ -562,9 +521,7 @@ export default function FinancialAnalysisPage() {
               </div>
             )}
           </div>
-        </PageContainer>
-      </main>
       )}
-    </div>
+    </PageWrapper>
   );
 }

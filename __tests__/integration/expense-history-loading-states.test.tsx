@@ -1,42 +1,15 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { setupCommonMocks } from '../utils/commonMocks';
 
 // Mock the page component
 const ExpenseHistoryPage = React.lazy(() => import('../../app/expense-history/page'));
 
-// Mock all the dependencies
-jest.mock('../../app/context/AuthContext', () => ({
-  useAuth: () => ({
-    user: { id: 'test-user', email: 'test@example.com' },
-    loading: false,
-  }),
-}));
+// Setup common mocks
+setupCommonMocks();
 
-jest.mock('../../app/context/LanguageContext', () => ({
-  useLanguage: () => {},
-}));
-
-jest.mock('../../app/hooks/useTranslation', () => ({
-  useTranslation: () => ({
-    t: {
-      navigation: { expenseHistory: 'Expense History' },
-      common: { loading: 'Loading expenses...' },
-      confirmDelete: 'Are you sure you want to delete this expense?',
-    },
-  }),
-}));
-
-jest.mock('../../app/hooks/useVehicles', () => ({
-  useVehicles: () => ({
-    cars: [
-      { _id: '1', name: 'Test Car 1' },
-      { _id: '2', name: 'Test Car 2' },
-    ],
-    loading: false,
-  }),
-}));
-
+// Add specific mocks for this test
 jest.mock('../../app/lib/api', () => ({
   expenseApi: {
     getEntries: jest.fn(),
@@ -46,17 +19,6 @@ jest.mock('../../app/lib/api', () => ({
   },
 }));
 
-jest.mock('../../app/components/PageContainer', () => {
-  return {
-    __esModule: true,
-    default: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-      <div data-testid="page-container" className={className}>
-        {children}
-      </div>
-    ),
-  };
-});
-
 jest.mock('../../app/components/ExpenseTab', () => {
   return {
     __esModule: true,
@@ -64,38 +26,8 @@ jest.mock('../../app/components/ExpenseTab', () => {
   };
 });
 
-jest.mock('../../app/components/withTranslations', () => {
-  return {
-    __esModule: true,
-    default: (Component: any) => Component,
-  };
-});
-
-jest.mock('../../app/components/AuthButton', () => ({
-  AuthButton: () => <button data-testid="auth-button">Auth</button>,
-}));
-
-jest.mock('../../app/components/TranslatedNavigation', () => ({
-  TranslatedNavigation: () => <nav data-testid="navigation">Navigation</nav>,
-}));
-
-jest.mock('../../app/components/GlobalLanguageSelector', () => ({
-  GlobalLanguageSelector: () => <div data-testid="language-selector">Language</div>,
-}));
-
-jest.mock('../../app/components/ThemeToggle', () => ({
-  SimpleThemeToggle: () => <button data-testid="theme-toggle">Theme</button>,
-}));
-
-jest.mock('../../app/components/ImageUpload', () => {
-  return {
-    __esModule: true,
-    default: (props: any) => <div data-testid="image-upload">Image Upload</div>,
-  };
-});
-
 describe('ExpenseHistoryPage Loading States Integration', () => {
-  const mockExpenseApi = require('../../app/lib/api').expenseApi;
+  const mockExpenseApi = jest.requireMock('../../app/lib/api').expenseApi;
 
   beforeEach(() => {
     jest.clearAllMocks();

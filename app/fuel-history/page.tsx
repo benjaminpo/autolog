@@ -1,31 +1,24 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AuthContext';
-import PageContainer from '../components/PageContainer';
+import { usePageLayout } from '../hooks/usePageLayout';
+import { PageWrapper } from '../components/PageWrapper';
+import { HeaderControls } from '../components/HeaderControls';
 import FuelTab from '../components/FuelTab';
 import withTranslations from '../components/withTranslations';
-import { AuthButton } from '../components/AuthButton';
-import { TranslatedNavigation } from '../components/TranslatedNavigation';
-import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
-import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
 import { fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
-import { SimpleThemeToggle } from '../components/ThemeToggle';
-import { LoadingState } from '../components/LoadingState';
-import { ErrorState } from '../components/ErrorState';
-import { Car, FuelEntry } from '../types/common';
+import { FuelEntry } from '../types/common';
 
 // Wrap components with translations HOC
 const TranslatedFuelTab = withTranslations(FuelTab);
 const TranslatedModals = withTranslations(Modals);
 
 export default function FuelHistoryPage() {
-  const { user, loading } = useAuth();
-  const { t } = useTranslation();
-
-  const [cars, setCars] = useState<Car[]>([]);
+  const { user, t } = usePageLayout();
+  const { cars } = useVehicles();
   const [entries, setEntries] = useState<FuelEntry[]>([]);
   const [showFuelDetails, setShowFuelDetails] = useState<string | null>(null);
   const [itemsPerPage] = useState(20);
@@ -37,6 +30,7 @@ export default function FuelHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Remove the separate cars loading - it's handled by useVehicles hook
   const loadFuelEntries = useCallback(async (offset = 0) => {
     try {
       const response = await fetch(`/api/fuel-entries?limit=${itemsPerPage}&offset=${offset}`);
@@ -74,22 +68,6 @@ export default function FuelHistoryPage() {
     try {
       setIsLoading(true);
       setError(null);
-
-      // Fetch vehicles
-      const vehiclesResponse = await fetch('/api/vehicles');
-      const vehiclesData = await vehiclesResponse.json();
-      if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
-        const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
-          const normalizedVehicle = {...vehicle};
-          if (normalizedVehicle._id && !normalizedVehicle.id) {
-            normalizedVehicle.id = normalizedVehicle._id.toString();
-          } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-            normalizedVehicle._id = normalizedVehicle.id;
-          }
-          return normalizedVehicle;
-        });
-        setCars(normalizedVehicles);
-      }
 
       // Fetch fuel entries
       await loadFuelEntries();
@@ -271,62 +249,41 @@ export default function FuelHistoryPage() {
     setEditEntry(entryWithValidId);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-800 transition-colors">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600 dark:border-blue-400"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
-        <PageContainer>
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg font-bold">{(t as any)?.navigation?.fuelHistory || 'Fuel History'}</h1>
-            <div className="flex items-center gap-2">
-              <SimpleThemeToggle />
-              <GlobalLanguageSelector darkMode={false} />
-              <AuthButton />
-            </div>
-          </div>
-        </PageContainer>
+    <PageWrapper
+      error={error}
+      onRetry={loadData}
+      loadingMessage={(t as any)?.common?.loading || 'Loading fuel history...'}
+      showHeader={false}
+    >
+      {/* Custom Header with title */}
+      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700 mb-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-lg font-bold">{(t as any)?.navigation?.fuelHistory || 'Fuel History'}</h1>
+          <HeaderControls />
+        </div>
       </div>
 
-      {/* Navigation Component */}
-      <TranslatedNavigation showTabs={false} />
-
-      {/* Loading State */}
-      {isLoading && <LoadingState message={(t as any)?.common?.loading || 'Loading...'} />}
-
-      {/* Error State */}
-      {error && !isLoading && (
-        <ErrorState
-          error={error}
-          onRetry={loadData}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600 dark:text-gray-400">
+            {(t as any)?.common?.loading || 'Loading...'}
+          </span>
+        </div>
+      ) : (
+        <TranslatedFuelTab
+          cars={cars}
+          entries={entries}
+          showFuelDetails={showFuelDetails}
+          itemsPerPage={itemsPerPage}
+          setShowFuelDetails={setShowFuelDetails}
+          deleteEntry={handleDeleteFuelEntry}
+          startEditing={startEditing}
+          onLoadMore={handleLoadMore}
+          hasMore={hasMore}
+          loading={isLoadingMore}
         />
-      )}
-
-      {/* Main Content */}
-      {!isLoading && !error && (
-      <main className="flex-grow overflow-auto transition-colors">
-        <PageContainer className="p-3 md:p-6">
-          <TranslatedFuelTab
-            cars={cars}
-            entries={entries}
-            showFuelDetails={showFuelDetails}
-            itemsPerPage={itemsPerPage}
-            setShowFuelDetails={setShowFuelDetails}
-            deleteEntry={handleDeleteFuelEntry}
-            startEditing={startEditing}
-            onLoadMore={handleLoadMore}
-            hasMore={hasMore}
-            loading={isLoadingMore}
-          />
-        </PageContainer>
-      </main>
       )}
 
       {/* Modals */}
@@ -354,6 +311,6 @@ export default function FuelHistoryPage() {
         setEditFuelCompany={() => {}}
         setEditFuelType={() => {}}
       />
-    </div>
+    </PageWrapper>
   );
 }
