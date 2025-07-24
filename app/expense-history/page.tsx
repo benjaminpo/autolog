@@ -64,8 +64,19 @@ export default function ExpenseHistoryPage() {
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadExpenses = useCallback(async (offset = 0) => {
+    const isInitial = offset === 0;
+
+    if (isInitial) {
+      setIsLoading(true);
+      setError(null);
+    } else {
+      setIsLoadingMore(true);
+    }
+
     try {
       // Use shared API utility instead of manual fetch
       const data = await expenseApi.getEntries({
@@ -83,41 +94,65 @@ export default function ExpenseHistoryPage() {
       }
     } catch (error) {
       console.error('Error fetching expense entries:', error);
+      if (isInitial) {
+        setError('Failed to load expenses. Please try again.');
+      }
     } finally {
-      setIsLoadingMore(false);
+      if (isInitial) {
+        setIsLoading(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   }, [itemsPerPage]);
 
-  // Load data
-  useEffect(() => {
+  // Consolidated data loading function
+  const loadData = useCallback(async () => {
     if (!user) return;
 
-    // Cars are now loaded automatically by useVehicles hook
-    // Just load expense entries
-    loadExpenses();
+    setIsLoading(true);
+    setError(null);
 
-    // Fetch expense categories using shared API utility
-    expenseApi.getCategories()
-      .then(data => {
-        if (data.success && Array.isArray(data.expenseCategories)) {
-          // Combine predefined categories with custom categories from API
-          const customCategories = data.expenseCategories.map((cat: any) => cat.name) as string[];
-          const allCategories = [...expenseCategories, ...customCategories];
-          setAvailableCategories([...new Set(allCategories)].sort((a, b) => a.localeCompare(b)));
-        } else {
-          // Fallback to predefined categories
-          setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching expense categories:', error);
+    try {
+      // Load expense entries and categories in parallel
+      const [expenseResponse, categoriesResponse] = await Promise.all([
+        expenseApi.getEntries({
+          limit: itemsPerPage.toString(),
+          offset: '0'
+        }),
+        expenseApi.getCategories()
+      ]);
+
+      // Handle expense entries
+      if (expenseResponse.success && Array.isArray(expenseResponse.entries)) {
+        setExpenses(expenseResponse.entries);
+        setHasMore(expenseResponse.entries.length === itemsPerPage);
+      }
+
+      // Handle categories
+      if (categoriesResponse.success && Array.isArray(categoriesResponse.expenseCategories)) {
+        // Combine predefined categories with custom categories from API
+        const customCategories = categoriesResponse.expenseCategories.map((cat: any) => cat.name) as string[];
+        const allCategories = [...expenseCategories, ...customCategories];
+        setAvailableCategories([...new Set(allCategories)].sort((a, b) => a.localeCompare(b)));
+      } else {
         // Fallback to predefined categories
         setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
-      });
+      }
+    } catch (error) {
+      console.error('Failed to load expense data:', error);
+      setError('Failed to load expenses. Please try again.');
+      // Fallback to predefined categories
+      setAvailableCategories(expenseCategories.slice().sort((a, b) => a.localeCompare(b)));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, itemsPerPage]);
 
-    // Fetch expense entries
-    loadExpenses();
-  }, [user, loadExpenses]);
+  // Load data
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleLoadMore = () => {
     if (!isLoadingMore && hasMore) {
@@ -253,22 +288,54 @@ export default function ExpenseHistoryPage() {
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
 
-      <main className="flex-grow overflow-auto transition-colors">
-        <PageContainer className="p-3 md:p-6">
-          <TranslatedExpenseTab
-            cars={cars}
-            expenses={expenses}
-            showExpenseDetails={showExpenseDetails}
-            itemsPerPage={itemsPerPage}
-            setShowExpenseDetails={setShowExpenseDetails}
-            deleteExpense={handleDeleteExpense}
-            startEditingExpense={startEditingExpense}
-            onLoadMore={handleLoadMore}
-            hasMore={hasMore}
-            loading={isLoadingMore}
-          />
-        </PageContainer>
-      </main>
+      {/* Loading State */}
+      {isLoading && (
+        <main className="flex-grow overflow-auto transition-colors">
+          <PageContainer className="p-3 md:p-6">
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600 dark:text-gray-400">Loading...</span>
+            </div>
+          </PageContainer>
+        </main>
+      )}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <main className="flex-grow overflow-auto transition-colors">
+          <PageContainer className="p-3 md:p-6">
+            <div className="text-center py-12">
+              <div className="text-red-500 dark:text-red-400 text-lg mb-4">{error}</div>
+              <button
+                onClick={loadData}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+              >
+                Try Again
+              </button>
+            </div>
+          </PageContainer>
+        </main>
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
+        <main className="flex-grow overflow-auto transition-colors">
+          <PageContainer className="p-3 md:p-6">
+            <TranslatedExpenseTab
+              cars={cars}
+              expenses={expenses}
+              showExpenseDetails={showExpenseDetails}
+              itemsPerPage={itemsPerPage}
+              setShowExpenseDetails={setShowExpenseDetails}
+              deleteExpense={handleDeleteExpense}
+              startEditingExpense={startEditingExpense}
+              onLoadMore={handleLoadMore}
+              hasMore={hasMore}
+              loading={isLoadingMore}
+            />
+          </PageContainer>
+        </main>
+      )}
 
       {/* Modals */}
       <TranslatedModals

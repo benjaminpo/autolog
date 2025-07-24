@@ -92,7 +92,7 @@ describe('ManageListsPage', () => {
       user: mockUser,
       loading: false,
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
@@ -208,7 +208,7 @@ describe('ManageListsPage', () => {
 
     it('should handle fetch errors', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // Set up fetch to reject before rendering
       mockFetch.mockRejectedValueOnce(new Error('Failed to fetch'));
 
@@ -221,4 +221,4 @@ describe('ManageListsPage', () => {
       consoleSpy.mockRestore();
     });
   });
-}); 
+});
