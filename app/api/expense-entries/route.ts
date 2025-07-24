@@ -5,7 +5,7 @@ import ExpenseEntry from '../../models/ExpenseEntry';
 import { authOptions } from '../auth/authOptions';
 
 // GET /api/expense-entries - Get all expense entries for the current user
-export async function GET(req?: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,15 +18,10 @@ export async function GET(req?: NextRequest) {
 
     await dbConnect();
 
-    // Parse pagination parameters from URL (with defaults if no request provided)
-    let limit = 20;
-    let offset = 0;
-
-    if (req) {
-      const { searchParams } = new URL(req.url);
-      limit = parseInt(searchParams.get('limit') || '20', 10);
-      offset = parseInt(searchParams.get('offset') || '0', 10);
-    }
+    // Parse pagination parameters from URL
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     const userId = session.user.id;
     const rawEntries = await ExpenseEntry.find({ userId })

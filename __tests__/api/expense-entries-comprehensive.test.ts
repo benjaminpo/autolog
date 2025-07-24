@@ -47,6 +47,14 @@ const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getS
 const mockDbConnect = dbConnect as jest.MockedFunction<typeof dbConnect>;
 const mockExpenseEntry = ExpenseEntry as any;
 
+// Helper function to create mock NextRequest
+function createMockRequest(url: string = 'http://localhost:3000/api/expense-entries'): NextRequest {
+  return {
+    url,
+    nextUrl: new URL(url),
+  } as NextRequest;
+}
+
 describe('/api/expense-entries', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -69,7 +77,7 @@ describe('/api/expense-entries', () => {
       const mockSort = jest.fn().mockReturnValue({ skip: mockSkip });
       mockExpenseEntry.find.mockReturnValue({ sort: mockSort });
 
-      const response = await GET();
+      const response = await GET(createMockRequest());
       const responseData = await response.json();
 
       expect(response.status).toBe(200);
@@ -82,7 +90,7 @@ describe('/api/expense-entries', () => {
     it('should return 401 for unauthenticated user', async () => {
       mockGetServerSession.mockResolvedValue(null);
 
-      const response = await GET();
+      const response = await GET(createMockRequest());
       const responseData = await response.json();
 
       expect(response.status).toBe(401);
@@ -97,7 +105,7 @@ describe('/api/expense-entries', () => {
         throw new Error('Database error');
       });
 
-      const response = await GET();
+      const response = await GET(createMockRequest());
       const responseData = await response.json();
 
       expect(response.status).toBe(500);
