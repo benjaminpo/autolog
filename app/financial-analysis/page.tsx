@@ -1,26 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { usePageLayout } from '../hooks/usePageLayout';
-import { PageWrapper } from '../components/PageWrapper';
-import { HeaderControls } from '../components/HeaderControls';
-import { useVehicles } from '../hooks/useVehicles';
+import { useAuth } from '../context/AuthContext';
+import PageContainer from '../components/PageContainer';
+import { TranslatedNavigation } from '../components/TranslatedNavigation';
+import { AuthButton } from '../components/AuthButton';
+import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
+import { SimpleThemeToggle } from '../components/ThemeToggle';
+import { LoadingState } from '../components/LoadingState';
+import { ErrorState } from '../components/ErrorState';
 import { useTranslation } from '../hooks/useTranslation';
+import { useVehicles } from '../hooks/useVehicles';
 import { getObjectId } from '../lib/idUtils';
 import { currencies, distanceUnits, volumeUnits } from '../lib/vehicleData';
 import Image from 'next/image';
-
-interface Car {
-  id: string;
-  _id?: string;
-  name: string;
-  vehicleType: string;
-  brand: string;
-  model: string;
-  year: number;
-  photo: string;
-  dateAdded: string;
-}
 
 interface FuelEntry {
   id: string;
@@ -68,7 +61,8 @@ interface IncomeEntry {
 }
 
 export default function FinancialAnalysisPage() {
-  const { user, t } = usePageLayout();
+  const { user } = useAuth();
+  const { t } = useTranslation();
   const { cars } = useVehicles();
 
   const [entries, setEntries] = useState<FuelEntry[]>([]);
@@ -277,30 +271,41 @@ export default function FinancialAnalysisPage() {
                    incomes.length > 0 ? incomes[0].currency : currencies[0];
 
   return (
-    <PageWrapper
-      error={error}
-      onRetry={loadData}
-      loadingMessage={(t as any)?.common?.loading || 'Loading financial analysis...'}
-      showHeader={false}
-    >
-      {/* Custom Header with title */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700 mb-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-lg font-bold">{(t as any)?.navigation?.financialAnalysis || 'Financial Analysis'}</h1>
-          <HeaderControls />
-        </div>
+    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
+      {/* Sticky Header */}
+      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
+        <PageContainer>
+          <div className="flex justify-between items-center">
+            <h1 className="text-lg font-bold">{(t as any)?.navigation?.financialAnalysis || 'Financial Analysis'}</h1>
+            <div className="flex items-center gap-2">
+              <SimpleThemeToggle />
+              <GlobalLanguageSelector darkMode={false} />
+              <AuthButton />
+            </div>
+          </div>
+        </PageContainer>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
-          <span className="ml-3 text-gray-600 dark:text-gray-400">
-            {(t as any)?.common?.loading || 'Loading...'}
-          </span>
-        </div>
-      ) : (
-          <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>
+      {/* Navigation Component */}
+      <TranslatedNavigation showTabs={false} />
+
+      {/* Loading State */}
+      {isLoading && <LoadingState />}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <ErrorState
+          error={error}
+          onRetry={loadData}
+        />
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
+        <main className="flex-grow overflow-auto transition-colors">
+          <PageContainer className="p-3 md:p-6">
+            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>
 
             {cars.length === 0 ? (
               <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg">
@@ -520,8 +525,10 @@ export default function FinancialAnalysisPage() {
                 </div>
               </div>
             )}
-          </div>
+            </div>
+          </PageContainer>
+        </main>
       )}
-    </PageWrapper>
+    </div>
   );
 }
