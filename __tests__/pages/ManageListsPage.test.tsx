@@ -92,7 +92,7 @@ describe('ManageListsPage', () => {
       user: mockUser,
       loading: false,
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
@@ -193,19 +193,22 @@ describe('ManageListsPage', () => {
   });
 
   describe('Error Handling', () => {
-    it('should handle missing translation gracefully', () => {
+    it('should handle missing translation gracefully', async () => {
       (useTranslation as jest.Mock).mockReturnValue({
         t: null,
       });
 
       render(<ManageListsPage />);
 
-      expect(screen.getAllByTestId('page-container')).toHaveLength(2);
+      // Wait for loading to complete and components to render
+      await waitFor(() => {
+        expect(screen.getAllByTestId('page-container')).toHaveLength(2);
+      });
     });
 
     it('should handle fetch errors', async () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
-      
+
       // Set up fetch to reject before rendering
       mockFetch.mockRejectedValueOnce(new Error('Failed to fetch'));
 
@@ -218,4 +221,4 @@ describe('ManageListsPage', () => {
       consoleSpy.mockRestore();
     });
   });
-}); 
+});

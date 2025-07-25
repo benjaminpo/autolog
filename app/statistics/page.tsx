@@ -92,7 +92,6 @@ export default function StatisticsPage() {
 
       try {
         setLoading(true);
-        setError(null);
 
         // Fetch vehicles
         const vehiclesResponse = await fetch('/api/vehicles');

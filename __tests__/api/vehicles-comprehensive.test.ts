@@ -122,7 +122,7 @@ describe('Vehicles API', () => {
         )
       );
 
-      const response = await mockGET(mockRequest);
+      await mockGET(mockRequest);
 
       expect(NextResponse.json).toHaveBeenCalledWith(
         { success: false, error: 'Failed to fetch vehicles' },
@@ -677,4 +677,4 @@ describe('Vehicles API', () => {
       });
     });
   });
-}); 
+});

@@ -13,6 +13,8 @@ import { useTranslation } from '../hooks/useTranslation';
 import { vehicleBrands, vehicleModels, fuelCompanies as predefinedFuelCompanies, fuelTypes as predefinedFuelTypes } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { SimpleThemeToggle } from '../components/ThemeToggle';
+import { LoadingState } from '../components/LoadingState';
+import { ErrorState } from '../components/ErrorState';
 
 // Wrap component with translations HOC
 const TranslatedListsTab = withTranslations(ListsTab);
@@ -56,7 +58,7 @@ interface FuelTypeItem {
 }
 
 export default function ManageListsPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   useLanguage();
   const { t } = useTranslation();
 
@@ -65,9 +67,10 @@ export default function ManageListsPage() {
   const [fuelTypes, setFuelTypes] = useState<string[]>([]);
   const [fullFuelCompanies, setFullFuelCompanies] = useState<FuelCompanyItem[]>([]);
   const [fullFuelTypes, setFullFuelTypes] = useState<FuelTypeItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [customBrands, setCustomBrands] = useState<{ [key: string]: string[] }>({});
   const [customModels, setCustomModels] = useState<{ [key: string]: { [brand: string]: string[] } }>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [newCar, setNewCar] = useState({
     name: '',
@@ -118,72 +121,66 @@ export default function ManageListsPage() {
     }
   }, []);
 
-  useEffect(() => {
+  // Consolidated data loading function
+  const loadData = useCallback(async () => {
     if (!user) return;
 
-    setIsLoading(true);
+    try {
+      setIsLoading(true);
+      setError(null);
 
-    // Load vehicle form preferences
-    loadVehicleFormPreferences();
+      // Load vehicle form preferences
+      loadVehicleFormPreferences();
 
-    // Fetch vehicles
-    fetch('/api/vehicles')
-      .then(response => response.json())
-      .then(data => {
-        console.log('Vehicle data received:', data);
-        if (data.success && Array.isArray(data.vehicles)) {
-          // Ensure all vehicles have both id and _id properties
-          const normalizedVehicles = data.vehicles.map((vehicle: any) => {
-            const normalizedVehicle = {...vehicle};
-            if (normalizedVehicle._id && !normalizedVehicle.id) {
-              normalizedVehicle.id = normalizedVehicle._id.toString();
-            } else if (normalizedVehicle.id && !normalizedVehicle._id) {
-              normalizedVehicle._id = normalizedVehicle.id;
-            }
-            return normalizedVehicle;
-          });
+      // Fetch vehicles
+      const vehiclesResponse = await fetch('/api/vehicles');
+      const vehiclesData = await vehiclesResponse.json();
+      console.log('Vehicle data received:', vehiclesData);
+      if (vehiclesData.success && Array.isArray(vehiclesData.vehicles)) {
+        // Ensure all vehicles have both id and _id properties
+        const normalizedVehicles = vehiclesData.vehicles.map((vehicle: any) => {
+          const normalizedVehicle = {...vehicle};
+          if (normalizedVehicle._id && !normalizedVehicle.id) {
+            normalizedVehicle.id = normalizedVehicle._id.toString();
+          } else if (normalizedVehicle.id && !normalizedVehicle._id) {
+            normalizedVehicle._id = normalizedVehicle.id;
+          }
+          return normalizedVehicle;
+        });
 
-          console.log(`Setting ${normalizedVehicles.length} vehicles with normalized IDs`);
-          setCars(normalizedVehicles);
-        } else if (data.message === 'Unauthorized') {
-          console.log('User not authenticated, skipping vehicle fetch');
-          setCars([]); // Set empty array instead of causing error
-        } else {
-          console.warn('Vehicle API did not return expected format:', data);
-          setCars([]); // Set empty array as fallback
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching vehicles:', error);
-      });
+        console.log(`Setting ${normalizedVehicles.length} vehicles with normalized IDs`);
+        setCars(normalizedVehicles);
+      } else if (vehiclesData.message === 'Unauthorized') {
+        console.log('User not authenticated, skipping vehicle fetch');
+        setCars([]); // Set empty array instead of causing error
+      } else {
+        console.warn('Vehicle API did not return expected format:', vehiclesData);
+        setCars([]); // Set empty array as fallback
+      }
 
-    // Fetch fuel companies
-    fetch('/api/fuel-companies')
-      .then(response => response.json())
-      .then(data => {
-        if (data.companies) {
-          const customCompanies = Array.isArray(data.companies) ? data.companies : [];
-          setFullFuelCompanies(customCompanies);
+      // Fetch fuel companies
+      const fuelCompaniesResponse = await fetch('/api/fuel-companies');
+      const fuelCompaniesData = await fuelCompaniesResponse.json();
+      if (fuelCompaniesData.companies) {
+        const customCompanies = Array.isArray(fuelCompaniesData.companies) ? fuelCompaniesData.companies : [];
+        setFullFuelCompanies(customCompanies);
 
-          // Create predefined company objects
-          const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
-            _id: `predefined-${name}`,
-            userId: 'system',
-            name,
-            isPredefined: true
-          }));
+        // Create predefined company objects
+        const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
+          _id: `predefined-${name}`,
+          userId: 'system',
+          name,
+          isPredefined: true
+        }));
 
-          // Merge predefined with custom, avoiding duplicates
-          const customCompanyNames = customCompanies
-            .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
-            .map((company: any) => company.name);
+        // Merge predefined with custom, avoiding duplicates
+        const customCompanyNames = customCompanies
+          .filter((company: any) => !predefinedFuelCompanies.includes(company.name))
+          .map((company: any) => company.name);
 
-          setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
-          setFullFuelCompanies([...predefinedCompanyObjects, ...customCompanies.filter((company: any) => !predefinedFuelCompanies.includes(company.name))]);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel companies:', error);
+        setFuelCompanies([...predefinedFuelCompanies, ...customCompanyNames].sort((a, b) => a.localeCompare(b)));
+        setFullFuelCompanies([...predefinedCompanyObjects, ...customCompanies.filter((company: any) => !predefinedFuelCompanies.includes(company.name))]);
+      } else {
         // Set predefined companies as fallback
         setFuelCompanies(predefinedFuelCompanies);
         const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
@@ -193,34 +190,30 @@ export default function ManageListsPage() {
           isPredefined: true
         }));
         setFullFuelCompanies(predefinedCompanyObjects);
-      });
+      }
 
-    // Fetch fuel types
-    fetch('/api/fuel-types')
-      .then(response => response.json())
-      .then(data => {
-        if (data.types) {
-          const customTypes = Array.isArray(data.types) ? data.types : [];
+      // Fetch fuel types
+      const fuelTypesResponse = await fetch('/api/fuel-types');
+      const fuelTypesData = await fuelTypesResponse.json();
+      if (fuelTypesData.types) {
+        const customTypes = Array.isArray(fuelTypesData.types) ? fuelTypesData.types : [];
 
-          // Create predefined type objects
-          const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
-            _id: `predefined-${name}`,
-            userId: 'system',
-            name,
-            isPredefined: true
-          }));
+        // Create predefined type objects
+        const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
+          _id: `predefined-${name}`,
+          userId: 'system',
+          name,
+          isPredefined: true
+        }));
 
-          // Merge predefined with custom, avoiding duplicates
-          const customTypeNames = customTypes
-            .filter((type: any) => !predefinedFuelTypes.includes(type.name))
-            .map((type: any) => type.name);
+        // Merge predefined with custom, avoiding duplicates
+        const customTypeNames = customTypes
+          .filter((type: any) => !predefinedFuelTypes.includes(type.name))
+          .map((type: any) => type.name);
 
-          setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
-          setFullFuelTypes([...predefinedTypeObjects, ...customTypes.filter((type: any) => !predefinedFuelTypes.includes(type.name))]);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching fuel types:', error);
+        setFuelTypes([...predefinedFuelTypes, ...customTypeNames].sort((a, b) => a.localeCompare(b)));
+        setFullFuelTypes([...predefinedTypeObjects, ...customTypes.filter((type: any) => !predefinedFuelTypes.includes(type.name))]);
+      } else {
         // Set predefined types as fallback
         setFuelTypes(predefinedFuelTypes);
         const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
@@ -230,25 +223,50 @@ export default function ManageListsPage() {
           isPredefined: true
         }));
         setFullFuelTypes(predefinedTypeObjects);
-      });
+      }
 
-    // Fetch custom brands and models from user preferences
-    fetch('/api/user-preferences')
-      .then(response => response.json())
-      .then(data => {
-        if (data.preferences) {
-          if (data.preferences.customBrands) {
-            setCustomBrands(data.preferences.customBrands);
-          }
-          if (data.preferences.customModels) {
-            setCustomModels(data.preferences.customModels);
-          }
+      // Fetch custom brands and models from user preferences
+      const preferencesResponse = await fetch('/api/user-preferences');
+      const preferencesData = await preferencesResponse.json();
+      if (preferencesData.preferences) {
+        if (preferencesData.preferences.customBrands) {
+          setCustomBrands(preferencesData.preferences.customBrands);
         }
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+        if (preferencesData.preferences.customModels) {
+          setCustomModels(preferencesData.preferences.customModels);
+        }
+      }
+
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setError('Failed to load data. Please try again.');
+
+      // Set fallback data
+      setFuelCompanies(predefinedFuelCompanies);
+      setFuelTypes(predefinedFuelTypes);
+      const predefinedCompanyObjects = predefinedFuelCompanies.map(name => ({
+        _id: `predefined-${name}`,
+        userId: 'system',
+        name,
+        isPredefined: true
+      }));
+      const predefinedTypeObjects = predefinedFuelTypes.map(name => ({
+        _id: `predefined-${name}`,
+        userId: 'system',
+        name,
+        isPredefined: true
+      }));
+      setFullFuelCompanies(predefinedCompanyObjects);
+      setFullFuelTypes(predefinedTypeObjects);
+    } finally {
+      setIsLoading(false);
+    }
   }, [user, loadVehicleFormPreferences]);
+
+  // Load data
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const saveVehicleFormPreferences = useCallback((carData: typeof newCar) => {
     try {
@@ -489,10 +507,11 @@ export default function ManageListsPage() {
         method: 'DELETE',
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setCars(cars.filter(car => getObjectId(car as unknown as Record<string, unknown>) !== id));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCars(cars.filter(car => getObjectId(car as unknown as Record<string, unknown>) !== id));
+        }
       }
     } catch (error) {
       console.error('Error deleting vehicle:', error);
@@ -519,11 +538,12 @@ export default function ManageListsPage() {
         method: 'DELETE',
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setFuelCompanies(fuelCompanies.filter(c => c !== company));
-        setFullFuelCompanies(fullFuelCompanies.filter(c => c._id !== companyId));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setFuelCompanies(fuelCompanies.filter(c => c !== company));
+          setFullFuelCompanies(fullFuelCompanies.filter(c => c._id !== companyId));
+        }
       }
     } catch (error) {
       console.error('Error deleting fuel company:', error);
@@ -550,11 +570,12 @@ export default function ManageListsPage() {
         method: 'DELETE',
       });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setFuelTypes(fuelTypes.filter(t => t !== type));
-        setFullFuelTypes(fullFuelTypes.filter(t => t._id !== typeId));
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setFuelTypes(fuelTypes.filter(t => t !== type));
+          setFullFuelTypes(fullFuelTypes.filter(t => t._id !== typeId));
+        }
       }
     } catch (error) {
       console.error('Error deleting fuel type:', error);
@@ -581,6 +602,20 @@ export default function ManageListsPage() {
 
       {/* Navigation Component */}
       <TranslatedNavigation showTabs={false} />
+
+      {/* Loading State */}
+      {isLoading && <LoadingState message={t?.common?.loading || 'Loading...'} />}
+
+      {/* Error State */}
+      {error && !isLoading && (
+        <ErrorState
+          error={error}
+          onRetry={loadData}
+        />
+      )}
+
+      {/* Main Content */}
+      {!isLoading && !error && (
 
       <main className="flex-grow overflow-auto transition-colors">
         <PageContainer className="p-3 md:p-6">
@@ -619,6 +654,7 @@ export default function ManageListsPage() {
           />
         </PageContainer>
       </main>
+      )}
     </div>
   );
 }

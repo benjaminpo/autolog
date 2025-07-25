@@ -18,7 +18,7 @@ describe('SortableTableHeader', () => {
   describe('Rendering', () => {
     it('should render header with label', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toBeInTheDocument();
       expect(screen.getByText('Test Column')).toBeInTheDocument();
@@ -26,31 +26,31 @@ describe('SortableTableHeader', () => {
 
     it('should apply default className', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveClass('p-1', 'text-left');
     });
 
     it('should apply custom className', () => {
       render(<SortableTableHeader {...defaultProps} className="custom-class" />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveClass('custom-class');
     });
 
     it('should show sort arrows', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       const arrows = header.querySelectorAll('svg');
-      
+
       // Should have two arrows (up and down)
       expect(arrows).toHaveLength(2);
     });
 
     it('should be clickable', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveClass('cursor-pointer');
     });
@@ -65,10 +65,10 @@ describe('SortableTableHeader', () => {
           currentSortDirection="asc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       const arrows = header.querySelectorAll('svg');
-      
+
       // Both arrows should have inactive colors
       arrows.forEach(arrow => {
         expect(arrow).toHaveClass('text-gray-400', 'dark:text-gray-500');
@@ -84,16 +84,16 @@ describe('SortableTableHeader', () => {
           currentSortDirection="asc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       const arrows = header.querySelectorAll('svg');
       const upArrow = arrows[0];
       const downArrow = arrows[1];
-      
+
       // Up arrow should be active (blue)
       expect(upArrow).toHaveClass('text-blue-600', 'dark:text-blue-400');
       expect(upArrow).not.toHaveClass('text-gray-400');
-      
+
       // Down arrow should be inactive (gray)
       expect(downArrow).toHaveClass('text-gray-400', 'dark:text-gray-500');
       expect(downArrow).not.toHaveClass('text-blue-600');
@@ -107,16 +107,16 @@ describe('SortableTableHeader', () => {
           currentSortDirection="desc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       const arrows = header.querySelectorAll('svg');
       const upArrow = arrows[0];
       const downArrow = arrows[1];
-      
+
       // Up arrow should be inactive (gray)
       expect(upArrow).toHaveClass('text-gray-400', 'dark:text-gray-500');
       expect(upArrow).not.toHaveClass('text-blue-600');
-      
+
       // Down arrow should be active (blue)
       expect(downArrow).toHaveClass('text-blue-600', 'dark:text-blue-400');
       expect(downArrow).not.toHaveClass('text-gray-400');
@@ -133,10 +133,10 @@ describe('SortableTableHeader', () => {
           currentSortBy="otherKey"
         />
       );
-      
+
       const header = screen.getByRole('button');
       fireEvent.click(header);
-      
+
       expect(mockOnSort).toHaveBeenCalledWith('testKey', 'asc');
     });
 
@@ -150,10 +150,10 @@ describe('SortableTableHeader', () => {
           currentSortDirection="asc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       fireEvent.click(header);
-      
+
       expect(mockOnSort).toHaveBeenCalledWith('testKey', 'desc');
     });
 
@@ -167,10 +167,10 @@ describe('SortableTableHeader', () => {
           currentSortDirection="desc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       fireEvent.click(header);
-      
+
       expect(mockOnSort).toHaveBeenCalledWith('testKey', 'asc');
     });
   });
@@ -183,7 +183,7 @@ describe('SortableTableHeader', () => {
           currentSortBy="otherKey"
         />
       );
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveAttribute('title', 'Sort by Test Column ascending');
     });
@@ -196,7 +196,7 @@ describe('SortableTableHeader', () => {
           currentSortDirection="asc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveAttribute('title', 'Sort by Test Column descending');
     });
@@ -209,7 +209,7 @@ describe('SortableTableHeader', () => {
           currentSortDirection="desc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveAttribute('title', 'Sort by Test Column ascending');
     });
@@ -222,17 +222,17 @@ describe('SortableTableHeader', () => {
           onSort={mockOnSort}
         />
       );
-      
+
       const header = screen.getByRole('button');
-      
+
       // Test keyboard navigation
       header.focus();
       expect(header).toHaveFocus();
-      
+
       // Test Enter key
       fireEvent.keyDown(header, { key: 'Enter' });
       expect(mockOnSort).toHaveBeenCalledWith('testKey', 'asc');
-      
+
       // Test Space key
       fireEvent.keyDown(header, { key: ' ' });
       expect(mockOnSort).toHaveBeenCalledTimes(2);
@@ -246,9 +246,9 @@ describe('SortableTableHeader', () => {
           currentSortDirection="asc"
         />
       );
-      
+
       const header = screen.getByRole('button');
-      
+
       // Should be focusable for keyboard users
       expect(header).toHaveAttribute('tabIndex', '0');
     });
@@ -257,34 +257,34 @@ describe('SortableTableHeader', () => {
   describe('Visual States', () => {
     it('should have hover styles', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveClass('hover:bg-gray-300', 'dark:hover:bg-gray-500');
     });
 
     it('should have transition styles', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveClass('transition-colors');
     });
 
     it('should be non-selectable', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       expect(header).toHaveClass('select-none');
     });
 
     it('should have proper arrow positioning', () => {
       render(<SortableTableHeader {...defaultProps} />);
-      
+
       const header = screen.getByRole('button');
       const arrowContainer = header.querySelector('.flex.flex-col');
-      
+
       expect(arrowContainer).toBeInTheDocument();
       expect(arrowContainer).toHaveClass('ml-1');
-      
+
       // Down arrow should have negative margin
       const downArrow = arrowContainer?.children[1];
       expect(downArrow).toHaveClass('-mt-1');
@@ -293,7 +293,7 @@ describe('SortableTableHeader', () => {
 
   describe('Complex Scenarios', () => {
     it('should handle multiple columns with different states', () => {
-      const { rerender } = render(
+      render(
         <table>
           <thead>
             <tr>
@@ -315,15 +315,15 @@ describe('SortableTableHeader', () => {
           </thead>
         </table>
       );
-      
+
       const headers = screen.getAllByRole('button');
       const col1Header = headers[0];
       const col2Header = headers[1];
-      
+
       // Column 1 should be active
       const col1Arrows = col1Header.querySelectorAll('svg');
       expect(col1Arrows[0]).toHaveClass('text-blue-600');
-      
+
       // Column 2 should be inactive
       const col2Arrows = col2Header.querySelectorAll('svg');
       expect(col2Arrows[0]).toHaveClass('text-gray-400');
@@ -340,14 +340,14 @@ describe('SortableTableHeader', () => {
           currentSortDirection="asc"
         />
       );
-      
+
       const header = screen.getByRole('button');
-      
+
       // Rapid clicks
       fireEvent.click(header);
       fireEvent.click(header);
       fireEvent.click(header);
-      
+
       expect(mockOnSort).toHaveBeenCalledTimes(3);
       expect(mockOnSort).toHaveBeenNthCalledWith(1, 'testKey', 'desc');
       expect(mockOnSort).toHaveBeenNthCalledWith(2, 'testKey', 'desc');
@@ -365,10 +365,10 @@ describe('SortableTableHeader', () => {
           currentSortDirection="desc"
         />
       );
-      
+
       const header = screen.getByRole('button');
       fireEvent.click(header);
-      
+
       expect(mockOnSort).toHaveBeenCalledWith('custom.nested.key', 'asc');
     });
   });
@@ -381,7 +381,7 @@ describe('SortableTableHeader', () => {
           label=""
         />
       );
-      
+
       const header = screen.getByRole('button');
       expect(header).toBeInTheDocument();
       // Should still show arrows even with empty label
@@ -396,17 +396,17 @@ describe('SortableTableHeader', () => {
           label={longLabel}
         />
       );
-      
+
       expect(screen.getByText(longLabel)).toBeInTheDocument();
     });
 
     it('should handle missing onSort function gracefully', () => {
       const props = { ...defaultProps };
       delete (props as any).onSort;
-      
+
       expect(() => {
         render(<SortableTableHeader {...props} />);
       }).not.toThrow();
     });
   });
-}); 
+});

@@ -5,7 +5,7 @@ import ExpenseEntry from '../../models/ExpenseEntry';
 import { authOptions } from '../auth/authOptions';
 
 // GET /api/expense-entries - Get all expense entries for the current user
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -18,8 +18,17 @@ export async function GET() {
 
     await dbConnect();
 
+    // Parse pagination parameters from URL
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
+
     const userId = session.user.id;
-    const rawEntries = await ExpenseEntry.find({ userId }).sort({ date: -1 }).lean();
+    const rawEntries = await ExpenseEntry.find({ userId })
+      .sort({ date: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean();
 
     // Transform entries to ensure they have client-compatible IDs
     const entries = rawEntries.map(entry => {
@@ -33,7 +42,7 @@ export async function GET() {
     });
 
     return new NextResponse(
-      JSON.stringify({ success: true, expenses: entries }),
+      JSON.stringify({ success: true, entries: entries }),
       { status: 200 }
     );
   } catch (error) {

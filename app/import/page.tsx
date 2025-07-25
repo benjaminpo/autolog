@@ -551,7 +551,7 @@ export default function ImportPage() {
             }
           } else if (importType === 'expenses') {
             const expenseEntry = entry as ExpenseEntry;
-            const duplicates = existingExpenses.expenses?.filter((existing: any) =>
+            const duplicates = existingExpenses.entries?.filter((existing: any) =>
               existing.carId === expenseEntry.carId &&
               existing.date === expenseEntry.date &&
               existing.category === expenseEntry.category &&

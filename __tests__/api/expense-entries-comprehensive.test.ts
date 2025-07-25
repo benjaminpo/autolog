@@ -20,7 +20,7 @@ jest.mock('next-auth/jwt', () => ({
   decode: jest.fn(),
 }));
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { GET, POST, PUT, DELETE } from '../../app/api/expense-entries/route';
 import dbConnect from '../../app/lib/dbConnect';
@@ -47,6 +47,14 @@ const mockGetServerSession = getServerSession as jest.MockedFunction<typeof getS
 const mockDbConnect = dbConnect as jest.MockedFunction<typeof dbConnect>;
 const mockExpenseEntry = ExpenseEntry as any;
 
+// Helper function to create mock NextRequest
+function createMockRequest(url: string = 'http://localhost:3000/api/expense-entries'): NextRequest {
+  return {
+    url,
+    nextUrl: new URL(url),
+  } as NextRequest;
+}
+
 describe('/api/expense-entries', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,24 +70,27 @@ describe('/api/expense-entries', () => {
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
       mockDbConnect.mockResolvedValue({} as any);
-      
-      const mockSort = jest.fn().mockReturnValue({ lean: jest.fn().mockResolvedValue(mockEntries) });
+
+      const mockLean = jest.fn().mockResolvedValue(mockEntries);
+      const mockLimit = jest.fn().mockReturnValue({ lean: mockLean });
+      const mockSkip = jest.fn().mockReturnValue({ limit: mockLimit });
+      const mockSort = jest.fn().mockReturnValue({ skip: mockSkip });
       mockExpenseEntry.find.mockReturnValue({ sort: mockSort });
 
-      const response = await GET();
+      const response = await GET(createMockRequest());
       const responseData = await response.json();
 
       expect(response.status).toBe(200);
       expect(responseData.success).toBe(true);
-      expect(responseData.expenses).toHaveLength(2);
-      expect(responseData.expenses[0].id).toBe('entry1');
+      expect(responseData.entries).toHaveLength(2);
+      expect(responseData.entries[0].id).toBe('entry1');
       expect(mockExpenseEntry.find).toHaveBeenCalledWith({ userId: 'user123' });
     });
 
     it('should return 401 for unauthenticated user', async () => {
       mockGetServerSession.mockResolvedValue(null);
 
-      const response = await GET();
+      const response = await GET(createMockRequest());
       const responseData = await response.json();
 
       expect(response.status).toBe(401);
@@ -94,7 +105,7 @@ describe('/api/expense-entries', () => {
         throw new Error('Database error');
       });
 
-      const response = await GET();
+      const response = await GET(createMockRequest());
       const responseData = await response.json();
 
       expect(response.status).toBe(500);
@@ -152,7 +163,7 @@ describe('/api/expense-entries', () => {
 
       mockGetServerSession.mockResolvedValue(mockSession as any);
       mockDbConnect.mockResolvedValue({} as any);
-      
+
       const mockEntry = {
         save: jest.fn().mockRejectedValue(new Error('Save failed')),
       };
@@ -305,4 +316,4 @@ describe('/api/expense-entries', () => {
       expect(responseData.message).toBe('Unauthorized');
     });
   });
-}); 
+});
