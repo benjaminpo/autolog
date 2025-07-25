@@ -78,15 +78,15 @@ export const commonTestMocks = {
  * Apply common mocks for integration tests
  */
 export function setupCommonMocks() {
-  jest.mock('../../app/context/AuthContext', commonTestMocks.authContext);
-  jest.mock('../../app/context/LanguageContext', commonTestMocks.languageContext);
-  jest.mock('../../app/hooks/useTranslation', commonTestMocks.translation);
-  jest.mock('../../app/hooks/useVehicles', commonTestMocks.vehicles);
-  jest.mock('../../app/components/PageContainer', commonTestMocks.pageContainer);
-  jest.mock('../../app/components/withTranslations', commonTestMocks.withTranslations);
-  jest.mock('../../app/components/AuthButton', commonTestMocks.authButton);
-  jest.mock('../../app/components/TranslatedNavigation', commonTestMocks.navigation);
-  jest.mock('../../app/components/GlobalLanguageSelector', commonTestMocks.languageSelector);
-  jest.mock('../../app/components/ThemeToggle', commonTestMocks.themeToggle);
-  jest.mock('../../app/components/ImageUpload', commonTestMocks.imageUpload);
+  jest.mock('../app/context/AuthContext', commonTestMocks.authContext);
+  jest.mock('../app/context/LanguageContext', commonTestMocks.languageContext);
+  jest.mock('../app/hooks/useTranslation', commonTestMocks.translation);
+  jest.mock('../app/hooks/useVehicles', commonTestMocks.vehicles);
+  jest.mock('../app/components/PageContainer', commonTestMocks.pageContainer);
+  jest.mock('../app/components/withTranslations', commonTestMocks.withTranslations);
+  jest.mock('../app/components/AuthButton', commonTestMocks.authButton);
+  jest.mock('../app/components/TranslatedNavigation', commonTestMocks.navigation);
+  jest.mock('../app/components/GlobalLanguageSelector', commonTestMocks.languageSelector);
+  jest.mock('../app/components/ThemeToggle', commonTestMocks.themeToggle);
+  jest.mock('../app/components/ImageUpload', commonTestMocks.imageUpload);
 }

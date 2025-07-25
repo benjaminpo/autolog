@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { setupCommonMocks } from '../utils/commonMocks';
+import { setupCommonMocks } from '../../test-utils/commonMocks';
 
 // Mock the page component
 const ExpenseHistoryPage = React.lazy(() => import('../../app/expense-history/page'));

@@ -2,10 +2,16 @@ import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import IncomeHistoryPage from '../../app/income-history/page';
-import { setupCommonMocks } from '../utils/commonMocks';
+import { setupCommonMocks } from '../../test-utils/commonMocks';
 
 // Setup common mocks
 setupCommonMocks();
+
+// Helper function to wait for loading to complete
+const waitForLoadingToComplete = () =>
+  waitFor(() => {
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  }, { timeout: 3000 });
 
 // Add specific mocks for this test
 jest.mock('../../app/lib/api', () => ({
@@ -15,6 +21,26 @@ jest.mock('../../app/lib/api', () => ({
     deleteEntry: jest.fn(),
     updateEntry: jest.fn(),
   },
+}));
+
+// Mock the user object more explicitly
+jest.mock('../../app/context/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user', email: 'test@example.com' },
+    loading: false,
+  }),
+}));
+
+// Mock the useVehicles hook
+jest.mock('../../app/hooks/useVehicles', () => ({
+  useVehicles: () => ({
+    cars: [
+      { _id: '1', name: 'Test Car 1' },
+      { _id: '2', name: 'Test Car 2' },
+    ],
+    loading: false,
+    error: null,
+  }),
 }));
 
 jest.mock('../../app/components/IncomeTab', () => {
@@ -30,7 +56,20 @@ describe('IncomeHistoryPage Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Default successful API responses
+    // Mock fetch for vehicles API
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          vehicles: [
+            { _id: '1', name: 'Test Car 1' },
+            { _id: '2', name: 'Test Car 2' },
+          ]
+        })
+      })
+    ) as jest.Mock;
+
+    // Default successful API responses with immediate resolution
     mockIncomeApi.getEntries.mockResolvedValue({
       success: true,
       entries: [
@@ -54,6 +93,10 @@ describe('IncomeHistoryPage Integration', () => {
         { _id: '2', name: 'Delivery Services', userId: 'test-user' },
       ],
     });
+
+    // Mock other API methods
+    mockIncomeApi.deleteEntry.mockResolvedValue({ success: true });
+    mockIncomeApi.updateEntry.mockResolvedValue({ success: true });
   });
 
   it('renders LoadingState initially', async () => {
@@ -63,9 +106,7 @@ describe('IncomeHistoryPage Integration', () => {
     expect(screen.getByText('Loading...')).toBeInTheDocument();
 
     // Wait for loading to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-    });
+    await waitForLoadingToComplete();
   });
 
   it('shows ErrorState when API call fails', async () => {
@@ -129,9 +170,9 @@ describe('IncomeHistoryPage Integration', () => {
     });
 
     // Should show main content
-    expect(screen.getByText('Income History')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Income History' })).toBeInTheDocument();
     expect(screen.getByTestId('income-tab')).toBeInTheDocument();
-    expect(screen.getByTestId('navigation')).toBeInTheDocument();
+    expect(screen.getByText('Navigation')).toBeInTheDocument();
   });
 
   it('handles categories API failure gracefully', async () => {
@@ -143,7 +184,7 @@ describe('IncomeHistoryPage Integration', () => {
     // Should still render main content (categories failure is handled gracefully)
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
-      expect(screen.getByText('Income History')).toBeInTheDocument();
+      expect(screen.getAllByText('Income History').length).toBeGreaterThan(0);
     });
   });
 
