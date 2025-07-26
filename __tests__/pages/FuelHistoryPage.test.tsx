@@ -263,7 +263,7 @@ describe('FuelHistoryPage', () => {
 
       await waitFor(() => {
         const mainContainer = screen.getByRole('main');
-        expect(mainContainer).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+        expect(mainContainer).toHaveClass('flex-grow', 'overflow-auto');
       });
     });
   });

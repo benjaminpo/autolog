@@ -272,7 +272,7 @@ export default function ExpenseHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col">
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
         <PageContainer>
@@ -303,7 +303,7 @@ export default function ExpenseHistoryPage() {
 
       {/* Main Content */}
       {!isLoading && !error && (
-        <main className="flex-grow overflow-auto transition-colors">
+        <main className="flex-grow overflow-auto">
           <PageContainer className="p-3 md:p-6">
             <TranslatedExpenseTab
               cars={cars}

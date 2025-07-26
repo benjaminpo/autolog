@@ -13,7 +13,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   retryButtonText = 'Try Again'
 }) => {
   return (
-    <main className="flex-grow overflow-auto transition-colors">
+    <main className="flex-grow overflow-auto">
       <PageContainer className="p-3 md:p-6">
         <div className="text-center py-12">
           <div className="text-red-500 dark:text-red-400 text-lg mb-4">{error}</div>

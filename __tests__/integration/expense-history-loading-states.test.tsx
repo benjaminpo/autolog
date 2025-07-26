@@ -187,7 +187,7 @@ describe('ExpenseHistoryPage Loading States Integration', () => {
     await waitFor(() => {
       const loadingText = screen.getByText('Loading...');
       const loadingContainer = loadingText.closest('main');
-      expect(loadingContainer).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+      expect(loadingContainer).toHaveClass('flex-grow', 'overflow-auto');
     });
 
     await waitFor(() => {
@@ -207,7 +207,7 @@ describe('ExpenseHistoryPage Loading States Integration', () => {
     await waitFor(() => {
       const errorText = screen.getByText(/Failed to load expenses/);
       const errorContainer = errorText.closest('main');
-      expect(errorContainer).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+      expect(errorContainer).toHaveClass('flex-grow', 'overflow-auto');
     }, { timeout: 3000 });
   });
 
