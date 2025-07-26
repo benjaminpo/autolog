@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import PageContainer from '../components/PageContainer';
-import { TranslatedNavigation } from '../components/TranslatedNavigation';
-import { AuthButton } from '../components/AuthButton';
-import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
-import { SimpleThemeToggle } from '../components/ThemeToggle';
-import { LoadingState } from '../components/LoadingState';
-import { ErrorState } from '../components/ErrorState';
+import HistoryPageLayout from '../components/HistoryPageLayout';
 import { useTranslation } from '../hooks/useTranslation';
 import { useVehicles } from '../hooks/useVehicles';
 import { getObjectId } from '../lib/idUtils';
@@ -271,264 +265,234 @@ export default function FinancialAnalysisPage() {
                    (incomes || []).length > 0 ? incomes[0].currency : currencies[0];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col">
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
-        <PageContainer>
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg font-bold">{(t as any)?.navigation?.financialAnalysis || 'Financial Analysis'}</h1>
-            <div className="flex items-center gap-2">
-              <SimpleThemeToggle />
-              <GlobalLanguageSelector darkMode={false} />
-              <AuthButton />
-            </div>
-          </div>
-        </PageContainer>
-      </div>
+    <HistoryPageLayout
+      title={(t as any)?.navigation?.financialAnalysis || 'Financial Analysis'}
+      isLoading={isLoading}
+      error={error}
+      onRetry={loadData}
+    >
+      <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>
 
-      {/* Navigation Component */}
-      <TranslatedNavigation showTabs={false} />
+      {cars.length === 0 ? (
+        <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg">
+          <p className="text-gray-600 mb-4">{(t as any)?.stats?.noVehiclesFound || 'No vehicles found. Add vehicles to see financial analysis.'}</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
 
-      {/* Loading State */}
-      {isLoading && <LoadingState />}
+          {/* Overall Financial Summary */}
+          {(() => {
+            const aggregateStats = calculateAggregateStats();
+            const totalIncome = aggregateStats.totalIncomeCosts || 0;
+            const totalCosts = (aggregateStats.totalFuelCosts || 0) + (aggregateStats.totalExpenseCosts || 0);
+            const netProfit = totalIncome - totalCosts;
+            const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+            const roi = totalCosts > 0 ? (netProfit / totalCosts) * 100 : 0;
+            const isBreakEven = Math.abs(netProfit) < 1;
+            const isProfitable = netProfit > 0;
 
-      {/* Error State */}
-      {error && !isLoading && (
-        <ErrorState
-          error={error}
-          onRetry={loadData}
-        />
-      )}
-
-      {/* Main Content */}
-      {!isLoading && !error && (
-        <main className="flex-grow overflow-auto">
-          <PageContainer className="p-3 md:p-6">
-            <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{(t as any)?.stats?.financialAnalysisBreakEven || 'Financial Analysis & Break-Even'}</h2>
-
-            {cars.length === 0 ? (
-              <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg">
-                <p className="text-gray-600 mb-4">{(t as any)?.stats?.noVehiclesFound || 'No vehicles found. Add vehicles to see financial analysis.'}</p>
-              </div>
-            ) : (
-              <div className="space-y-6">
-
-                {/* Overall Financial Summary */}
-                {(() => {
-                  const aggregateStats = calculateAggregateStats();
-                  const totalIncome = aggregateStats.totalIncomeCosts || 0;
-                  const totalCosts = (aggregateStats.totalFuelCosts || 0) + (aggregateStats.totalExpenseCosts || 0);
-                  const netProfit = totalIncome - totalCosts;
-                  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
-                  const roi = totalCosts > 0 ? (netProfit / totalCosts) * 100 : 0;
-                  const isBreakEven = Math.abs(netProfit) < 1;
-                  const isProfitable = netProfit > 0;
-
-                  return (
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
-                      <h3 className="font-medium text-xl mb-4 text-purple-700">{(t as any)?.stats?.overallFinancialSummary || 'Overall Financial Summary'}</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border dark:border-green-800 transition-colors">
-                          <div className="font-medium text-sm text-green-600">{(t as any)?.stats?.financialTotalIncome || 'Total Income'}</div>
-                          <div className="text-xl font-semibold text-green-700">{totalIncome.toFixed(2)} {currency}</div>
-                        </div>
-                        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border dark:border-red-800 transition-colors">
-                          <div className="font-medium text-sm text-red-600">{(t as any)?.stats?.financialTotalCosts || 'Total Costs'}</div>
-                          <div className="text-xl font-semibold text-red-700">{totalCosts.toFixed(2)} {currency}</div>
-                        </div>
-                        <div className={`p-4 rounded-lg border ${isProfitable ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : isBreakEven ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} transition-colors`}>
-                          <div className={`font-medium text-sm ${isProfitable ? 'text-green-600' : isBreakEven ? 'text-yellow-600' : 'text-red-600'}`}>{(t as any)?.stats?.netProfit || 'Net Profit'}</div>
-                          <div className={`text-xl font-semibold ${isProfitable ? 'text-green-700' : isBreakEven ? 'text-yellow-700' : 'text-red-700'}`}>
-                            {netProfit.toFixed(2)} {currency}
-                          </div>
-                        </div>
-                        <div className="bg-blue-50 p-4 rounded-lg border">
-                          <div className="font-medium text-sm text-blue-600">{(t as any)?.stats?.profitMargin || 'Profit Margin'}</div>
-                          <div className="text-xl font-semibold text-blue-700">{profitMargin.toFixed(1)}%</div>
-                        </div>
-                        <div className="bg-indigo-50 p-4 rounded-lg border">
-                          <div className="font-medium text-sm text-indigo-600">{(t as any)?.stats?.roi || 'ROI'}</div>
-                          <div className="text-xl font-semibold text-indigo-700">{roi.toFixed(1)}%</div>
-                        </div>
-                        <div className={`p-4 rounded-lg border ${isProfitable ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : isBreakEven ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} transition-colors`}>
-                          <div className={`font-medium text-sm ${isProfitable ? 'text-green-600' : isBreakEven ? 'text-yellow-600' : 'text-red-600'}`}>{(t as any)?.stats?.financialStatus || 'Status'}</div>
-                          <div className={`text-lg font-semibold ${isProfitable ? 'text-green-700' : isBreakEven ? 'text-yellow-700' : 'text-red-700'}`}>
-                            {isProfitable ? ((t as any)?.stats?.profitable || 'Profitable') : isBreakEven ? ((t as any)?.stats?.breakEven || 'Break-Even') : ((t as any)?.stats?.loss || 'Loss')}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Break-even analysis */}
-                      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-medium text-lg text-gray-900 dark:text-gray-100 mb-3">{(t as any)?.stats?.breakEvenAnalysis || 'Break-Even Analysis'}</h4>
-                        <div className="text-base">
-                          {isProfitable ? (
-                            <div className="text-green-700">
-                              ✅ {(t as any)?.stats?.aboveBreakEven || 'You are'} <strong>{Math.abs(netProfit).toFixed(2)} {currency}</strong> {(t as any)?.stats?.aboveBreakEven || 'above break-even point'}.
-                              {(t as any)?.stats?.businessGeneratingProfit || 'Your business is generating profit!'}
-                            </div>
-                          ) : isBreakEven ? (
-                            <div className="text-yellow-700">
-                              ⚖️ {(t as any)?.stats?.atBreakEvenPoint || 'You are at break-even point. Income equals costs.'}
-                            </div>
-                          ) : (
-                            <div className="text-red-700">
-                              ❌ {(t as any)?.stats?.needMoreIncome || 'You need'} <strong>{Math.abs(netProfit).toFixed(2)} {currency}</strong> {(t as any)?.stats?.needMoreIncome || 'more income to reach break-even'}.
-                              {(t as any)?.stats?.considerOptimizing || 'Consider optimizing costs or increasing income.'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+            return (
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
+                <h3 className="font-medium text-xl mb-4 text-purple-700">{(t as any)?.stats?.overallFinancialSummary || 'Overall Financial Summary'}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border dark:border-green-800 transition-colors">
+                    <div className="font-medium text-sm text-green-600">{(t as any)?.stats?.financialTotalIncome || 'Total Income'}</div>
+                    <div className="text-xl font-semibold text-green-700">{totalIncome.toFixed(2)} {currency}</div>
+                  </div>
+                  <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border dark:border-red-800 transition-colors">
+                    <div className="font-medium text-sm text-red-600">{(t as any)?.stats?.financialTotalCosts || 'Total Costs'}</div>
+                    <div className="text-xl font-semibold text-red-700">{totalCosts.toFixed(2)} {currency}</div>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${isProfitable ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : isBreakEven ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} transition-colors`}>
+                    <div className={`font-medium text-sm ${isProfitable ? 'text-green-600' : isBreakEven ? 'text-yellow-600' : 'text-red-600'}`}>{(t as any)?.stats?.netProfit || 'Net Profit'}</div>
+                    <div className={`text-xl font-semibold ${isProfitable ? 'text-green-700' : isBreakEven ? 'text-yellow-700' : 'text-red-700'}`}>
+                      {netProfit.toFixed(2)} {currency}
                     </div>
-                  );
-                })()}
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg border">
+                    <div className="font-medium text-sm text-blue-600">{(t as any)?.stats?.profitMargin || 'Profit Margin'}</div>
+                    <div className="text-xl font-semibold text-blue-700">{profitMargin.toFixed(1)}%</div>
+                  </div>
+                  <div className="bg-indigo-50 p-4 rounded-lg border">
+                    <div className="font-medium text-sm text-indigo-600">{(t as any)?.stats?.roi || 'ROI'}</div>
+                    <div className="text-xl font-semibold text-indigo-700">{roi.toFixed(1)}%</div>
+                  </div>
+                  <div className={`p-4 rounded-lg border ${isProfitable ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : isBreakEven ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} transition-colors`}>
+                    <div className={`font-medium text-sm ${isProfitable ? 'text-green-600' : isBreakEven ? 'text-yellow-600' : 'text-red-600'}`}>{(t as any)?.stats?.financialStatus || 'Status'}</div>
+                    <div className={`text-lg font-semibold ${isProfitable ? 'text-green-700' : isBreakEven ? 'text-yellow-700' : 'text-red-700'}`}>
+                      {isProfitable ? ((t as any)?.stats?.profitable || 'Profitable') : isBreakEven ? ((t as any)?.stats?.breakEven || 'Break-Even') : ((t as any)?.stats?.loss || 'Loss')}
+                    </div>
+                  </div>
+                </div>
 
-                {/* Per-Vehicle Financial Analysis */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
-                  <h3 className="font-medium text-xl mb-4 text-purple-700">{(t as any)?.stats?.perVehicleAnalysis || 'Per-Vehicle Financial Analysis'}</h3>
-                  <div className="space-y-6">
-                    {cars.map((car) => {
-                      const carId = getObjectId(car as unknown as Record<string, unknown>);
-                      const financialAnalysis = calculateFinancialAnalysis(carId);
-                      const efficiencyMetrics = calculateEfficiencyMetrics(carId);
-
-                      if (financialAnalysis.totalCosts === 0 && financialAnalysis.totalIncome === 0) {
-                        return (
-                          <div key={carId} className="border rounded-lg p-4 bg-gray-50">
-                            <div className="flex items-center gap-3 mb-3">
-                              {car.photo ? (
-                                <Image
-                                  src={car.photo}
-                                  alt={car.name}
-                                  width={48}
-                                  height={48}
-                                  className="object-cover rounded"
-                                  unoptimized={true}
-                                />
-                              ) : (
-                                <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
-                                  <span className="text-gray-500 text-xs">{(t as any)?.stats?.noPhoto || 'No Photo'}</span>
-                                </div>
-                              )}
-                              <div>
-                                <h4 className="font-medium text-gray-900 dark:text-gray-100">{car.name}</h4>
-                                <p className="text-sm text-gray-600">{car.brand} {car.model}{car.year ? ` (${car.year})` : ''}</p>
-                              </div>
-                            </div>
-                            <p className="text-gray-500 text-center py-4">{(t as any)?.stats?.noFinancialData || 'No financial data available for this vehicle.'}</p>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div key={carId} className="border rounded-lg p-6">
-                          <div className="flex items-center gap-3 mb-4">
-                            {car.photo ? (
-                              <Image
-                                src={car.photo}
-                                alt={car.name}
-                                width={64}
-                                height={64}
-                                className="object-cover rounded"
-                                unoptimized={true}
-                              />
-                            ) : (
-                              <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
-                                <span className="text-gray-500 text-xs">{(t as any)?.stats?.noPhoto || 'No Photo'}</span>
-                              </div>
-                            )}
-                            <div className="flex-grow">
-                              <h4 className="font-medium text-lg text-gray-900 dark:text-gray-100">{car.name}</h4>
-                              <p className="text-gray-600">{car.brand} {car.model}{car.year ? ` (${car.year})` : ''}</p>
-                            </div>
-                            <div className={`px-4 py-2 rounded-full text-sm font-medium ${
-                              financialAnalysis.isProfitable ? 'bg-green-100 text-green-800' :
-                              financialAnalysis.isBreakEven ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {financialAnalysis.isProfitable ? ((t as any)?.stats?.profitable || 'Profitable') :
-                               financialAnalysis.isBreakEven ? ((t as any)?.stats?.breakEven || 'Break-Even') : ((t as any)?.stats?.loss || 'Loss')}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-                            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border dark:border-green-800 transition-colors">
-                              <div className="text-sm text-green-600">{(t as any)?.stats?.financialIncome || 'Income'}</div>
-                              <div className="font-semibold text-green-700">{financialAnalysis.totalIncome} {currency}</div>
-                            </div>
-                            <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border dark:border-red-800 transition-colors">
-                              <div className="text-sm text-red-600">{(t as any)?.stats?.financialCosts || 'Costs'}</div>
-                              <div className="font-semibold text-red-700">{financialAnalysis.totalCosts} {currency}</div>
-                            </div>
-                            <div className={`p-3 rounded-lg ${financialAnalysis.isProfitable ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} border transition-colors`}>
-                              <div className={`text-sm ${financialAnalysis.isProfitable ? 'text-green-600' : 'text-red-600'}`}>{(t as any)?.stats?.netProfit || 'Net Profit'}</div>
-                              <div className={`font-semibold ${financialAnalysis.isProfitable ? 'text-green-700' : 'text-red-700'}`}>
-                                {financialAnalysis.netProfit} {currency}
-                              </div>
-                            </div>
-                            <div className="bg-blue-50 p-3 rounded-lg">
-                              <div className="text-sm text-blue-600">{(t as any)?.stats?.profitMargin || 'Profit Margin'}</div>
-                              <div className="font-semibold text-blue-700">{financialAnalysis.profitMargin}%</div>
-                            </div>
-                            <div className="bg-indigo-50 p-3 rounded-lg">
-                              <div className="text-sm text-indigo-600">{(t as any)?.stats?.roi || 'ROI'}</div>
-                              <div className="font-semibold text-indigo-700">{financialAnalysis.roi}%</div>
-                            </div>
-                            <div className="bg-purple-50 p-3 rounded-lg">
-                              <div className="text-sm text-purple-600">{(t as any)?.stats?.monthlyAvgProfit || 'Monthly Avg Profit'}</div>
-                              <div className="font-semibold text-purple-700">{financialAnalysis.monthlyAvgProfit} {currency}</div>
-                            </div>
-                          </div>
-
-                          {/* Efficiency Metrics */}
-                          {efficiencyMetrics.totalDistance > 0 && (
-                            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="text-sm text-gray-600">{(t as any)?.stats?.costPerKm || 'Cost per km'}</div>
-                                <div className="font-semibold">{efficiencyMetrics.costPerKm} {currency}/km</div>
-                              </div>
-                              <div className="bg-gray-50 p-3 rounded-lg">
-                                <div className="text-sm text-gray-600">{(t as any)?.stats?.incomePerKm || 'Income per km'}</div>
-                                <div className="font-semibold">{efficiencyMetrics.incomePerKm} {currency}/km</div>
-                              </div>
-                              <div className={`p-3 rounded-lg ${efficiencyMetrics.profitPerKm >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} border transition-colors`}>
-                                <div className={`text-sm ${efficiencyMetrics.profitPerKm >= 0 ? 'text-green-600' : 'text-red-600'}`}>{(t as any)?.stats?.profitPerKm || 'Profit per km'}</div>
-                                <div className={`font-semibold ${efficiencyMetrics.profitPerKm >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                                  {efficiencyMetrics.profitPerKm} {currency}/km
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Break-even recommendation */}
-                          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                            <div className="text-sm font-medium mb-2">{(t as any)?.stats?.breakEvenAnalysis || 'Break-Even Analysis'}:</div>
-                            <div className="text-sm">
-                              {financialAnalysis.isProfitable ? (
-                                <span className="text-green-700">
-                                  ✅ {(t as any)?.stats?.surplusAboveBreakEven || 'Surplus of'} {financialAnalysis.breakEvenSurplus} {currency} {(t as any)?.stats?.surplusAboveBreakEven || 'above break-even'}
-                                </span>
-                              ) : financialAnalysis.isBreakEven ? (
-                                <span className="text-yellow-700">⚖️ {(t as any)?.stats?.atBreakEvenPointShort || 'At break-even point'}</span>
-                              ) : (
-                                <span className="text-red-700">
-                                  ❌ {(t as any)?.stats?.needToBreakEven || 'Need'} {financialAnalysis.breakEvenDeficit} {currency} {(t as any)?.stats?.needToBreakEven || 'more income to break even'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                {/* Break-even analysis */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-lg text-gray-900 dark:text-gray-100 mb-3">{(t as any)?.stats?.breakEvenAnalysis || 'Break-Even Analysis'}</h4>
+                  <div className="text-base">
+                    {isProfitable ? (
+                      <div className="text-green-700">
+                        ✅ {(t as any)?.stats?.aboveBreakEven || 'You are'} <strong>{Math.abs(netProfit).toFixed(2)} {currency}</strong> {(t as any)?.stats?.aboveBreakEven || 'above break-even point'}.
+                        {(t as any)?.stats?.businessGeneratingProfit || 'Your business is generating profit!'}
+                      </div>
+                    ) : isBreakEven ? (
+                      <div className="text-yellow-700">
+                        ⚖️ {(t as any)?.stats?.atBreakEvenPoint || 'You are at break-even point. Income equals costs.'}
+                      </div>
+                    ) : (
+                      <div className="text-red-700">
+                        ❌ {(t as any)?.stats?.needMoreIncome || 'You need'} <strong>{Math.abs(netProfit).toFixed(2)} {currency}</strong> {(t as any)?.stats?.needMoreIncome || 'more income to reach break-even'}.
+                        {(t as any)?.stats?.considerOptimizing || 'Consider optimizing costs or increasing income.'}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
+            );
+          })()}
+
+          {/* Per-Vehicle Financial Analysis */}
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
+            <h3 className="font-medium text-xl mb-4 text-purple-700">{(t as any)?.stats?.perVehicleAnalysis || 'Per-Vehicle Financial Analysis'}</h3>
+            <div className="space-y-6">
+              {cars.map((car) => {
+                const carId = getObjectId(car as unknown as Record<string, unknown>);
+                const financialAnalysis = calculateFinancialAnalysis(carId);
+                const efficiencyMetrics = calculateEfficiencyMetrics(carId);
+
+                if (financialAnalysis.totalCosts === 0 && financialAnalysis.totalIncome === 0) {
+                  return (
+                    <div key={carId} className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center gap-3 mb-3">
+                        {car.photo ? (
+                          <Image
+                            src={car.photo}
+                            alt={car.name}
+                            width={48}
+                            height={48}
+                            className="object-cover rounded"
+                            unoptimized={true}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center">
+                            <span className="text-gray-500 text-xs">{(t as any)?.stats?.noPhoto || 'No Photo'}</span>
+                          </div>
+                        )}
+                        <div>
+                          <h4 className="font-medium text-gray-900 dark:text-gray-100">{car.name}</h4>
+                          <p className="text-sm text-gray-600">{car.brand} {car.model}{car.year ? ` (${car.year})` : ''}</p>
+                        </div>
+                      </div>
+                      <p className="text-gray-500 text-center py-4">{(t as any)?.stats?.noFinancialData || 'No financial data available for this vehicle.'}</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={carId} className="border rounded-lg p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      {car.photo ? (
+                        <Image
+                          src={car.photo}
+                          alt={car.name}
+                          width={64}
+                          height={64}
+                          className="object-cover rounded"
+                          unoptimized={true}
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                          <span className="text-gray-500 text-xs">{(t as any)?.stats?.noPhoto || 'No Photo'}</span>
+                        </div>
+                      )}
+                      <div className="flex-grow">
+                        <h4 className="font-medium text-lg text-gray-900 dark:text-gray-100">{car.name}</h4>
+                        <p className="text-gray-600">{car.brand} {car.model}{car.year ? ` (${car.year})` : ''}</p>
+                      </div>
+                      <div className={`px-4 py-2 rounded-full text-sm font-medium ${
+                        financialAnalysis.isProfitable ? 'bg-green-100 text-green-800' :
+                        financialAnalysis.isBreakEven ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {financialAnalysis.isProfitable ? ((t as any)?.stats?.profitable || 'Profitable') :
+                         financialAnalysis.isBreakEven ? ((t as any)?.stats?.breakEven || 'Break-Even') : ((t as any)?.stats?.loss || 'Loss')}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border dark:border-green-800 transition-colors">
+                        <div className="text-sm text-green-600">{(t as any)?.stats?.financialIncome || 'Income'}</div>
+                        <div className="font-semibold text-green-700">{financialAnalysis.totalIncome} {currency}</div>
+                      </div>
+                      <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border dark:border-red-800 transition-colors">
+                        <div className="text-sm text-red-600">{(t as any)?.stats?.financialCosts || 'Costs'}</div>
+                        <div className="font-semibold text-red-700">{financialAnalysis.totalCosts} {currency}</div>
+                      </div>
+                      <div className={`p-3 rounded-lg ${financialAnalysis.isProfitable ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} border transition-colors`}>
+                        <div className={`text-sm ${financialAnalysis.isProfitable ? 'text-green-600' : 'text-red-600'}`}>{(t as any)?.stats?.netProfit || 'Net Profit'}</div>
+                        <div className={`font-semibold ${financialAnalysis.isProfitable ? 'text-green-700' : 'text-red-700'}`}>
+                          {financialAnalysis.netProfit} {currency}
+                        </div>
+                      </div>
+                      <div className="bg-blue-50 p-3 rounded-lg">
+                        <div className="text-sm text-blue-600">{(t as any)?.stats?.profitMargin || 'Profit Margin'}</div>
+                        <div className="font-semibold text-blue-700">{financialAnalysis.profitMargin}%</div>
+                      </div>
+                      <div className="bg-indigo-50 p-3 rounded-lg">
+                        <div className="text-sm text-indigo-600">{(t as any)?.stats?.roi || 'ROI'}</div>
+                        <div className="font-semibold text-indigo-700">{financialAnalysis.roi}%</div>
+                      </div>
+                      <div className="bg-purple-50 p-3 rounded-lg">
+                        <div className="text-sm text-purple-600">{(t as any)?.stats?.monthlyAvgProfit || 'Monthly Avg Profit'}</div>
+                        <div className="font-semibold text-purple-700">{financialAnalysis.monthlyAvgProfit} {currency}</div>
+                      </div>
+                    </div>
+
+                    {/* Efficiency Metrics */}
+                    {efficiencyMetrics.totalDistance > 0 && (
+                      <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t">
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">{(t as any)?.stats?.costPerKm || 'Cost per km'}</div>
+                          <div className="font-semibold">{efficiencyMetrics.costPerKm} {currency}/km</div>
+                        </div>
+                        <div className="bg-gray-50 p-3 rounded-lg">
+                          <div className="text-sm text-gray-600">{(t as any)?.stats?.incomePerKm || 'Income per km'}</div>
+                          <div className="font-semibold">{efficiencyMetrics.incomePerKm} {currency}/km</div>
+                        </div>
+                        <div className={`p-3 rounded-lg ${efficiencyMetrics.profitPerKm >= 0 ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'} border transition-colors`}>
+                          <div className={`text-sm ${efficiencyMetrics.profitPerKm >= 0 ? 'text-green-600' : 'text-red-600'}`}>{(t as any)?.stats?.profitPerKm || 'Profit per km'}</div>
+                          <div className={`font-semibold ${efficiencyMetrics.profitPerKm >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                            {efficiencyMetrics.profitPerKm} {currency}/km
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Break-even recommendation */}
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                      <div className="text-sm font-medium mb-2">{(t as any)?.stats?.breakEvenAnalysis || 'Break-Even Analysis'}:</div>
+                      <div className="text-sm">
+                        {financialAnalysis.isProfitable ? (
+                          <span className="text-green-700">
+                            ✅ {(t as any)?.stats?.surplusAboveBreakEven || 'Surplus of'} {financialAnalysis.breakEvenSurplus} {currency} {(t as any)?.stats?.surplusAboveBreakEven || 'above break-even'}
+                          </span>
+                        ) : financialAnalysis.isBreakEven ? (
+                          <span className="text-yellow-700">⚖️ {(t as any)?.stats?.atBreakEvenPointShort || 'At break-even point'}</span>
+                        ) : (
+                          <span className="text-red-700">
+                            ❌ {(t as any)?.stats?.needToBreakEven || 'Need'} {financialAnalysis.breakEvenDeficit} {currency} {(t as any)?.stats?.needToBreakEven || 'more income to break even'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </PageContainer>
-        </main>
+          </div>
+        </div>
       )}
-    </div>
+      </div>
+    </HistoryPageLayout>
   );
 }

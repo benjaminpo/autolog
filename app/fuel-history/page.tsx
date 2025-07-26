@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import PageContainer from '../components/PageContainer';
-import { TranslatedNavigation } from '../components/TranslatedNavigation';
-import { AuthButton } from '../components/AuthButton';
-import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
-import { SimpleThemeToggle } from '../components/ThemeToggle';
-import { LoadingState } from '../components/LoadingState';
-import { ErrorState } from '../components/ErrorState';
+import HistoryPageLayout from '../components/HistoryPageLayout';
 import { useTranslation } from '../hooks/useTranslation';
 import FuelTab from '../components/FuelTab';
 import withTranslations from '../components/withTranslations';
@@ -257,54 +251,26 @@ export default function FuelHistoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col">
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
-        <PageContainer>
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg font-bold">{(t as any)?.navigation?.fuelHistory || 'Fuel History'}</h1>
-            <div className="flex items-center gap-2">
-              <SimpleThemeToggle />
-              <GlobalLanguageSelector darkMode={false} />
-              <AuthButton />
-            </div>
-          </div>
-        </PageContainer>
-      </div>
-
-      {/* Navigation Component */}
-      <TranslatedNavigation showTabs={false} />
-
-      {/* Loading State */}
-      {isLoading && <LoadingState />}
-
-      {/* Error State */}
-      {error && !isLoading && (
-        <ErrorState
-          error={error}
-          onRetry={loadData}
+    <>
+      <HistoryPageLayout
+        title={(t as any)?.navigation?.fuelHistory || 'Fuel History'}
+        isLoading={isLoading}
+        error={error}
+        onRetry={loadData}
+      >
+        <TranslatedFuelTab
+          cars={cars}
+          entries={entries}
+          showFuelDetails={showFuelDetails}
+          itemsPerPage={itemsPerPage}
+          setShowFuelDetails={setShowFuelDetails}
+          deleteEntry={handleDeleteFuelEntry}
+          startEditing={startEditing}
+          onLoadMore={handleLoadMore}
+          hasMore={hasMore}
+          loading={isLoadingMore}
         />
-      )}
-
-      {/* Main Content */}
-      {!isLoading && !error && (
-        <main className="flex-grow overflow-auto">
-          <PageContainer className="p-3 md:p-6">
-            <TranslatedFuelTab
-              cars={cars}
-              entries={entries}
-              showFuelDetails={showFuelDetails}
-              itemsPerPage={itemsPerPage}
-              setShowFuelDetails={setShowFuelDetails}
-              deleteEntry={handleDeleteFuelEntry}
-              startEditing={startEditing}
-              onLoadMore={handleLoadMore}
-              hasMore={hasMore}
-              loading={isLoadingMore}
-            />
-          </PageContainer>
-        </main>
-      )}
+      </HistoryPageLayout>
 
       {/* Modals */}
       <TranslatedModals
@@ -331,6 +297,6 @@ export default function FuelHistoryPage() {
         setEditFuelCompany={() => {}}
         setEditFuelType={() => {}}
       />
-    </div>
+    </>
   );
 }

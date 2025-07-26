@@ -2,21 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import PageContainer from '../components/PageContainer';
+import HistoryPageLayout from '../components/HistoryPageLayout';
 import ExpenseTab from '../components/ExpenseTab';
 import withTranslations from '../components/withTranslations';
-import { AuthButton } from '../components/AuthButton';
-import { TranslatedNavigation } from '../components/TranslatedNavigation';
-import { GlobalLanguageSelector } from '../components/GlobalLanguageSelector';
 import { useTranslation } from '../hooks/useTranslation';
 import { useVehicles } from '../hooks/useVehicles';
 import { expenseApi } from '../lib/api';
 import { expenseCategories } from '../lib/vehicleData';
 import { getObjectId } from '../lib/idUtils';
 import { Modals } from '../components/modals';
-import { SimpleThemeToggle } from '../components/ThemeToggle';
-import { LoadingState } from '../components/LoadingState';
-import { ErrorState } from '../components/ErrorState';
 
 // Wrap components with translations HOC
 const TranslatedExpenseTab = withTranslations(ExpenseTab);
@@ -272,54 +266,26 @@ export default function ExpenseHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col">
-      {/* Sticky Header */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
-        <PageContainer>
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg font-bold">{(t as any)?.navigation?.expenseHistory || 'Expense History'}</h1>
-            <div className="flex items-center gap-2">
-              <SimpleThemeToggle />
-              <GlobalLanguageSelector darkMode={false} />
-              <AuthButton />
-            </div>
-          </div>
-        </PageContainer>
-      </div>
-
-      {/* Navigation Component */}
-      <TranslatedNavigation showTabs={false} />
-
-      {/* Loading State */}
-      {isLoading && <LoadingState />}
-
-      {/* Error State */}
-      {error && !isLoading && (
-        <ErrorState
-          error={error}
-          onRetry={loadData}
+    <>
+      <HistoryPageLayout
+        title={(t as any)?.navigation?.expenseHistory || 'Expense History'}
+        isLoading={isLoading}
+        error={error}
+        onRetry={loadData}
+      >
+        <TranslatedExpenseTab
+          cars={cars}
+          expenses={expenses}
+          showExpenseDetails={showExpenseDetails}
+          itemsPerPage={itemsPerPage}
+          setShowExpenseDetails={setShowExpenseDetails}
+          deleteExpense={handleDeleteExpense}
+          startEditingExpense={startEditingExpense}
+          onLoadMore={handleLoadMore}
+          hasMore={hasMore}
+          loading={isLoadingMore}
         />
-      )}
-
-      {/* Main Content */}
-      {!isLoading && !error && (
-        <main className="flex-grow overflow-auto">
-          <PageContainer className="p-3 md:p-6">
-            <TranslatedExpenseTab
-              cars={cars}
-              expenses={expenses}
-              showExpenseDetails={showExpenseDetails}
-              itemsPerPage={itemsPerPage}
-              setShowExpenseDetails={setShowExpenseDetails}
-              deleteExpense={handleDeleteExpense}
-              startEditingExpense={startEditingExpense}
-              onLoadMore={handleLoadMore}
-              hasMore={hasMore}
-              loading={isLoadingMore}
-            />
-          </PageContainer>
-        </main>
-      )}
+      </HistoryPageLayout>
 
       {/* Modals */}
       <TranslatedModals
@@ -346,6 +312,6 @@ export default function ExpenseHistoryPage() {
         setEditFuelCompany={() => {}}
         setEditFuelType={() => {}}
       />
-    </div>
+    </>
   );
 }
