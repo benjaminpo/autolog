@@ -208,7 +208,7 @@ export default function IncomeHistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col">
       {/* Sticky Header */}
       <div className="sticky top-0 bg-white dark:bg-gray-800 dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700">
         <PageContainer>
@@ -239,7 +239,7 @@ export default function IncomeHistoryPage() {
 
       {/* Main Content */}
       {!isLoading && !error && (
-      <main className="flex-grow overflow-auto transition-colors">
+      <main className="flex-grow overflow-auto">
         <PageContainer className="p-3 md:p-6">
           <TranslatedIncomeTab
             cars={cars}
@@ -260,7 +260,7 @@ export default function IncomeHistoryPage() {
       {/* Edit Income Modal */}
       {editingIncome && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border dark:border-gray-700 transition-colors">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto border dark:border-gray-700">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t?.editIncome || 'Edit Income Entry'}</h2>
 
             <form onSubmit={handleEditSubmit} className="space-y-4">
@@ -273,7 +273,7 @@ export default function IncomeHistoryPage() {
                   name="carId"
                   value={editingIncome.carId}
                   onChange={handleEditInputChange}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400"
                   required
                 >
                   <option value="">{t?.selectVehicle || 'Select Vehicle'}</option>
@@ -294,7 +294,7 @@ export default function IncomeHistoryPage() {
                   name="category"
                   value={editingIncome.category}
                   onChange={handleEditInputChange}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400"
                   required
                 >
                   <option value="">{t?.selectCategory || 'Select Category'}</option>
@@ -321,7 +321,7 @@ export default function IncomeHistoryPage() {
                   onChange={handleEditInputChange}
                   step="0.01"
                   min="0"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400"
                   required
                 />
               </div>
@@ -335,7 +335,7 @@ export default function IncomeHistoryPage() {
                   name="currency"
                   value={editingIncome.currency}
                   onChange={handleEditInputChange}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400"
                   required
                 >
                   {currencies.map((currency) => (
@@ -356,7 +356,7 @@ export default function IncomeHistoryPage() {
                   name="date"
                   value={editingIncome.date}
                   onChange={handleEditInputChange}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400"
                   required
                 />
               </div>
@@ -371,7 +371,7 @@ export default function IncomeHistoryPage() {
                   value={editingIncome.notes}
                   onChange={handleEditInputChange}
                   rows={3}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400 transition-colors"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent dark:focus:ring-green-400"
                   placeholder={t?.notesPlaceholder || 'Optional notes...'}
                 />
               </div>
