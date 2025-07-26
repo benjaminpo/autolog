@@ -130,9 +130,9 @@ export default function FinancialAnalysisPage() {
 
   // Calculate aggregate statistics
   const calculateAggregateStats = () => {
-    const totalFuelCosts = entries.reduce((sum, entry) => sum + Number(entry.cost), 0);
-    const totalExpenseCosts = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
-    const totalIncomeCosts = incomes.reduce((sum, income) => sum + Number(income.amount), 0);
+    const totalFuelCosts = (entries || []).reduce((sum, entry) => sum + Number(entry.cost), 0);
+    const totalExpenseCosts = (expenses || []).reduce((sum, expense) => sum + Number(expense.amount), 0);
+    const totalIncomeCosts = (incomes || []).reduce((sum, income) => sum + Number(income.amount), 0);
 
     return {
       totalFuelCosts: Number(totalFuelCosts.toFixed(2)),
@@ -143,9 +143,9 @@ export default function FinancialAnalysisPage() {
 
   // Calculate break-even analysis and profitability metrics
   const calculateFinancialAnalysis = (carId: string) => {
-    const carFuelEntries = entries.filter((entry) => matchesCarId(entry.carId, carId));
-    const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
-    const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
+    const carFuelEntries = (entries || []).filter((entry) => matchesCarId(entry.carId, carId));
+    const carExpenseEntries = (expenses || []).filter((expense) => matchesCarId(expense.carId, carId));
+    const carIncomeEntries = (incomes || []).filter((income) => matchesCarId(income.carId, carId));
 
     // Calculate totals
     const totalFuelCosts = carFuelEntries.reduce((sum, entry) => sum + Number(entry.cost), 0);
@@ -211,9 +211,9 @@ export default function FinancialAnalysisPage() {
 
   // Calculate cost per distance and efficiency metrics
   const calculateEfficiencyMetrics = (carId: string) => {
-    const carFuelEntries = entries.filter((entry) => matchesCarId(entry.carId, carId));
-    const carExpenseEntries = expenses.filter((expense) => matchesCarId(expense.carId, carId));
-    const carIncomeEntries = incomes.filter((income) => matchesCarId(income.carId, carId));
+    const carFuelEntries = (entries || []).filter((entry) => matchesCarId(entry.carId, carId));
+    const carExpenseEntries = (expenses || []).filter((expense) => matchesCarId(expense.carId, carId));
+    const carIncomeEntries = (incomes || []).filter((income) => matchesCarId(income.carId, carId));
 
     if (carFuelEntries.length < 2) {
       return {
@@ -266,9 +266,9 @@ export default function FinancialAnalysisPage() {
     };
   };
 
-  const currency = entries.length > 0 ? entries[0].currency :
-                   expenses.length > 0 ? expenses[0].currency :
-                   incomes.length > 0 ? incomes[0].currency : currencies[0];
+  const currency = (entries || []).length > 0 ? entries[0].currency :
+                   (expenses || []).length > 0 ? expenses[0].currency :
+                   (incomes || []).length > 0 ? incomes[0].currency : currencies[0];
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col transition-colors">
