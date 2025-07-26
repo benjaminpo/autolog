@@ -42,7 +42,7 @@ describe('LoadingState Component', () => {
     render(<LoadingState />);
 
     const main = screen.getByRole('main');
-    expect(main).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+    expect(main).toHaveClass('flex-grow', 'overflow-auto');
 
     const pageContainer = screen.getByTestId('page-container');
     expect(pageContainer).toHaveClass('p-3', 'md:p-6');

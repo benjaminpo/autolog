@@ -22,7 +22,7 @@ describe('Refactored Components Pattern Integration', () => {
       const { rerender } = render(<LoadingState message="Loading data..." />);
 
       let mainElement = screen.getByRole('main');
-      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto');
 
       let pageContainer = screen.getByTestId('page-container');
       expect(pageContainer).toHaveClass('p-3', 'md:p-6');
@@ -31,7 +31,7 @@ describe('Refactored Components Pattern Integration', () => {
       rerender(<ErrorState error="Test error" onRetry={() => {}} />);
 
       mainElement = screen.getByRole('main');
-      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto');
 
       pageContainer = screen.getByTestId('page-container');
       expect(pageContainer).toHaveClass('p-3', 'md:p-6');
@@ -130,7 +130,7 @@ describe('Refactored Components Pattern Integration', () => {
         } else {
           // Content state
           return (
-            <main className="flex-grow overflow-auto transition-colors">
+            <main className="flex-grow overflow-auto">
               <div data-testid="page-container" className="p-3 md:p-6">
                 <div>Main Content</div>
               </div>
@@ -143,7 +143,7 @@ describe('Refactored Components Pattern Integration', () => {
 
       // Check loading state spacing
       let mainElement = screen.getByRole('main');
-      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto');
 
       // Transition to error state
       currentState = 'error';
@@ -159,7 +159,7 @@ describe('Refactored Components Pattern Integration', () => {
       // Check content state spacing
       expect(screen.getByText('Main Content')).toBeInTheDocument();
       mainElement = screen.getByRole('main');
-      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+      expect(mainElement).toHaveClass('flex-grow', 'overflow-auto');
     });
   });
 

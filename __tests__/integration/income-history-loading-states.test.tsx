@@ -230,7 +230,7 @@ describe('IncomeHistoryPage Integration', () => {
 
     // Check that LoadingState is properly wrapped in the same structure
     const loadingContainer = screen.getByText('Loading...').closest('main');
-    expect(loadingContainer).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+    expect(loadingContainer).toHaveClass('flex-grow', 'overflow-auto');
 
     await waitFor(() => {
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
@@ -248,6 +248,6 @@ describe('IncomeHistoryPage Integration', () => {
 
     // Check that ErrorState is properly wrapped in the same structure
     const errorContainer = screen.getByText('Failed to load income entries. Please try again.').closest('main');
-    expect(errorContainer).toHaveClass('flex-grow', 'overflow-auto', 'transition-colors');
+    expect(errorContainer).toHaveClass('flex-grow', 'overflow-auto');
   });
 });
