@@ -253,7 +253,7 @@ export default function FuelHistoryPage() {
   return (
     <>
       <HistoryPageLayout
-        title={(t as any)?.navigation?.fuelHistory || 'Fuel History'}
+        title={t?.navigation?.fuelHistory || 'Fuel History'}
         isLoading={isLoading}
         error={error}
         onRetry={loadData}
