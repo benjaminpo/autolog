@@ -54,6 +54,147 @@ interface IncomeEntry {
   images: string[];
 }
 
+interface FinancialSummaryProps {
+  aggregateStats: {
+    totalFuelCosts: number;
+    totalExpenseCosts: number;
+    totalIncomeCosts: number;
+  };
+  currency: string;
+  t: any;
+}
+
+function getStatusClasses(isProfitable: boolean, isBreakEven: boolean) {
+  if (isProfitable) {
+    return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+  }
+  if (isBreakEven) {
+    return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
+  }
+  return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+}
+
+function getStatusTextClasses(isProfitable: boolean, isBreakEven: boolean) {
+  if (isProfitable) return 'text-green-600';
+  if (isBreakEven) return 'text-yellow-600';
+  return 'text-red-600';
+}
+
+function getStatusValueClasses(isProfitable: boolean, isBreakEven: boolean) {
+  if (isProfitable) return 'text-green-700';
+  if (isBreakEven) return 'text-yellow-700';
+  return 'text-red-700';
+}
+
+function getStatusText(isProfitable: boolean, isBreakEven: boolean, t: any) {
+  if (isProfitable) return t?.stats?.profitable || 'Profitable';
+  if (isBreakEven) return t?.stats?.breakEven || 'Break-Even';
+  return t?.stats?.loss || 'Loss';
+}
+
+function OverallFinancialSummary({ aggregateStats, currency, t }: FinancialSummaryProps) {
+  const totalIncome = aggregateStats.totalIncomeCosts || 0;
+  const totalCosts = (aggregateStats.totalFuelCosts || 0) + (aggregateStats.totalExpenseCosts || 0);
+  const netProfit = totalIncome - totalCosts;
+  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+  const roi = totalCosts > 0 ? (netProfit / totalCosts) * 100 : 0;
+  const isBreakEven = Math.abs(netProfit) < 1;
+  const isProfitable = netProfit > 0;
+
+  const statusClasses = getStatusClasses(isProfitable, isBreakEven);
+  const statusTextClasses = getStatusTextClasses(isProfitable, isBreakEven);
+  const statusValueClasses = getStatusValueClasses(isProfitable, isBreakEven);
+  const statusText = getStatusText(isProfitable, isBreakEven, t);
+
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6 border dark:border-gray-700 transition-colors">
+      <h3 className="font-medium text-xl mb-4 text-purple-700">{t?.stats?.overallFinancialSummary || 'Overall Financial Summary'}</h3>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border dark:border-green-800 transition-colors">
+          <div className="font-medium text-sm text-green-600">{t?.stats?.financialTotalIncome || 'Total Income'}</div>
+          <div className="text-xl font-semibold text-green-700">{totalIncome.toFixed(2)} {currency}</div>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border dark:border-red-800 transition-colors">
+          <div className="font-medium text-sm text-red-600">{t?.stats?.financialTotalCosts || 'Total Costs'}</div>
+          <div className="text-xl font-semibold text-red-700">{totalCosts.toFixed(2)} {currency}</div>
+        </div>
+        <div className={`p-4 rounded-lg border ${statusClasses} transition-colors`}>
+          <div className={`font-medium text-sm ${statusTextClasses}`}>{t?.stats?.netProfit || 'Net Profit'}</div>
+          <div className={`text-xl font-semibold ${statusValueClasses}`}>
+            {netProfit.toFixed(2)} {currency}
+          </div>
+        </div>
+        <div className="bg-blue-50 p-4 rounded-lg border">
+          <div className="font-medium text-sm text-blue-600">{t?.stats?.profitMargin || 'Profit Margin'}</div>
+          <div className="text-xl font-semibold text-blue-700">{profitMargin.toFixed(1)}%</div>
+        </div>
+        <div className="bg-indigo-50 p-4 rounded-lg border">
+          <div className="font-medium text-sm text-indigo-600">{t?.stats?.roi || 'ROI'}</div>
+          <div className="text-xl font-semibold text-indigo-700">{roi.toFixed(1)}%</div>
+        </div>
+        <div className={`p-4 rounded-lg border ${statusClasses} transition-colors`}>
+          <div className={`font-medium text-sm ${statusTextClasses}`}>{t?.stats?.financialStatus || 'Status'}</div>
+          <div className={`text-lg font-semibold ${statusValueClasses}`}>
+            {statusText}
+          </div>
+        </div>
+      </div>
+
+      {/* Break-even analysis */}
+      <BreakEvenAnalysis
+        isProfitable={isProfitable}
+        isBreakEven={isBreakEven}
+        netProfit={netProfit}
+        currency={currency}
+        t={t}
+      />
+    </div>
+  );
+}
+
+function BreakEvenAnalysis({ isProfitable, isBreakEven, netProfit, currency, t }: Readonly<{
+  isProfitable: boolean;
+  isBreakEven: boolean;
+  netProfit: number;
+  currency: string;
+  t: any;
+}>) {
+  const renderAnalysisContent = () => {
+    if (isProfitable) {
+      return (
+        <div className="text-green-700"></div>
+          ✅ {t?.stats?.aboveBreakEven || 'You are'} <strong>{Math.abs(netProfit).toFixed(2)} {currency}</strong> {t?.stats?.aboveBreakEven || 'above break-even point'}.
+          {t?.stats?.businessGeneratingProfit || 'Your business is generating profit!'}
+        </div>
+      );
+    }
+
+    if (isBreakEven) {
+      return (
+        <div className="text-yellow-700">
+          ⚖️ {t?.stats?.atBreakEvenPoint || 'You are at break-even point. Income equals costs.'}
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-red-700">
+        ❌ {t?.stats?.needMoreIncome || 'You need'} <strong>{Math.abs(netProfit).toFixed(2)} {currency}</strong> {t?.stats?.needMoreIncome || 'more income to reach break-even'}.
+        {t?.stats?.considerOptimizing || 'Consider optimizing costs or increasing income.'}
+      </div>
+    );
+  };
+
+  return (
+    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+      <h4 className="font-medium text-lg text-gray-900 dark:text-gray-100 mb-3">{t?.stats?.breakEvenAnalysis || 'Break-Even Analysis'}</h4>
+      <div className="text-base">
+        {renderAnalysisContent()}
+      </div>
+    </div>
+  );
+}
+
 export default function FinancialAnalysisPage() {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -84,7 +225,7 @@ export default function FinancialAnalysisPage() {
 
     try {
       // Fetch all data in parallel
-      const [vehiclesResponse, fuelResponse, expenseResponse, incomeResponse] = await Promise.all([
+      const [, fuelResponse, expenseResponse, incomeResponse] = await Promise.all([
         fetch('/api/vehicles'),
         fetch('/api/fuel-entries'),
         fetch('/api/expense-entries'),
@@ -169,69 +310,10 @@ export default function FinancialAnalysisPage() {
         breakEvenPoint: 0,
         breakEvenDeficit: 0,
         breakEvenSurplus: 0,
-        monthlyAvgIncome: 0,
-        monthlyAvgCosts: 0,
         monthlyAvgProfit: 0,
-        isBreakEven: false,
+        isBreakEven: true,
         isProfitable: false
       };
-    }
-
-    const firstDate = new Date(sortedEntries[0].date);
-    const lastDate = new Date(sortedEntries[sortedEntries.length - 1].date);
-    const monthsDiff = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 +
-                      (lastDate.getMonth() - firstDate.getMonth()) + 1;
-
-    const monthlyAvgIncome = monthsDiff > 0 ? totalIncome / monthsDiff : 0;
-    const monthlyAvgCosts = monthsDiff > 0 ? totalCosts / monthsDiff : 0;
-    const monthlyAvgProfit = monthlyAvgIncome - monthlyAvgCosts;
-
-    return {
-      totalIncome: Number(totalIncome.toFixed(2)),
-      totalCosts: Number(totalCosts.toFixed(2)),
-      netProfit: Number(netProfit.toFixed(2)),
-      profitMargin: Number(profitMargin.toFixed(2)),
-      roi: Number(roi.toFixed(2)),
-      breakEvenPoint: Number(breakEvenPoint.toFixed(2)),
-      breakEvenDeficit: Number(breakEvenDeficit.toFixed(2)),
-      breakEvenSurplus: Number(breakEvenSurplus.toFixed(2)),
-      monthlyAvgIncome: Number(monthlyAvgIncome.toFixed(2)),
-      monthlyAvgCosts: Number(monthlyAvgCosts.toFixed(2)),
-      monthlyAvgProfit: Number(monthlyAvgProfit.toFixed(2)),
-      isBreakEven: Math.abs(netProfit) < 1, // Within $1 of break-even
-      isProfitable: netProfit > 0
-    };
-  };
-
-  // Calculate cost per distance and efficiency metrics
-  const calculateEfficiencyMetrics = (carId: string) => {
-    const carFuelEntries = (entries || []).filter((entry) => matchesCarId(entry.carId, carId));
-    const carExpenseEntries = (expenses || []).filter((expense) => matchesCarId(expense.carId, carId));
-    const carIncomeEntries = (incomes || []).filter((income) => matchesCarId(income.carId, carId));
-
-    if (carFuelEntries.length < 2) {
-      return {
-        costPerKm: 0,
-        incomePerKm: 0,
-        profitPerKm: 0,
-        totalDistance: 0
-      };
-    }
-
-    // Calculate total distance
-    const sortedFuelEntries = carFuelEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    let totalDistance = 0;
-
-    for (let i = 1; i < sortedFuelEntries.length; i++) {
-      const curr = sortedFuelEntries[i];
-      const prev = sortedFuelEntries[i - 1];
-      const distance = curr.distanceUnit === 'km'
-        ? Number(curr.mileage) - Number(prev.mileage)
-        : (Number(curr.mileage) - Number(prev.mileage)) * 1.60934;
-
-      if (distance > 0 && distance <= 2000) {
-        totalDistance += distance;
-      }
     }
 
     if (totalDistance === 0) {
@@ -260,9 +342,20 @@ export default function FinancialAnalysisPage() {
     };
   };
 
-  const currency = (entries || []).length > 0 ? entries[0].currency :
-                   (expenses || []).length > 0 ? expenses[0].currency :
-                   (incomes || []).length > 0 ? incomes[0].currency : currencies[0];
+  const getCurrency = () => {
+    if ((entries || []).length > 0) {
+      return entries[0].currency;
+    }
+    if ((expenses || []).length > 0) {
+      return expenses[0].currency;
+    }
+    if ((incomes || []).length > 0) {
+      return incomes[0].currency;
+    }
+    return currencies[0];
+  };
+
+  const currency = getCurrency();
 
   return (
     <HistoryPageLayout
@@ -276,7 +369,7 @@ export default function FinancialAnalysisPage() {
 
       {cars.length === 0 ? (
         <div className="text-center p-8 bg-white dark:bg-gray-800 rounded-lg">
-          <p className="text-gray-600 mb-4">{(t as any)?.stats?.noVehiclesFound || 'No vehicles found. Add vehicles to see financial analysis.'}</p>
+          <p className="text-gray-600 mb-4">{t?.stats?.noVehiclesFound || 'No vehicles found. Add vehicles to see financial analysis.'}</p>
         </div>
       ) : (
         <div className="space-y-6">
