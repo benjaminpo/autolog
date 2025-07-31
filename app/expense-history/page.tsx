@@ -268,7 +268,7 @@ export default function ExpenseHistoryPage() {
   return (
     <>
       <HistoryPageLayout
-        title={(t as any)?.navigation?.expenseHistory || 'Expense History'}
+        title={(t)?.navigation?.expenseHistory || 'Expense History'}
         isLoading={isLoading}
         error={error}
         onRetry={loadData}
