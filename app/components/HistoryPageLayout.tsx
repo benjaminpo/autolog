@@ -24,8 +24,8 @@ export default function HistoryPageLayout({
   error,
   onRetry,
   children
-}: HistoryPageLayoutProps) {
-  const { t } = useTranslation();
+}: Readonly<HistoryPageLayoutProps>) {
+  useTranslation();
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-800 flex flex-col">
