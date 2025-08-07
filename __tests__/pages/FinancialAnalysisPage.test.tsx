@@ -5,6 +5,20 @@ import FinancialAnalysisPage from '../../app/financial-analysis/page';
 import { useAuth } from '../../app/context/AuthContext';
 import { useTranslation } from '../../app/hooks/useTranslation';
 import { useVehicles } from '../../app/hooks/useVehicles';
+import {
+  testLayoutStructure,
+  testNavigationComponent,
+  testPageContainer,
+  testSemanticStructure,
+  testStylingClasses,
+  testLoadingState,
+  testErrorState,
+  testRetryFunctionality,
+  testMissingUserHandling,
+  mockUser,
+  mockTranslation,
+  mockCars,
+} from '../utils/testHelpers';
 
 // Mock dependencies
 jest.mock('../../app/context/AuthContext', () => ({
@@ -33,21 +47,7 @@ jest.mock('../../app/lib/vehicleData', () => ({
 jest.mock('../../app/context/LanguageContext', () => ({
   useLanguage: jest.fn(() => ({
     language: 'en',
-    t: {
-      navigation: {
-        financialAnalysis: 'Financial Analysis',
-      },
-      stats: {
-        financialAnalysisBreakEven: 'Financial Analysis & Break-Even',
-        noVehiclesFound: 'No vehicles found. Add vehicles to see financial analysis.',
-        overallFinancialSummary: 'Overall Financial Summary',
-        financialTotalIncome: 'Total Income',
-        financialTotalCosts: 'Total Costs',
-        netProfit: 'Net Profit',
-        profitMargin: 'Profit Margin',
-        roi: 'ROI',
-      },
-    },
+    t: mockTranslation,
     setLanguage: jest.fn(),
     saveLanguagePreference: jest.fn(),
   })),
@@ -56,47 +56,47 @@ jest.mock('../../app/context/LanguageContext', () => ({
 // Mock components that might cause issues in testing
 jest.mock('../../app/components/PageContainer', () => {
   return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-    return <div data-testid="page-container" className={className}>{children}</div>;
+    return React.createElement('div', { 'data-testid': 'page-container', className }, children);
   };
 });
 
 jest.mock('../../app/components/TranslatedNavigation', () => ({
   TranslatedNavigation: function MockTranslatedNavigation() {
-    return <nav data-testid="translated-navigation">Navigation</nav>;
+    return React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation');
   },
 }));
 
 jest.mock('../../app/components/AuthButton', () => ({
   AuthButton: function MockAuthButton() {
-    return <button data-testid="auth-button">Auth</button>;
+    return React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth');
   },
 }));
 
 jest.mock('../../app/components/GlobalLanguageSelector', () => ({
   GlobalLanguageSelector: function MockGlobalLanguageSelector() {
-    return <select data-testid="language-selector"><option>English</option></select>;
+    return React.createElement('select', { 'data-testid': 'language-selector' }, 
+      React.createElement('option', null, 'English')
+    );
   },
 }));
 
 jest.mock('../../app/components/ThemeToggle', () => ({
   SimpleThemeToggle: function MockSimpleThemeToggle() {
-    return <button data-testid="theme-toggle">Theme</button>;
+    return React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme');
   },
 }));
 
 jest.mock('../../app/components/LoadingState', () => ({
   LoadingState: function MockLoadingState() {
-    return <div data-testid="loading-state">Loading...</div>;
+    return React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...');
   },
 }));
 
 jest.mock('../../app/components/ErrorState', () => ({
   ErrorState: function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-    return (
-      <div data-testid="error-state">
-        <span>{error}</span>
-        <button onClick={onRetry}>Retry</button>
-      </div>
+    return React.createElement('div', { 'data-testid': 'error-state' },
+      React.createElement('span', null, error),
+      React.createElement('button', { onClick: onRetry }, 'Retry')
     );
   },
 }));
@@ -104,52 +104,9 @@ jest.mock('../../app/components/ErrorState', () => ({
 // Mock Next.js Image component
 jest.mock('next/image', () => {
   return function MockImage({ src, alt, ...props }: any) {
-    return <img src={src} alt={alt} {...props} data-testid="next-image" />;
+    return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
   };
 });
-
-const mockUser = {
-  id: '1',
-  email: 'test@example.com',
-};
-
-const mockTranslation = {
-  navigation: {
-    financialAnalysis: 'Financial Analysis',
-  },
-  stats: {
-    financialAnalysisBreakEven: 'Financial Analysis & Break-Even',
-    noVehiclesFound: 'No vehicles found. Add vehicles to see financial analysis.',
-    overallFinancialSummary: 'Overall Financial Summary',
-    financialTotalIncome: 'Total Income',
-    financialTotalCosts: 'Total Costs',
-    netProfit: 'Net Profit',
-    profitMargin: 'Profit Margin',
-    roi: 'ROI',
-    profitable: 'Profitable',
-    breakEven: 'Break-Even',
-    loss: 'Loss',
-  },
-};
-
-const mockCars = [
-  {
-    id: '1',
-    name: 'Test Car 1',
-    brand: 'Toyota',
-    model: 'Camry',
-    year: 2020,
-    photo: null,
-  },
-  {
-    id: '2',
-    name: 'Test Car 2',
-    brand: 'Honda',
-    model: 'Civic',
-    year: 2021,
-    photo: 'test-photo.jpg',
-  },
-];
 
 // Mock fetch globally
 const mockFetch = jest.fn();
@@ -205,31 +162,17 @@ describe('FinancialAnalysisPage', () => {
   describe('Layout and Structure', () => {
     it('should render with consistent layout structure', async () => {
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        // Check header structure
-        expect(screen.getByText('Financial Analysis')).toBeInTheDocument();
-        expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
-        expect(screen.getByTestId('language-selector')).toBeInTheDocument();
-        expect(screen.getByTestId('auth-button')).toBeInTheDocument();
-      });
+      await testLayoutStructure('Financial Analysis');
     });
 
     it('should render navigation component', async () => {
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('translated-navigation')).toBeInTheDocument();
-      });
+      await testNavigationComponent();
     });
 
     it('should render main content within PageContainer', async () => {
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        const pageContainers = screen.getAllByTestId('page-container');
-        expect(pageContainers.length).toBeGreaterThan(0);
-      });
+      await testPageContainer();
     });
 
     it('should show loading state initially', () => {
@@ -240,7 +183,7 @@ describe('FinancialAnalysisPage', () => {
       });
 
       render(<FinancialAnalysisPage />);
-      expect(screen.getByTestId('loading-state')).toBeInTheDocument();
+      testLoadingState();
     });
 
     it('should show error state when there is an error', async () => {
@@ -253,10 +196,7 @@ describe('FinancialAnalysisPage', () => {
       mockFetch.mockRejectedValueOnce(new Error('Failed to fetch'));
 
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-      });
+      await testErrorState();
     });
   });
 
@@ -311,24 +251,14 @@ describe('FinancialAnalysisPage', () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-      });
+      await testErrorState();
     });
 
     it('should retry data loading when retry button is clicked', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        const retryButton = screen.getByText('Retry');
-        fireEvent.click(retryButton);
-      });
-
-      // Should attempt to fetch again (4 calls initially + 4 calls on retry = 8 total)
-      expect(mockFetch).toHaveBeenCalledTimes(8);
+      await testRetryFunctionality(mockFetch);
     });
 
     it('should handle missing user gracefully', () => {
@@ -338,9 +268,7 @@ describe('FinancialAnalysisPage', () => {
       });
 
       render(<FinancialAnalysisPage />);
-
-      // Should not crash and should not make API calls
-      expect(mockFetch).not.toHaveBeenCalled();
+      testMissingUserHandling(mockFetch);
     });
   });
 
@@ -355,19 +283,12 @@ describe('FinancialAnalysisPage', () => {
 
     it('should have proper semantic structure with main element', async () => {
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('main')).toBeInTheDocument();
-      });
+      await testSemanticStructure();
     });
 
     it('should maintain consistent styling classes', async () => {
       render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        const mainContainer = screen.getByRole('main');
-        expect(mainContainer).toHaveClass('flex-grow', 'overflow-auto');
-      });
+      await testStylingClasses();
     });
   });
 });

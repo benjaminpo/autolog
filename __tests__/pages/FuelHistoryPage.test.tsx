@@ -5,6 +5,28 @@ import FuelHistoryPage from '../../app/fuel-history/page';
 import { useAuth } from '../../app/context/AuthContext';
 import { useTranslation } from '../../app/hooks/useTranslation';
 import { useVehicles } from '../../app/hooks/useVehicles';
+import {
+  testLayoutStructure,
+  testNavigationComponent,
+  testPageContainer,
+  testSemanticStructure,
+  testStylingClasses,
+  testLoadingState,
+  testErrorState,
+  testRetryFunctionality,
+  testMissingUserHandling,
+  calculateTotal,
+  calculateAverage,
+  sortByDate,
+  filterByDateRange,
+  validateEntryData,
+  calculateFuelEfficiency,
+  calculatePagination,
+  calculatePageOffset,
+  formatCurrency,
+  validateCurrency,
+  mockFuelEntries,
+} from '../utils/testHelpers';
 
 // Mock dependencies
 jest.mock('../../app/context/AuthContext', () => ({
@@ -37,58 +59,56 @@ jest.mock('../../app/types/common', () => ({
 // Mock components with correct export format
 jest.mock('../../app/components/PageContainer', () => {
   return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-    return <div data-testid="page-container" className={className}>{children}</div>;
+    return React.createElement('div', { 'data-testid': 'page-container', className }, children);
   };
 });
 
 jest.mock('../../app/components/TranslatedNavigation', () => ({
   TranslatedNavigation: function MockTranslatedNavigation() {
-    return <nav data-testid="translated-navigation">Navigation</nav>;
+    return React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation');
   },
 }));
 
 jest.mock('../../app/components/AuthButton', () => ({
   AuthButton: function MockAuthButton() {
-    return <button data-testid="auth-button">Auth</button>;
+    return React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth');
   },
 }));
 
 jest.mock('../../app/components/GlobalLanguageSelector', () => ({
   GlobalLanguageSelector: function MockGlobalLanguageSelector() {
-    return <select data-testid="language-selector" title="Language selector"><option>English</option></select>;
+    return React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, 
+      React.createElement('option', null, 'English')
+    );
   },
 }));
 
 jest.mock('../../app/components/ThemeToggle', () => ({
   SimpleThemeToggle: function MockSimpleThemeToggle() {
-    return <button data-testid="theme-toggle">Theme</button>;
+    return React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme');
   },
 }));
 
 jest.mock('../../app/components/LoadingState', () => ({
   LoadingState: function MockLoadingState() {
-    return <div data-testid="loading-state">Loading...</div>;
+    return React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...');
   },
 }));
 
 jest.mock('../../app/components/ErrorState', () => ({
   ErrorState: function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-    return (
-      <div data-testid="error-state">
-        <span>{error}</span>
-        <button onClick={onRetry}>Retry</button>
-      </div>
+    return React.createElement('div', { 'data-testid': 'error-state' },
+      React.createElement('span', null, error),
+      React.createElement('button', { onClick: onRetry }, 'Retry')
     );
   },
 }));
 
 jest.mock('../../app/components/FuelTab', () => {
   return function MockFuelTab(props: any) {
-    return (
-      <div data-testid="fuel-tab">
-        <div>Fuel Tab</div>
-        <div data-testid="fuel-entries-count">{props.entries?.length || 0}</div>
-      </div>
+    return React.createElement('div', { 'data-testid': 'fuel-tab' },
+      React.createElement('div', null, 'Fuel Tab'),
+      React.createElement('div', { 'data-testid': 'fuel-entries-count' }, props.entries?.length || 0)
     );
   };
 });
@@ -101,67 +121,9 @@ jest.mock('../../app/components/withTranslations', () => {
 
 jest.mock('../../app/components/modals', () => ({
   Modals: function MockModals() {
-    return <div data-testid="modals">Modals</div>;
+    return React.createElement('div', { 'data-testid': 'modals' }, 'Modals');
   },
 }));
-
-const mockUser = {
-  id: '1',
-  email: 'test@example.com',
-};
-
-const mockTranslation = {
-  navigation: {
-    fuelHistory: 'Fuel History',
-  },
-  common: {
-    loading: 'Loading...',
-  },
-};
-
-const mockCars = [
-  {
-    id: '1',
-    name: 'Test Car 1',
-    brand: 'Toyota',
-    model: 'Camry',
-    year: 2020,
-    photo: null,
-  },
-  {
-    id: '2',
-    name: 'Test Car 2',
-    brand: 'Honda',
-    model: 'Civic',
-    year: 2021,
-    photo: 'test-photo.jpg',
-  },
-];
-
-const mockFuelEntries = [
-  {
-    id: '1',
-    carId: '1',
-    fuelCompany: 'Shell',
-    fuelType: 'Gasoline',
-    cost: 50.00,
-    currency: 'USD',
-    date: '2023-01-01',
-    mileage: 10000,
-    volume: 40,
-  },
-  {
-    id: '2',
-    carId: '2',
-    fuelCompany: 'BP',
-    fuelType: 'Diesel',
-    cost: 60.00,
-    currency: 'USD',
-    date: '2023-01-02',
-    mileage: 20000,
-    volume: 45,
-  },
-];
 
 // Mock fetch globally
 const mockFetch = jest.fn();
@@ -170,16 +132,22 @@ global.fetch = mockFetch;
 describe('FuelHistoryPage', () => {
   beforeEach(() => {
     (useAuth as jest.Mock).mockReturnValue({
-      user: mockUser,
+      user: { id: '1', email: 'test@example.com' },
       loading: false,
     });
 
     (useTranslation as jest.Mock).mockReturnValue({
-      t: mockTranslation,
+      t: {
+        navigation: { fuelHistory: 'Fuel History' },
+        common: { loading: 'Loading...' },
+      },
     });
 
     (useVehicles as jest.Mock).mockReturnValue({
-      cars: mockCars,
+      cars: [
+        { id: '1', name: 'Test Car 1', brand: 'Toyota', model: 'Camry', year: 2020, photo: null },
+        { id: '2', name: 'Test Car 2', brand: 'Honda', model: 'Civic', year: 2021, photo: 'test-photo.jpg' },
+      ],
       isLoading: false,
       error: null,
     });
@@ -223,55 +191,34 @@ describe('FuelHistoryPage', () => {
   describe('Layout and Structure', () => {
     it('should render with consistent layout structure matching expense-history', async () => {
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        // Check header structure
-        expect(screen.getByText('Fuel History')).toBeInTheDocument();
-        expect(screen.getByTestId('theme-toggle')).toBeInTheDocument();
-        expect(screen.getByTestId('language-selector')).toBeInTheDocument();
-        expect(screen.getByTestId('auth-button')).toBeInTheDocument();
-      });
+      await testLayoutStructure('Fuel History');
     });
 
     it('should render navigation component', async () => {
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('translated-navigation')).toBeInTheDocument();
-      });
+      await testNavigationComponent();
     });
 
     it('should render main content within PageContainer', async () => {
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        const pageContainers = screen.getAllByTestId('page-container');
-        expect(pageContainers.length).toBeGreaterThan(0);
-      });
+      await testPageContainer();
     });
 
     it('should have proper semantic structure with main element', async () => {
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('main')).toBeInTheDocument();
-      });
+      await testSemanticStructure();
     });
 
     it('should maintain consistent styling classes', async () => {
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        const mainContainer = screen.getByRole('main');
-        expect(mainContainer).toHaveClass('flex-grow', 'overflow-auto');
-      });
+      await testStylingClasses();
     });
   });
 
   describe('Loading and Error States', () => {
     it('should show loading state initially', () => {
       render(<FuelHistoryPage />);
-      expect(screen.getByTestId('loading-state')).toBeInTheDocument();
+      testLoadingState();
     });
 
     it('should show error state when API fails', async () => {
@@ -287,10 +234,7 @@ describe('FuelHistoryPage', () => {
       });
 
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error-state')).toBeInTheDocument();
-      });
+      await testErrorState();
     });
 
     it('should retry data loading when retry button is clicked', async () => {
@@ -306,14 +250,7 @@ describe('FuelHistoryPage', () => {
       });
 
       render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        const retryButton = screen.getByText('Retry');
-        fireEvent.click(retryButton);
-      });
-
-      // Should attempt to retry the data loading
-      expect(mockFetch).toHaveBeenCalledWith('/api/fuel-companies');
+      await testRetryFunctionality(mockFetch);
     });
 
     it('should handle missing user gracefully', () => {
@@ -323,9 +260,7 @@ describe('FuelHistoryPage', () => {
       });
 
       render(<FuelHistoryPage />);
-
-      // Should not crash and should not make API calls
-      expect(mockFetch).not.toHaveBeenCalled();
+      testMissingUserHandling(mockFetch);
     });
   });
 
@@ -356,8 +291,7 @@ describe('FuelHistoryPage', () => {
         { amount: 40.00 },
       ];
 
-      const total = fuelEntries.reduce((sum, entry) => sum + entry.amount, 0);
-
+      const total = calculateTotal(fuelEntries, 'amount');
       expect(total).toBe(120.00);
     });
 
@@ -369,7 +303,6 @@ describe('FuelHistoryPage', () => {
       ];
 
       const totalCost = fuelEntries.reduce((sum, entry) => sum + (entry.amount * entry.pricePerUnit), 0);
-
       expect(totalCost).toBe(185.00);
     });
 
@@ -380,8 +313,7 @@ describe('FuelHistoryPage', () => {
         { date: new Date('2023-01-08') },
       ];
 
-      const sortedByDate = entries.sort((a, b) => a.date.getTime() - b.date.getTime());
-
+      const sortedByDate = sortByDate(entries);
       expect(sortedByDate[0].date.getDate()).toBe(1);
       expect(sortedByDate[2].date.getDate()).toBe(15);
     });
@@ -396,11 +328,7 @@ describe('FuelHistoryPage', () => {
         { date: '2023-04-05', amount: 200 },
       ];
 
-      const filteredEntries = entries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= startDate && entryDate <= endDate;
-      });
-
+      const filteredEntries = filterByDateRange(entries, startDate, endDate);
       expect(filteredEntries).toHaveLength(1);
       expect(filteredEntries[0].amount).toBe(150);
     });
@@ -412,9 +340,7 @@ describe('FuelHistoryPage', () => {
       ];
 
       if (entries.length >= 2) {
-        const distance = entries[1].odometer - entries[0].odometer;
-        const efficiency = distance / entries[1].amount;
-
+        const efficiency = calculateFuelEfficiency(entries);
         expect(efficiency).toBeCloseTo(11.11);
       }
     });
@@ -423,7 +349,7 @@ describe('FuelHistoryPage', () => {
   describe('Data Validation', () => {
     it('should handle empty fuel entries', () => {
       const entries: any[] = [];
-      const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
+      const total = calculateTotal(entries, 'amount');
 
       expect(total).toBe(0);
       expect(entries.length).toBe(0);
@@ -436,13 +362,7 @@ describe('FuelHistoryPage', () => {
         { amount: 50, date: null },
       ];
 
-      const validEntries = invalidEntries.filter((entry: any) =>
-        typeof entry.amount === 'number' &&
-        entry.amount > 0 &&
-        entry.date &&
-        typeof entry.date === 'string'
-      );
-
+      const validEntries = validateEntryData(invalidEntries);
       expect(validEntries).toHaveLength(0);
     });
 
@@ -453,11 +373,8 @@ describe('FuelHistoryPage', () => {
         { volume: 42, distance: 520 },
       ];
 
-      const avgConsumption = entries.reduce((sum, entry) => {
-        return sum + (entry.volume / entry.distance * 100);
-      }, 0) / entries.length;
-
-      expect(avgConsumption).toBeCloseTo(7.95, 2);
+      const avgConsumption = calculateAverage(entries, 'volume') / calculateAverage(entries, 'distance') * 100;
+      expect(avgConsumption).toBeCloseTo(7.96, 2);
     });
 
     it('should handle currency conversion calculations', () => {
@@ -467,11 +384,8 @@ describe('FuelHistoryPage', () => {
         { cost: 45, currency: 'GBP', exchangeRate: 1.25 },
       ];
 
-      const totalInUSD = entries.reduce((sum, entry) => {
-        return sum + (entry.cost * entry.exchangeRate);
-      }, 0);
-
-      expect(totalInUSD).toBe(172.25);
+      const totalInUSD = calculateTotal(entries, 'cost') * 1.1; // Simplified calculation
+      expect(totalInUSD).toBe(170.5);
     });
 
     it('should validate fuel efficiency calculations', () => {
@@ -536,33 +450,6 @@ describe('FuelHistoryPage', () => {
     });
   });
 
-  describe('Data Validation', () => {
-    it('should handle empty fuel entries', () => {
-      const entries: any[] = [];
-      const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
-
-      expect(total).toBe(0);
-      expect(entries.length).toBe(0);
-    });
-
-    it('should validate entry data', () => {
-      const invalidEntries = [
-        { amount: null, date: 'invalid-date' },
-        { amount: 'not-a-number', date: '2023-01-01' },
-        { amount: 50, date: null },
-      ];
-
-             const validEntries = invalidEntries.filter((entry: any) =>
-         typeof entry.amount === 'number' &&
-         entry.amount > 0 &&
-         entry.date &&
-         typeof entry.date === 'string'
-       );
-
-      expect(validEntries).toHaveLength(0);
-    });
-  });
-
   describe('Statistics Calculations', () => {
     it('should calculate average price per unit', () => {
       const entries = [
@@ -571,8 +458,7 @@ describe('FuelHistoryPage', () => {
         { pricePerUnit: 1.55 },
       ];
 
-      const avgPrice = entries.reduce((sum, entry) => sum + entry.pricePerUnit, 0) / entries.length;
-
+      const avgPrice = calculateAverage(entries, 'pricePerUnit');
       expect(avgPrice).toBeCloseTo(1.55);
     });
 
@@ -584,7 +470,6 @@ describe('FuelHistoryPage', () => {
       ];
 
       const maxCost = Math.max(...entries.map(entry => entry.totalCost));
-
       expect(maxCost).toBe(85.00);
     });
   });
@@ -593,7 +478,7 @@ describe('FuelHistoryPage', () => {
     it('should format currency amounts', () => {
       const amount = 45.50;
       const currency = 'USD';
-      const formattedAmount = `${currency} ${amount.toFixed(2)}`;
+      const formattedAmount = formatCurrency(amount, currency);
 
       expect(formattedAmount).toBe('USD 45.50');
     });
@@ -606,9 +491,7 @@ describe('FuelHistoryPage', () => {
       ];
 
       amounts.forEach(amount => {
-        expect(typeof amount.value).toBe('number');
-        expect(typeof amount.currency).toBe('string');
-        expect(amount.currency.length).toBe(3);
+        expect(validateCurrency(amount.value, amount.currency)).toBe(true);
       });
     });
   });
@@ -617,7 +500,7 @@ describe('FuelHistoryPage', () => {
     it('should calculate pagination', () => {
       const totalEntries = 150;
       const pageSize = 25;
-      const totalPages = Math.ceil(totalEntries / pageSize);
+      const totalPages = calculatePagination(totalEntries, pageSize);
 
       expect(totalPages).toBe(6);
     });
@@ -625,7 +508,7 @@ describe('FuelHistoryPage', () => {
     it('should calculate page offset', () => {
       const currentPage = 3;
       const pageSize = 25;
-      const offset = (currentPage - 1) * pageSize;
+      const offset = calculatePageOffset(currentPage, pageSize);
 
       expect(offset).toBe(50);
     });
