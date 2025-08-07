@@ -190,4 +190,40 @@ export const validateCurrency = (amount: any, currency: any) => {
   return typeof amount === 'number' && 
          typeof currency === 'string' && 
          currency.length === 3;
+};
+
+// Shared mock setup patterns
+export const createMockComponent = (testId: string, content: string = '') => {
+  return function MockComponent(props: any) {
+    return React.createElement('div', { 'data-testid': testId }, content);
+  };
+};
+
+export const createMockButton = (testId: string, content: string = '') => {
+  return function MockButton(props: any) {
+    return React.createElement('button', { 'data-testid': testId }, content);
+  };
+};
+
+export const createMockSelect = (testId: string, options: string[] = ['English']) => {
+  return function MockSelect(props: any) {
+    return React.createElement('select', { 'data-testid': testId, title: 'Language selector' }, 
+      options.map(option => React.createElement('option', { key: option }, option))
+    );
+  };
+};
+
+export const createMockErrorState = () => {
+  return function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
+    return React.createElement('div', { 'data-testid': 'error-state' },
+      React.createElement('span', null, error),
+      React.createElement('button', { onClick: onRetry }, 'Retry')
+    );
+  };
+};
+
+export const createMockImage = () => {
+  return function MockImage({ src, alt, ...props }: any) {
+    return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
+  };
 }; 

@@ -53,7 +53,7 @@ jest.mock('../../app/context/LanguageContext', () => ({
   })),
 }));
 
-// Mock components that might cause issues in testing
+// Mock components
 jest.mock('../../app/components/PageContainer', () => {
   return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     return React.createElement('div', { 'data-testid': 'page-container', className }, children);

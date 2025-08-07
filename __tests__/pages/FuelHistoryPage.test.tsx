@@ -56,7 +56,7 @@ jest.mock('../../app/types/common', () => ({
   FuelEntry: {},
 }));
 
-// Mock components with correct export format
+// Mock components
 jest.mock('../../app/components/PageContainer', () => {
   return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     return React.createElement('div', { 'data-testid': 'page-container', className }, children);
@@ -124,6 +124,13 @@ jest.mock('../../app/components/modals', () => ({
     return React.createElement('div', { 'data-testid': 'modals' }, 'Modals');
   },
 }));
+
+// Mock Next.js Image component
+jest.mock('next/image', () => {
+  return function MockImage({ src, alt, ...props }: any) {
+    return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
+  };
+});
 
 // Mock fetch globally
 const mockFetch = jest.fn();
