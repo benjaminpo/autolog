@@ -306,10 +306,10 @@ export const createMockTranslations = (overrides: any = {}) => {
 };
 
 // Mock language context creation
-export const createMockLanguageContext = (language: string = 'en', translations: any = null) => {
+export const createMockLanguageContext = (language: any = 'en', translations: any = null) => {
   const mockTranslations = translations || createMockTranslations();
   return {
-    language,
+    language: language as any,
     setLanguage: jest.fn(),
     saveLanguagePreference: jest.fn(),
     t: jest.fn((key: string) => {
@@ -385,4 +385,263 @@ describe('testHelpers', () => {
     expect(createMockDataTableFiltersReturn).toBeDefined();
     expect(createMockInfiniteScrollReturn).toBeDefined();
   });
-}); 
+});
+
+// Common mock setup functions to reduce duplication
+
+// Common Jest mock configurations
+export const createCommonComponentMocks = () => {
+  // PageContainer mock
+  jest.mock('../../app/components/PageContainer', () => {
+    return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+      return React.createElement('div', { 'data-testid': 'page-container', className }, children);
+    };
+  });
+
+  // TranslatedNavigation mock
+  jest.mock('../../app/components/TranslatedNavigation', () => ({
+    TranslatedNavigation: function MockTranslatedNavigation() {
+      return React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation');
+    },
+  }));
+
+  // AuthButton mock
+  jest.mock('../../app/components/AuthButton', () => ({
+    AuthButton: function MockAuthButton() {
+      return React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth');
+    },
+  }));
+
+  // GlobalLanguageSelector mock
+  jest.mock('../../app/components/GlobalLanguageSelector', () => ({
+    GlobalLanguageSelector: function MockGlobalLanguageSelector() {
+      return React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, 
+        React.createElement('option', null, 'English')
+      );
+    },
+  }));
+
+  // ThemeToggle mock
+  jest.mock('../../app/components/ThemeToggle', () => ({
+    SimpleThemeToggle: function MockSimpleThemeToggle() {
+      return React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme');
+    },
+  }));
+
+  // LoadingState mock
+  jest.mock('../../app/components/LoadingState', () => ({
+    LoadingState: function MockLoadingState() {
+      return React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...');
+    },
+  }));
+
+  // ErrorState mock
+  jest.mock('../../app/components/ErrorState', () => ({
+    ErrorState: function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
+      return React.createElement('div', { 'data-testid': 'error-state' },
+        React.createElement('span', null, error),
+        React.createElement('button', { onClick: onRetry }, 'Retry')
+      );
+    },
+  }));
+
+  // Next.js Image mock
+  jest.mock('next/image', () => {
+    return function MockImage({ src, alt, ...props }: any) {
+      return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
+    };
+  });
+};
+
+// Common hook mocks setup
+export const setupCommonHookMocks = () => {
+  jest.mock('../../app/context/AuthContext', () => ({
+    useAuth: jest.fn(),
+  }));
+
+  jest.mock('../../app/hooks/useTranslation', () => ({
+    useTranslation: jest.fn(),
+  }));
+
+  jest.mock('../../app/hooks/useVehicles', () => ({
+    useVehicles: jest.fn(),
+  }));
+
+  jest.mock('../../app/lib/idUtils', () => ({
+    getObjectId: jest.fn(() => 'mock-object-id'),
+  }));
+};
+
+// Common language context mock setup
+export const setupLanguageContextMock = (translations: any = null) => {
+  const mockTranslations = translations || createMockTranslations();
+  jest.mock('../../app/context/LanguageContext', () => ({
+    useLanguage: jest.fn(() => ({
+      language: 'en',
+      t: mockTranslations,
+      setLanguage: jest.fn(),
+      saveLanguagePreference: jest.fn(),
+    })),
+  }));
+  return mockTranslations;
+};
+
+// Standard mock returns for common hooks
+export const createStandardAuthMock = () => ({
+  user: mockUser,
+  loading: false,
+});
+
+export const createStandardVehiclesMock = () => ({
+  cars: mockCars,
+  isLoading: false,
+  error: null,
+});
+
+export const createStandardTranslationMock = () => ({
+  t: mockTranslation,
+});
+
+// Standard beforeEach setup for page tests
+export const setupStandardPageTest = (mockFetch: jest.Mock, additionalMockFetchSetup?: (mockFetch: jest.Mock) => void) => {
+  return () => {
+    const { useAuth } = require('../../app/context/AuthContext');
+    const { useTranslation } = require('../../app/hooks/useTranslation');
+    const { useVehicles } = require('../../app/hooks/useVehicles');
+
+    (useAuth as jest.Mock).mockReturnValue(createStandardAuthMock());
+    (useTranslation as jest.Mock).mockReturnValue(createStandardTranslationMock());
+    (useVehicles as jest.Mock).mockReturnValue(createStandardVehiclesMock());
+
+    // Default fetch mock setup
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        success: true,
+        vehicles: mockCars,
+        entries: mockFuelEntries,
+      }),
+    });
+
+    // Allow additional custom mock fetch setup
+    if (additionalMockFetchSetup) {
+      additionalMockFetchSetup(mockFetch);
+    }
+
+    jest.clearAllMocks();
+  };
+};
+
+// Standard layout test suite
+export const createStandardLayoutTests = (PageComponent: React.ComponentType, pageTitle: string) => {
+  return () => {
+    it('should render with consistent layout structure', async () => {
+      render(React.createElement(PageComponent));
+      await testLayoutStructure(pageTitle);
+    });
+
+    it('should render navigation component', async () => {
+      render(React.createElement(PageComponent));
+      await testNavigationComponent();
+    });
+
+    it('should render main content within PageContainer', async () => {
+      render(React.createElement(PageComponent));
+      await testPageContainer();
+    });
+
+    it('should have proper semantic structure with main element', async () => {
+      render(React.createElement(PageComponent));
+      await testSemanticStructure();
+    });
+
+    it('should maintain consistent styling classes', async () => {
+      render(React.createElement(PageComponent));
+      await testStylingClasses();
+    });
+  };
+};
+
+// Standard loading/error test suite
+export const createStandardDataLoadingTests = (PageComponent: React.ComponentType, mockFetch: jest.Mock) => {
+  return () => {
+    it('should show loading state initially', () => {
+      const { useVehicles } = require('../../app/hooks/useVehicles');
+      (useVehicles as jest.Mock).mockReturnValue({
+        cars: [],
+        isLoading: true,
+        error: null,
+      });
+
+      render(React.createElement(PageComponent));
+      testLoadingState();
+    });
+
+    it('should show error state when there is an error', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      render(React.createElement(PageComponent));
+      await testErrorState();
+    });
+
+    it('should retry data loading when retry button is clicked', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      render(React.createElement(PageComponent));
+      await testRetryFunctionality(mockFetch);
+    });
+
+    it('should handle missing user gracefully', () => {
+      const { useAuth } = require('../../app/context/AuthContext');
+      (useAuth as jest.Mock).mockReturnValue({
+        user: null,
+        loading: false,
+      });
+
+      render(React.createElement(PageComponent));
+      testMissingUserHandling(mockFetch);
+    });
+  };
+};
+
+// Helper for ExpenseTab-like component mock setups
+export const setupTabComponentMocks = (
+  mockUseLanguage: any,
+  mockUseDataTableFilters: any,
+  mockUseInfiniteScroll: any,
+  translations?: any,
+  filteredData: any[] = [],
+  visibleItems: any[] = []
+) => {
+  const mockTranslations = translations || createMockTranslations();
+  const mockFilterHookReturn = createMockDataTableFiltersReturn({
+    filteredData,
+    totalCount: filteredData.length,
+    resultCount: filteredData.length,
+  });
+  const mockScrollHookReturn = createMockInfiniteScrollReturn({
+    visibleItems,
+    canLoadMore: false,
+  });
+
+  mockUseLanguage.mockReturnValue(createMockLanguageContext('en', mockTranslations));
+  mockUseDataTableFilters.mockReturnValue(mockFilterHookReturn);
+  mockUseInfiniteScroll.mockReturnValue(mockScrollHookReturn);
+
+  return { mockFilterHookReturn, mockScrollHookReturn, mockTranslations };
+};
+
+// Helper to create custom mock setups for specific test scenarios
+export const createCustomMockSetup = (overrides: {
+  filterHookOverrides?: any;
+  scrollHookOverrides?: any;
+  languageOverrides?: any;
+}) => {
+  const baseFilterReturn = createMockDataTableFiltersReturn();
+  const baseScrollReturn = createMockInfiniteScrollReturn();
+  const baseLanguageContext = createMockLanguageContext();
+
+  return {
+    filterHookReturn: { ...baseFilterReturn, ...overrides.filterHookOverrides },
+    scrollHookReturn: { ...baseScrollReturn, ...overrides.scrollHookOverrides },
+    languageContext: { ...baseLanguageContext, ...overrides.languageOverrides },
+  };
+}; 

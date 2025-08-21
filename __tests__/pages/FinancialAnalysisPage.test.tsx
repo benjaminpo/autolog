@@ -1,23 +1,18 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import FinancialAnalysisPage from '../../app/financial-analysis/page';
 import { useAuth } from '../../app/context/AuthContext';
 import { useTranslation } from '../../app/hooks/useTranslation';
 import { useVehicles } from '../../app/hooks/useVehicles';
 import {
-  testLayoutStructure,
-  testNavigationComponent,
-  testPageContainer,
-  testSemanticStructure,
-  testStylingClasses,
-  testLoadingState,
-  testErrorState,
-  testRetryFunctionality,
-  testMissingUserHandling,
   mockUser,
   mockTranslation,
   mockCars,
+  setupStandardPageTest,
+  createStandardLayoutTests,
+  createStandardDataLoadingTests,
+  setupLanguageContextMock,
 } from '../utils/testHelpers';
 
 // Mock dependencies
@@ -44,16 +39,10 @@ jest.mock('../../app/lib/vehicleData', () => ({
   volumeUnits: ['liters', 'gallons'],
 }));
 
-jest.mock('../../app/context/LanguageContext', () => ({
-  useLanguage: jest.fn(() => ({
-    language: 'en',
-    t: mockTranslation,
-    setLanguage: jest.fn(),
-    saveLanguagePreference: jest.fn(),
-  })),
-}));
+// Setup language context mock
+setupLanguageContextMock();
 
-// Mock components
+// Mock components using shared utilities
 jest.mock('../../app/components/PageContainer', () => {
   return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     return React.createElement('div', { 'data-testid': 'page-container', className }, children);
@@ -113,23 +102,8 @@ const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
 describe('FinancialAnalysisPage', () => {
-  beforeEach(() => {
-    (useAuth as jest.Mock).mockReturnValue({
-      user: mockUser,
-      loading: false,
-    });
-
-    (useTranslation as jest.Mock).mockReturnValue({
-      t: mockTranslation,
-    });
-
-    (useVehicles as jest.Mock).mockReturnValue({
-      cars: mockCars,
-      isLoading: false,
-      error: null,
-    });
-
-    // Mock successful fetch responses
+  beforeEach(setupStandardPageTest(mockFetch, (mockFetch) => {
+    // Custom fetch setup for financial analysis
     mockFetch.mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({
@@ -155,50 +129,9 @@ describe('FinancialAnalysisPage', () => {
         ],
       }),
     });
+  }));
 
-    jest.clearAllMocks();
-  });
-
-  describe('Layout and Structure', () => {
-    it('should render with consistent layout structure', async () => {
-      render(<FinancialAnalysisPage />);
-      await testLayoutStructure('Financial Analysis');
-    });
-
-    it('should render navigation component', async () => {
-      render(<FinancialAnalysisPage />);
-      await testNavigationComponent();
-    });
-
-    it('should render main content within PageContainer', async () => {
-      render(<FinancialAnalysisPage />);
-      await testPageContainer();
-    });
-
-    it('should show loading state initially', () => {
-      (useVehicles as jest.Mock).mockReturnValue({
-        cars: [],
-        isLoading: true,
-        error: null,
-      });
-
-      render(<FinancialAnalysisPage />);
-      testLoadingState();
-    });
-
-    it('should show error state when there is an error', async () => {
-      (useVehicles as jest.Mock).mockReturnValue({
-        cars: [],
-        isLoading: false,
-        error: null,
-      });
-
-      mockFetch.mockRejectedValueOnce(new Error('Failed to fetch'));
-
-      render(<FinancialAnalysisPage />);
-      await testErrorState();
-    });
-  });
+  describe('Layout and Structure', createStandardLayoutTests(FinancialAnalysisPage, 'Financial Analysis'));
 
   describe('Content Display', () => {
     it('should display no vehicles message when no cars are available', async () => {
@@ -246,31 +179,7 @@ describe('FinancialAnalysisPage', () => {
     });
   });
 
-  describe('Data Loading and Error Handling', () => {
-    it('should handle fetch errors gracefully', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-      render(<FinancialAnalysisPage />);
-      await testErrorState();
-    });
-
-    it('should retry data loading when retry button is clicked', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
-
-      render(<FinancialAnalysisPage />);
-      await testRetryFunctionality(mockFetch);
-    });
-
-    it('should handle missing user gracefully', () => {
-      (useAuth as jest.Mock).mockReturnValue({
-        user: null,
-        loading: false,
-      });
-
-      render(<FinancialAnalysisPage />);
-      testMissingUserHandling(mockFetch);
-    });
-  });
+  describe('Data Loading and Error Handling', createStandardDataLoadingTests(FinancialAnalysisPage, mockFetch));
 
   describe('Accessibility and Responsive Design', () => {
     it('should have proper heading structure', async () => {
@@ -279,16 +188,6 @@ describe('FinancialAnalysisPage', () => {
       await waitFor(() => {
         expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
       });
-    });
-
-    it('should have proper semantic structure with main element', async () => {
-      render(<FinancialAnalysisPage />);
-      await testSemanticStructure();
-    });
-
-    it('should maintain consistent styling classes', async () => {
-      render(<FinancialAnalysisPage />);
-      await testStylingClasses();
     });
   });
 });

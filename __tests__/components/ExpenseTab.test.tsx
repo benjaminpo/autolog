@@ -9,7 +9,9 @@ import {
   createMockTranslations, 
   createMockDataTableFiltersReturn, 
   createMockInfiniteScrollReturn,
-  createMockLanguageContext
+  createMockLanguageContext,
+  setupTabComponentMocks,
+  createCustomMockSetup,
 } from '../utils/testHelpers';
 
 // Mock hooks
@@ -154,10 +156,15 @@ describe('ExpenseTab', () => {
     // Reset all mocks
     jest.clearAllMocks();
     
-    // Setup default mock returns
-    mockUseLanguage.mockReturnValue(createMockLanguageContext('en', mockTranslations));
-    mockUseDataTableFilters.mockReturnValue(mockFilterHookReturn);
-    mockUseInfiniteScroll.mockReturnValue(mockScrollHookReturn);
+    // Setup default mock returns using helper
+    setupTabComponentMocks(
+      mockUseLanguage,
+      mockUseDataTableFilters,
+      mockUseInfiniteScroll,
+      mockTranslations,
+      mockExpenses,
+      mockExpenses
+    );
 
     // Mock console.log to avoid test noise
     jest.spyOn(console, 'log').mockImplementation(() => {});

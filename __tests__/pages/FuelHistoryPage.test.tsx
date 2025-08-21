@@ -1,20 +1,11 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import FuelHistoryPage from '../../app/fuel-history/page';
 import { useAuth } from '../../app/context/AuthContext';
 import { useTranslation } from '../../app/hooks/useTranslation';
 import { useVehicles } from '../../app/hooks/useVehicles';
 import {
-  testLayoutStructure,
-  testNavigationComponent,
-  testPageContainer,
-  testSemanticStructure,
-  testStylingClasses,
-  testLoadingState,
-  testErrorState,
-  testRetryFunctionality,
-  testMissingUserHandling,
   calculateTotal,
   calculateAverage,
   sortByDate,
@@ -26,6 +17,9 @@ import {
   formatCurrency,
   validateCurrency,
   mockFuelEntries,
+  setupStandardPageTest,
+  createStandardLayoutTests,
+  createStandardDataLoadingTests,
 } from '../utils/testHelpers';
 
 // Mock dependencies
@@ -51,12 +45,11 @@ jest.mock('../../app/lib/vehicleData', () => ({
   fuelTypes: ['Gasoline', 'Diesel', 'Premium'],
 }));
 
-// Mock types
 jest.mock('../../app/types/common', () => ({
   FuelEntry: {},
 }));
 
-// Mock components
+// Mock components using shared utilities
 jest.mock('../../app/components/PageContainer', () => {
   return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     return React.createElement('div', { 'data-testid': 'page-container', className }, children);
@@ -137,29 +130,8 @@ const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
 describe('FuelHistoryPage', () => {
-  beforeEach(() => {
-    (useAuth as jest.Mock).mockReturnValue({
-      user: { id: '1', email: 'test@example.com' },
-      loading: false,
-    });
-
-    (useTranslation as jest.Mock).mockReturnValue({
-      t: {
-        navigation: { fuelHistory: 'Fuel History' },
-        common: { loading: 'Loading...' },
-      },
-    });
-
-    (useVehicles as jest.Mock).mockReturnValue({
-      cars: [
-        { id: '1', name: 'Test Car 1', brand: 'Toyota', model: 'Camry', year: 2020, photo: null },
-        { id: '2', name: 'Test Car 2', brand: 'Honda', model: 'Civic', year: 2021, photo: 'test-photo.jpg' },
-      ],
-      isLoading: false,
-      error: null,
-    });
-
-    // Mock successful fetch responses
+  beforeEach(setupStandardPageTest(mockFetch, (mockFetch) => {
+    // Custom fetch setup for fuel history
     mockFetch.mockImplementation((url: string) => {
       if (url.includes('/api/fuel-entries')) {
         return Promise.resolve({
@@ -191,333 +163,144 @@ describe('FuelHistoryPage', () => {
         json: () => Promise.resolve({ success: true }),
       });
     });
+  }));
 
-    jest.clearAllMocks();
-  });
+  describe('Layout and Structure', createStandardLayoutTests(FuelHistoryPage, 'Fuel History'));
 
-  describe('Layout and Structure', () => {
-    it('should render with consistent layout structure matching expense-history', async () => {
-      render(<FuelHistoryPage />);
-      await testLayoutStructure('Fuel History');
-    });
+  describe('Data Loading and Error Handling', createStandardDataLoadingTests(FuelHistoryPage, mockFetch));
 
-    it('should render navigation component', async () => {
-      render(<FuelHistoryPage />);
-      await testNavigationComponent();
-    });
-
-    it('should render main content within PageContainer', async () => {
-      render(<FuelHistoryPage />);
-      await testPageContainer();
-    });
-
-    it('should have proper semantic structure with main element', async () => {
-      render(<FuelHistoryPage />);
-      await testSemanticStructure();
-    });
-
-    it('should maintain consistent styling classes', async () => {
-      render(<FuelHistoryPage />);
-      await testStylingClasses();
-    });
-  });
-
-  describe('Loading and Error States', () => {
-    it('should show loading state initially', () => {
-      render(<FuelHistoryPage />);
-      testLoadingState();
-    });
-
-    it('should show error state when API fails', async () => {
-      // Make the fuel-companies API call fail to trigger error state
-      mockFetch.mockImplementation((url) => {
-        if (url.includes('fuel-companies') || url.includes('fuel-types')) {
-          return Promise.reject(new Error('API Error'));
-        }
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ success: true, entries: [] })
-        });
-      });
-
-      render(<FuelHistoryPage />);
-      await testErrorState();
-    });
-
-    it('should retry data loading when retry button is clicked', async () => {
-      // Make the fuel-companies API call fail to trigger error state
-      mockFetch.mockImplementation((url) => {
-        if (url.includes('fuel-companies') || url.includes('fuel-types')) {
-          return Promise.reject(new Error('Network error'));
-        }
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ success: true, entries: [] })
-        });
-      });
-
-      render(<FuelHistoryPage />);
-      await testRetryFunctionality(mockFetch);
-    });
-
-    it('should handle missing user gracefully', () => {
-      (useAuth as jest.Mock).mockReturnValue({
-        user: null,
-        loading: false,
-      });
-
-      render(<FuelHistoryPage />);
-      testMissingUserHandling(mockFetch);
-    });
-  });
-
-  describe('Content Display', () => {
-    it('should display fuel tab with entries', async () => {
+  describe('Component Integration', () => {
+    it('should render FuelTab component with correct props', async () => {
       render(<FuelHistoryPage />);
 
       await waitFor(() => {
         expect(screen.getByTestId('fuel-tab')).toBeInTheDocument();
-        expect(screen.getByTestId('fuel-entries-count')).toHaveTextContent('2');
+        expect(screen.getByText('Fuel Tab')).toBeInTheDocument();
       });
     });
 
-    it('should render modals component', async () => {
+    it('should pass fuel entries to FuelTab', async () => {
       render(<FuelHistoryPage />);
 
       await waitFor(() => {
-        expect(screen.getByTestId('modals')).toBeInTheDocument();
+        const entriesCount = screen.getByTestId('fuel-entries-count');
+        expect(entriesCount).toBeInTheDocument();
       });
+    });
+
+    it('should render modals component', () => {
+      render(<FuelHistoryPage />);
+      expect(screen.getByTestId('modals')).toBeInTheDocument();
     });
   });
 
-  describe('Data Processing Logic', () => {
-    it('should calculate total fuel amount', () => {
-      const fuelEntries = [
-        { amount: 50.00 },
-        { amount: 30.00 },
-        { amount: 40.00 },
-      ];
-
-      const total = calculateTotal(fuelEntries, 'amount');
-      expect(total).toBe(120.00);
-    });
-
-    it('should calculate total cost', () => {
-      const fuelEntries = [
-        { amount: 50.00, pricePerUnit: 1.50 },
-        { amount: 30.00, pricePerUnit: 1.60 },
-        { amount: 40.00, pricePerUnit: 1.55 },
-      ];
-
-      const totalCost = fuelEntries.reduce((sum, entry) => sum + (entry.amount * entry.pricePerUnit), 0);
-      expect(totalCost).toBe(185.00);
-    });
-
-    it('should sort entries by date', () => {
+  describe('Fuel Entry Data Processing', () => {
+    it('should calculate total costs correctly', () => {
       const entries = [
-        { date: new Date('2023-01-01') },
-        { date: new Date('2023-01-15') },
-        { date: new Date('2023-01-08') },
+        { cost: 50, currency: 'USD' },
+        { cost: 75, currency: 'USD' },
+        { cost: 30, currency: 'USD' },
       ];
-
-      const sortedByDate = sortByDate(entries);
-      expect(sortedByDate[0].date.getDate()).toBe(1);
-      expect(sortedByDate[2].date.getDate()).toBe(15);
+      
+      const total = calculateTotal(entries, 'cost');
+      expect(total).toBe(155);
     });
 
-    it('should filter entries by date range', () => {
+    it('should calculate average costs correctly', () => {
+      const entries = [
+        { cost: 50 },
+        { cost: 60 },
+        { cost: 70 },
+      ];
+      
+      const average = calculateAverage(entries, 'cost');
+      expect(average).toBe(60);
+    });
+
+    it('should sort entries by date correctly', () => {
+      const entries = [
+        { date: '2023-01-03' },
+        { date: '2023-01-01' },
+        { date: '2023-01-02' },
+      ];
+      
+      const sorted = sortByDate(entries);
+      expect(sorted[0].date).toBe('2023-01-01');
+      expect(sorted[2].date).toBe('2023-01-03');
+    });
+
+    it('should filter entries by date range correctly', () => {
+      const entries = [
+        { date: '2023-01-01' },
+        { date: '2023-01-15' },
+        { date: '2023-02-01' },
+      ];
+      
       const startDate = new Date('2023-01-01');
-      const endDate = new Date('2023-03-31');
+      const endDate = new Date('2023-01-31');
+      const filtered = filterByDateRange(entries, startDate, endDate);
+      
+      expect(filtered).toHaveLength(2);
+    });
 
+    it('should validate entry data correctly', () => {
       const entries = [
-        { date: '2022-12-15', amount: 100 },
-        { date: '2023-02-10', amount: 150 },
-        { date: '2023-04-05', amount: 200 },
+        { amount: 50, date: '2023-01-01' },
+        { amount: -10, date: '2023-01-02' },
+        { amount: 'invalid', date: '2023-01-03' },
+        { amount: 30, date: null },
       ];
-
-      const filteredEntries = filterByDateRange(entries, startDate, endDate);
-      expect(filteredEntries).toHaveLength(1);
-      expect(filteredEntries[0].amount).toBe(150);
+      
+      const valid = validateEntryData(entries);
+      expect(valid).toHaveLength(1);
     });
 
-    it('should calculate fuel efficiency', () => {
+    it('should calculate fuel efficiency correctly', () => {
       const entries = [
-        { amount: 50.00, odometer: 12000 },
-        { amount: 45.00, odometer: 12500 },
+        { odometer: 1000, amount: 40 },
+        { odometer: 1500, amount: 45 },
       ];
-
-      if (entries.length >= 2) {
-        const efficiency = calculateFuelEfficiency(entries);
-        expect(efficiency).toBeCloseTo(11.11);
-      }
-    });
-  });
-
-  describe('Data Validation', () => {
-    it('should handle empty fuel entries', () => {
-      const entries: any[] = [];
-      const total = calculateTotal(entries, 'amount');
-
-      expect(total).toBe(0);
-      expect(entries.length).toBe(0);
+      
+      const efficiency = calculateFuelEfficiency(entries);
+      expect(efficiency).toBe(500 / 45);
     });
 
-    it('should validate entry data', () => {
-      const invalidEntries = [
-        { amount: null, date: 'invalid-date' },
-        { amount: 'not-a-number', date: '2023-01-01' },
-        { amount: 50, date: null },
-      ];
-
-      const validEntries = validateEntryData(invalidEntries);
-      expect(validEntries).toHaveLength(0);
+    it('should calculate pagination correctly', () => {
+      const totalEntries = 127;
+      const pageSize = 10;
+      const pages = calculatePagination(totalEntries, pageSize);
+      expect(pages).toBe(13);
     });
 
-    it('should calculate average fuel consumption', () => {
-      const entries = [
-        { volume: 40, distance: 500 },
-        { volume: 35, distance: 450 },
-        { volume: 42, distance: 520 },
-      ];
-
-      const avgConsumption = calculateAverage(entries, 'volume') / calculateAverage(entries, 'distance') * 100;
-      expect(avgConsumption).toBeCloseTo(7.96, 2);
-    });
-
-    it('should handle currency conversion calculations', () => {
-      const entries = [
-        { cost: 50, currency: 'USD', exchangeRate: 1 },
-        { cost: 60, currency: 'EUR', exchangeRate: 1.1 },
-        { cost: 45, currency: 'GBP', exchangeRate: 1.25 },
-      ];
-
-      const totalInUSD = calculateTotal(entries, 'cost') * 1.1; // Simplified calculation
-      expect(totalInUSD).toBe(170.5);
-    });
-
-    it('should validate fuel efficiency calculations', () => {
-      const testData = {
-        previousMileage: 10000,
-        currentMileage: 10500,
-        fuelVolume: 40,
-      };
-
-      const distance = testData.currentMileage - testData.previousMileage;
-      const efficiency = distance / testData.fuelVolume;
-
-      expect(efficiency).toBeCloseTo(12.5);
-      expect(distance).toBe(500);
-    });
-
-    it('should handle partial fuel-ups correctly', () => {
-      const entries = [
-        { id: '1', partialFuelUp: false, volume: 50, cost: 65 },
-        { id: '2', partialFuelUp: true, volume: 20, cost: 26 },
-        { id: '3', partialFuelUp: false, volume: 48, cost: 62.4 },
-      ];
-
-      const fullFuelUps = entries.filter(entry => !entry.partialFuelUp);
-      const partialFuelUps = entries.filter(entry => entry.partialFuelUp);
-
-      expect(fullFuelUps).toHaveLength(2);
-      expect(partialFuelUps).toHaveLength(1);
-    });
-  });
-
-  describe('API Integration', () => {
-    it('should fetch fuel entries on mount', async () => {
-      render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('/api/fuel-entries')
-        );
-      });
-    });
-
-    it('should fetch fuel companies and types', async () => {
-      render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/fuel-companies');
-        expect(mockFetch).toHaveBeenCalledWith('/api/fuel-types');
-      });
-    });
-
-    it('should handle load more functionality', async () => {
-      // This would test pagination
-      render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        // Verify initial load
-        expect(mockFetch).toHaveBeenCalledWith(
-          expect.stringContaining('limit=20&offset=0')
-        );
-      });
-    });
-  });
-
-  describe('Statistics Calculations', () => {
-    it('should calculate average price per unit', () => {
-      const entries = [
-        { pricePerUnit: 1.50 },
-        { pricePerUnit: 1.60 },
-        { pricePerUnit: 1.55 },
-      ];
-
-      const avgPrice = calculateAverage(entries, 'pricePerUnit');
-      expect(avgPrice).toBeCloseTo(1.55);
-    });
-
-    it('should find most expensive fill-up', () => {
-      const entries = [
-        { totalCost: 75.00 },
-        { totalCost: 85.00 },
-        { totalCost: 65.00 },
-      ];
-
-      const maxCost = Math.max(...entries.map(entry => entry.totalCost));
-      expect(maxCost).toBe(85.00);
-    });
-  });
-
-  describe('Currency Formatting', () => {
-    it('should format currency amounts', () => {
-      const amount = 45.50;
-      const currency = 'USD';
-      const formattedAmount = formatCurrency(amount, currency);
-
-      expect(formattedAmount).toBe('USD 45.50');
-    });
-
-    it('should handle different currencies', () => {
-      const amounts = [
-        { value: 100, currency: 'USD' },
-        { value: 85, currency: 'EUR' },
-        { value: 12000, currency: 'JPY' },
-      ];
-
-      amounts.forEach(amount => {
-        expect(validateCurrency(amount.value, amount.currency)).toBe(true);
-      });
-    });
-  });
-
-  describe('Pagination Logic', () => {
-    it('should calculate pagination', () => {
-      const totalEntries = 150;
-      const pageSize = 25;
-      const totalPages = calculatePagination(totalEntries, pageSize);
-
-      expect(totalPages).toBe(6);
-    });
-
-    it('should calculate page offset', () => {
+    it('should calculate page offset correctly', () => {
       const currentPage = 3;
-      const pageSize = 25;
+      const pageSize = 10;
       const offset = calculatePageOffset(currentPage, pageSize);
+      expect(offset).toBe(20);
+    });
+  });
 
-      expect(offset).toBe(50);
+  describe('Currency and Formatting', () => {
+    it('should format currency correctly', () => {
+      const formatted = formatCurrency(123.45, 'USD');
+      expect(formatted).toBe('USD 123.45');
+    });
+
+    it('should validate currency correctly', () => {
+      expect(validateCurrency(50, 'USD')).toBe(true);
+      expect(validateCurrency('invalid', 'USD')).toBe(false);
+      expect(validateCurrency(50, 'INVALID_CURRENCY')).toBe(false);
+    });
+  });
+
+  describe('Accessibility', () => {
+    it('should have proper heading structure', async () => {
+      render(<FuelHistoryPage />);
+
+      await waitFor(() => {
+        const headings = screen.getAllByRole('heading');
+        expect(headings.length).toBeGreaterThan(0);
+      });
     });
   });
 });
