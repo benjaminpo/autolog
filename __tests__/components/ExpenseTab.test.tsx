@@ -199,9 +199,9 @@ describe('ExpenseTab', () => {
       expect(screen.getByText('200 USD')).toBeInTheDocument();
       
       // Check categories
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
-      expect(screen.getByText('Fuel')).toBeInTheDocument();
-      expect(screen.getByText('Insurance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
+      expect(screen.getByText('fuel')).toBeInTheDocument();
+      expect(screen.getByText('insurance')).toBeInTheDocument();
     });
 
     it('should show car names for each expense', () => {
@@ -380,7 +380,7 @@ describe('ExpenseTab', () => {
       );
       
       // Should render visible items
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
     });
 
     it('should show loading indicator when loading', () => {
@@ -453,9 +453,9 @@ describe('ExpenseTab', () => {
     it('should translate expense categories', () => {
       render(<ExpenseTab {...defaultProps} />);
       
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
-      expect(screen.getByText('Fuel')).toBeInTheDocument();
-      expect(screen.getByText('Insurance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
+      expect(screen.getByText('fuel')).toBeInTheDocument();
+      expect(screen.getByText('insurance')).toBeInTheDocument();
     });
 
     it('should handle missing translations gracefully', () => {
@@ -535,7 +535,7 @@ describe('ExpenseTab', () => {
       );
       
       // Should render without crashing - check for category instead of notes
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
     });
 
     it('should log car data for debugging', () => {
@@ -573,7 +573,7 @@ describe('ExpenseTab', () => {
 
       render(<ExpenseTab {...minimalProps} />);
       
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
     });
 
     it('should handle expenses with missing data', () => {
