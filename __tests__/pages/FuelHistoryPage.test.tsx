@@ -10,112 +10,34 @@ import {
   mockFuelEntries,
   setupStandardPageTest,
   createStandardLayoutTests,
-  createStandardDataLoadingTests,
   createStandardDataProcessingTests,
   createStandardFormattingTests,
+  createStandardAccessibilityTests,
 } from '../utils/testHelpers';
 
-// Mock dependencies
-jest.mock('../../app/context/AuthContext', () => ({
-  useAuth: jest.fn(),
-}));
-
-jest.mock('../../app/hooks/useTranslation', () => ({
-  useTranslation: jest.fn(),
-}));
-
-jest.mock('../../app/hooks/useVehicles', () => ({
-  useVehicles: jest.fn(),
-}));
-
-// Mock utility functions and data
-jest.mock('../../app/lib/idUtils', () => ({
-  getObjectId: jest.fn(() => 'mock-object-id'),
-}));
-
-jest.mock('../../app/lib/vehicleData', () => ({
-  fuelCompanies: ['Shell', 'BP', 'ExxonMobil'],
-  fuelTypes: ['Gasoline', 'Diesel', 'Premium'],
-}));
+// Mock dependencies - consolidated
+jest.mock('../../app/context/AuthContext', () => ({ useAuth: jest.fn() }));
+jest.mock('../../app/hooks/useTranslation', () => ({ useTranslation: jest.fn() }));
+jest.mock('../../app/hooks/useVehicles', () => ({ useVehicles: jest.fn() }));
+jest.mock('../../app/lib/idUtils', () => ({ getObjectId: jest.fn(() => 'mock-object-id') }));
+jest.mock('../../app/lib/vehicleData', () => ({ fuelCompanies: ['Shell', 'BP', 'Exxon'], fuelTypes: ['Gasoline', 'Diesel', 'Electric'] }));
 
 jest.mock('../../app/types/common', () => ({
   FuelEntry: {},
 }));
 
-// Mock components using shared utilities
-jest.mock('../../app/components/PageContainer', () => {
-  return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-    return React.createElement('div', { 'data-testid': 'page-container', className }, children);
-  };
-});
-
-jest.mock('../../app/components/TranslatedNavigation', () => ({
-  TranslatedNavigation: function MockTranslatedNavigation() {
-    return React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation');
-  },
-}));
-
-jest.mock('../../app/components/AuthButton', () => ({
-  AuthButton: function MockAuthButton() {
-    return React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth');
-  },
-}));
-
-jest.mock('../../app/components/GlobalLanguageSelector', () => ({
-  GlobalLanguageSelector: function MockGlobalLanguageSelector() {
-    return React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, 
-      React.createElement('option', null, 'English')
-    );
-  },
-}));
-
-jest.mock('../../app/components/ThemeToggle', () => ({
-  SimpleThemeToggle: function MockSimpleThemeToggle() {
-    return React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme');
-  },
-}));
-
-jest.mock('../../app/components/LoadingState', () => ({
-  LoadingState: function MockLoadingState() {
-    return React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...');
-  },
-}));
-
-jest.mock('../../app/components/ErrorState', () => ({
-  ErrorState: function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-    return React.createElement('div', { 'data-testid': 'error-state' },
-      React.createElement('span', null, error),
-      React.createElement('button', { onClick: onRetry }, 'Retry')
-    );
-  },
-}));
-
-jest.mock('../../app/components/FuelTab', () => {
-  return function MockFuelTab(props: any) {
-    return React.createElement('div', { 'data-testid': 'fuel-tab' },
-      React.createElement('div', null, 'Fuel Tab'),
-      React.createElement('div', { 'data-testid': 'fuel-entries-count' }, props.entries?.length || 0)
-    );
-  };
-});
-
-jest.mock('../../app/components/withTranslations', () => {
-  return function withTranslations(Component: any) {
-    return Component;
-  };
-});
-
-jest.mock('../../app/components/modals', () => ({
-  Modals: function MockModals() {
-    return React.createElement('div', { 'data-testid': 'modals' }, 'Modals');
-  },
-}));
-
-jest.mock('next/image', () => {
-  return function MockImage({ src, alt, ...props }: any) {
-    return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
-  };
-});
+// Mock components - compact inline definitions
+jest.mock('../../app/components/PageContainer', () => ({ children, className = '' }: any) => React.createElement('div', { 'data-testid': 'page-container', className }, children));
+jest.mock('../../app/components/TranslatedNavigation', () => ({ TranslatedNavigation: () => React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation') }));
+jest.mock('../../app/components/AuthButton', () => ({ AuthButton: () => React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth') }));
+jest.mock('../../app/components/GlobalLanguageSelector', () => ({ GlobalLanguageSelector: () => React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, React.createElement('option', null, 'English')) }));
+jest.mock('../../app/components/ThemeToggle', () => ({ SimpleThemeToggle: () => React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme') }));
+jest.mock('../../app/components/LoadingState', () => ({ LoadingState: () => React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...') }));
+jest.mock('../../app/components/ErrorState', () => ({ ErrorState: ({ error, onRetry }: any) => React.createElement('div', { 'data-testid': 'error-state' }, React.createElement('span', null, error), React.createElement('button', { onClick: onRetry }, 'Retry')) }));
+jest.mock('../../app/components/FuelTab', () => (props: any) => React.createElement('div', { 'data-testid': 'fuel-tab' }, React.createElement('div', null, 'Fuel Tab'), React.createElement('div', { 'data-testid': 'fuel-entries-count' }, props.entries?.length || 0)));
+jest.mock('../../app/components/withTranslations', () => (Component: any) => Component);
+jest.mock('../../app/components/modals', () => ({ Modals: () => React.createElement('div', { 'data-testid': 'modals' }, 'Modals') }));
+jest.mock('next/image', () => ({ src, alt, ...props }: any) => React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' }));
 
 // Mock fetch globally
 const mockFetch = jest.fn();
@@ -296,14 +218,5 @@ describe('FuelHistoryPage', () => {
 
   describe('Currency and Formatting', createStandardFormattingTests());
 
-  describe('Accessibility', () => {
-    it('should have proper heading structure', async () => {
-      render(<FuelHistoryPage />);
-
-      await waitFor(() => {
-        const headings = screen.getAllByRole('heading');
-        expect(headings.length).toBeGreaterThan(0);
-      });
-    });
-  });
+  describe('Accessibility', createStandardAccessibilityTests(FuelHistoryPage));
 });

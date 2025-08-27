@@ -768,4 +768,22 @@ export const createComponentRenderer = (Component: React.ComponentType<any>, def
     const props = { ...defaultProps, ...overrideProps };
     return render(React.createElement(Component, props));
   };
+};
+
+// Helper to create a comprehensive page test setup that reduces duplication
+export const createPageTestSetup = (customFetchSetup?: (mockFetch: jest.Mock) => void) => {
+  return setupStandardPageTest(jest.fn(), customFetchSetup);
+};
+
+// Helper to reduce duplication in accessibility tests
+export const createStandardAccessibilityTests = (PageComponent: React.ComponentType) => {
+  return () => {
+    it('should have proper heading structure', async () => {
+      render(React.createElement(PageComponent));
+
+      await waitFor(() => {
+        expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+      });
+    });
+  };
 }; 
