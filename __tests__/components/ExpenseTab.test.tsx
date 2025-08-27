@@ -152,6 +152,11 @@ const mockScrollHookReturn = createMockInfiniteScrollReturn({
 });
 
 describe('ExpenseTab', () => {
+  // Helper to reduce render call duplication
+  const renderExpenseTab = (props = {}) => {
+    return render(<ExpenseTab {...defaultProps} {...props} />);
+  };
+
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
@@ -176,7 +181,7 @@ describe('ExpenseTab', () => {
 
   describe('Basic rendering', () => {
     it('should render data table controls', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
       expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -184,7 +189,7 @@ describe('ExpenseTab', () => {
     });
 
     it('should render expense table with headers', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       expect(screen.getByTestId('header-carId')).toBeInTheDocument();
       expect(screen.getByTestId('header-date')).toBeInTheDocument();
@@ -198,7 +203,7 @@ describe('ExpenseTab', () => {
     });
 
     it('should render expense entries in table', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       // Check amounts as they appear in the component (number + currency)
       expect(screen.getByText('100 USD')).toBeInTheDocument();
@@ -212,7 +217,7 @@ describe('ExpenseTab', () => {
     });
 
     it('should show car names for each expense', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       // Use getAllByText since Toyota Camry appears twice in the data
       expect(screen.getAllByText('Toyota Camry')).toHaveLength(2);

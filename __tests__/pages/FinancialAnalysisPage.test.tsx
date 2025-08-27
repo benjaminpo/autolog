@@ -12,6 +12,7 @@ import {
   setupStandardPageTest,
   createStandardLayoutTests,
   createStandardDataLoadingTests,
+  createStandardContentDisplayTests,
   setupLanguageContextMock,
 } from '../utils/testHelpers';
 
@@ -90,7 +91,6 @@ jest.mock('../../app/components/ErrorState', () => ({
   },
 }));
 
-// Mock Next.js Image component
 jest.mock('next/image', () => {
   return function MockImage({ src, alt, ...props }: any) {
     return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
@@ -133,51 +133,19 @@ describe('FinancialAnalysisPage', () => {
 
   describe('Layout and Structure', createStandardLayoutTests(FinancialAnalysisPage, 'Financial Analysis'));
 
-  describe('Content Display', () => {
-    it('should display no vehicles message when no cars are available', async () => {
-      (useVehicles as jest.Mock).mockReturnValue({
-        cars: [],
-        isLoading: false,
-        error: null,
-      });
-
-      render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('No vehicles found. Add vehicles to see financial analysis.')).toBeInTheDocument();
-      });
-    });
-
-    it('should display financial analysis for vehicles with data', async () => {
-      render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Financial Analysis & Break-Even')).toBeInTheDocument();
-        expect(screen.getByText('Overall Financial Summary')).toBeInTheDocument();
-      });
-    });
-
-    it('should calculate and display financial metrics', async () => {
-      render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Total Income')).toBeInTheDocument();
-        expect(screen.getByText('Total Costs')).toBeInTheDocument();
-        expect(screen.getByText('Net Profit')).toBeInTheDocument();
-        expect(screen.getByText('Profit Margin')).toBeInTheDocument();
-        expect(screen.getByText('ROI')).toBeInTheDocument();
-      });
-    });
-
-    it('should display vehicle images when available', async () => {
-      render(<FinancialAnalysisPage />);
-
-      await waitFor(() => {
-        const images = screen.getAllByTestId('next-image');
-        expect(images.length).toBeGreaterThan(0);
-      });
-    });
-  });
+  describe('Content Display', createStandardContentDisplayTests(FinancialAnalysisPage, {
+    noDataMessage: 'No vehicles found. Add vehicles to see financial analysis.',
+    hasDataElements: [
+      'Financial Analysis & Break-Even',
+      'Overall Financial Summary',
+      'Total Income',
+      'Total Costs',
+      'Net Profit',
+      'Profit Margin',
+      'ROI'
+    ],
+    hasImages: true
+  }));
 
   describe('Data Loading and Error Handling', createStandardDataLoadingTests(FinancialAnalysisPage, mockFetch));
 

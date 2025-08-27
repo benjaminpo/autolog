@@ -192,33 +192,30 @@ export const validateCurrency = (amount: any, currency: any) => {
          currency.length === 3;
 };
 
+// Shared mock setup patterns (consolidated - use the Mock* exports below instead)
+const createMockElement = (tag: string, testId: string, content?: string, extraProps?: any) => {
+  return React.createElement(tag, { 'data-testid': testId, ...extraProps }, content);
+};
+
 // Shared mock setup patterns
-export const createMockComponent = (testId: string, content: string = '') => {
-  return function MockComponent(props: any) {
-    return React.createElement('div', { 'data-testid': testId }, content);
-  };
-};
+export const createMockComponent = (testId: string, content: string = '') => 
+  () => createMockElement('div', testId, content);
 
-export const createMockButton = (testId: string, content: string = '') => {
-  return function MockButton(props: any) {
-    return React.createElement('button', { 'data-testid': testId }, content);
-  };
-};
+export const createMockButton = (testId: string, content: string = '') => 
+  () => createMockElement('button', testId, content);
 
-export const createMockSelect = (testId: string, options: string[] = ['English']) => {
-  return function MockSelect(props: any) {
-    return React.createElement('select', { 'data-testid': testId, title: 'Language selector' }, 
-      options.map(option => React.createElement('option', { key: option }, option))
-    );
-  };
-};
+export const createMockSelect = (testId: string, options: string[] = ['English']) => 
+  () => createMockElement('select', testId, 
+    options.map(option => React.createElement('option', { key: option }, option)),
+    { title: 'Language selector' }
+  );
 
 export const createMockErrorState = () => {
   return function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-    return React.createElement('div', { 'data-testid': 'error-state' },
-      React.createElement('span', null, error),
-      React.createElement('button', { onClick: onRetry }, 'Retry')
-    );
+    return createMockElement('div', 'error-state', [
+      React.createElement('span', { key: 'error' }, error),
+      React.createElement('button', { key: 'retry', onClick: onRetry }, 'Retry')
+    ]);
   };
 };
 
@@ -389,68 +386,183 @@ describe('testHelpers', () => {
 
 // Common mock setup functions to reduce duplication
 
-// Common Jest mock configurations
-export const createCommonComponentMocks = () => {
-  // PageContainer mock
-  jest.mock('../../app/components/PageContainer', () => {
-    return function MockPageContainer({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-      return React.createElement('div', { 'data-testid': 'page-container', className }, children);
-    };
-  });
+// Common Jest mock configurations - these are component factories for reuse
+// Note: jest.mock() calls must be at the top level, so use these in individual test files
 
-  // TranslatedNavigation mock
-  jest.mock('../../app/components/TranslatedNavigation', () => ({
-    TranslatedNavigation: function MockTranslatedNavigation() {
-      return React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation');
-    },
-  }));
+// Standard component mock factories
+export const MockPageContainer = ({ children, className = '' }: { children: React.ReactNode; className?: string }) =>
+  React.createElement('div', { 'data-testid': 'page-container', className }, children);
 
-  // AuthButton mock
-  jest.mock('../../app/components/AuthButton', () => ({
-    AuthButton: function MockAuthButton() {
-      return React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth');
-    },
-  }));
+export const MockTranslatedNavigation = () =>
+  React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation');
 
-  // GlobalLanguageSelector mock
-  jest.mock('../../app/components/GlobalLanguageSelector', () => ({
-    GlobalLanguageSelector: function MockGlobalLanguageSelector() {
-      return React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, 
-        React.createElement('option', null, 'English')
-      );
-    },
-  }));
+export const MockAuthButton = () =>
+  React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth');
 
-  // ThemeToggle mock
-  jest.mock('../../app/components/ThemeToggle', () => ({
-    SimpleThemeToggle: function MockSimpleThemeToggle() {
-      return React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme');
-    },
-  }));
+export const MockGlobalLanguageSelector = () =>
+  React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, 
+    React.createElement('option', null, 'English')
+  );
 
-  // LoadingState mock
-  jest.mock('../../app/components/LoadingState', () => ({
-    LoadingState: function MockLoadingState() {
-      return React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...');
-    },
-  }));
+export const MockSimpleThemeToggle = () =>
+  React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme');
 
-  // ErrorState mock
-  jest.mock('../../app/components/ErrorState', () => ({
-    ErrorState: function MockErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-      return React.createElement('div', { 'data-testid': 'error-state' },
-        React.createElement('span', null, error),
-        React.createElement('button', { onClick: onRetry }, 'Retry')
-      );
-    },
-  }));
+export const MockLoadingState = () =>
+  React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...');
 
-  // Next.js Image mock
-  jest.mock('next/image', () => {
-    return function MockImage({ src, alt, ...props }: any) {
-      return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
-    };
-  });
+export const MockErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) =>
+  React.createElement('div', { 'data-testid': 'error-state' },
+    React.createElement('span', null, error),
+    React.createElement('button', { onClick: onRetry }, 'Retry')
+  );
+
+export const MockNextImage = ({ src, alt, ...props }: any) =>
+  React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
+
+// Helper to reduce duplication in Content Display tests
+export const createStandardContentDisplayTests = (PageComponent: React.ComponentType, expectations: {
+  noDataMessage?: string;
+  hasDataElements?: string[];
+  hasImages?: boolean;
+}) => {
+  const renderComponent = () => render(React.createElement(PageComponent));
+  
+  return () => {
+    if (expectations.noDataMessage) {
+      it('should display no data message when no data is available', async () => {
+        const { useVehicles } = require('../../app/hooks/useVehicles');
+        (useVehicles as jest.Mock).mockReturnValue({
+          cars: [],
+          isLoading: false,
+          error: null,
+        });
+
+        renderComponent();
+
+        await waitFor(() => {
+          expect(screen.getByText(expectations.noDataMessage!)).toBeInTheDocument();
+        });
+      });
+    }
+
+    if (expectations.hasDataElements) {
+      it('should display main content elements when data is available', async () => {
+        renderComponent();
+
+        await waitFor(() => {
+          expectations.hasDataElements!.forEach(element => {
+            expect(screen.getByText(element)).toBeInTheDocument();
+          });
+        });
+      });
+    }
+
+    if (expectations.hasImages) {
+      it('should display images when available', async () => {
+        renderComponent();
+
+        await waitFor(() => {
+          const images = screen.getAllByTestId('next-image');
+          expect(images.length).toBeGreaterThan(0);
+        });
+      });
+    }
+  };
+};
+
+// Helper to reduce duplication in data processing tests
+export const createStandardDataProcessingTests = () => {
+  return () => {
+    it('should calculate total costs correctly', () => {
+      const entries = [
+        { cost: 50, currency: 'USD' },
+        { cost: 75, currency: 'USD' },
+        { cost: 30, currency: 'USD' },
+      ];
+      
+      const total = calculateTotal(entries, 'cost');
+      expect(total).toBe(155);
+    });
+
+    it('should calculate average costs correctly', () => {
+      const entries = [
+        { cost: 50 },
+        { cost: 60 },
+        { cost: 70 },
+      ];
+      
+      const average = calculateAverage(entries, 'cost');
+      expect(average).toBe(60);
+    });
+
+    it('should sort entries by date correctly', () => {
+      const entries = [
+        { date: '2023-01-03' },
+        { date: '2023-01-01' },
+        { date: '2023-01-02' },
+      ];
+      
+      const sorted = sortByDate(entries);
+      expect(sorted[0].date).toBe('2023-01-01');
+      expect(sorted[2].date).toBe('2023-01-03');
+    });
+
+    it('should filter entries by date range correctly', () => {
+      const entries = [
+        { date: '2023-01-01' },
+        { date: '2023-01-15' },
+        { date: '2023-02-01' },
+      ];
+      
+      const startDate = new Date('2023-01-01');
+      const endDate = new Date('2023-01-31');
+      const filtered = filterByDateRange(entries, startDate, endDate);
+      
+      expect(filtered).toHaveLength(2);
+    });
+
+    it('should validate entry data correctly', () => {
+      const entries = [
+        { amount: 50, date: '2023-01-01' },
+        { amount: -10, date: '2023-01-02' },
+        { amount: 'invalid', date: '2023-01-03' },
+        { amount: 30, date: null },
+      ];
+      
+      const valid = validateEntryData(entries);
+      expect(valid).toHaveLength(1);
+    });
+
+    it('should calculate pagination correctly', () => {
+      const totalEntries = 127;
+      const pageSize = 10;
+      const pages = calculatePagination(totalEntries, pageSize);
+      expect(pages).toBe(13);
+    });
+
+    it('should calculate page offset correctly', () => {
+      const currentPage = 3;
+      const pageSize = 10;
+      const offset = calculatePageOffset(currentPage, pageSize);
+      expect(offset).toBe(20);
+    });
+  };
+};
+
+// Helper to reduce duplication in currency/formatting tests
+export const createStandardFormattingTests = () => {
+  return () => {
+    it('should format currency correctly', () => {
+      const formatted = formatCurrency(123.45, 'USD');
+      expect(formatted).toBe('USD 123.45');
+    });
+
+    it('should validate currency correctly', () => {
+      expect(validateCurrency(50, 'USD')).toBe(true);
+      expect(validateCurrency('invalid', 'USD')).toBe(false);
+      expect(validateCurrency(50, 'INVALID_CURRENCY')).toBe(false);
+    });
+  };
 };
 
 // Common hook mocks setup
@@ -534,29 +646,31 @@ export const setupStandardPageTest = (mockFetch: jest.Mock, additionalMockFetchS
 
 // Standard layout test suite
 export const createStandardLayoutTests = (PageComponent: React.ComponentType, pageTitle: string) => {
+  const renderComponent = () => render(React.createElement(PageComponent));
+  
   return () => {
     it('should render with consistent layout structure', async () => {
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testLayoutStructure(pageTitle);
     });
 
     it('should render navigation component', async () => {
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testNavigationComponent();
     });
 
     it('should render main content within PageContainer', async () => {
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testPageContainer();
     });
 
     it('should have proper semantic structure with main element', async () => {
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testSemanticStructure();
     });
 
     it('should maintain consistent styling classes', async () => {
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testStylingClasses();
     });
   };
@@ -564,6 +678,8 @@ export const createStandardLayoutTests = (PageComponent: React.ComponentType, pa
 
 // Standard loading/error test suite
 export const createStandardDataLoadingTests = (PageComponent: React.ComponentType, mockFetch: jest.Mock) => {
+  const renderComponent = () => render(React.createElement(PageComponent));
+  
   return () => {
     it('should show loading state initially', () => {
       const { useVehicles } = require('../../app/hooks/useVehicles');
@@ -573,19 +689,19 @@ export const createStandardDataLoadingTests = (PageComponent: React.ComponentTyp
         error: null,
       });
 
-      render(React.createElement(PageComponent));
+      renderComponent();
       testLoadingState();
     });
 
     it('should show error state when there is an error', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testErrorState();
     });
 
     it('should retry data loading when retry button is clicked', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
-      render(React.createElement(PageComponent));
+      renderComponent();
       await testRetryFunctionality(mockFetch);
     });
 
@@ -596,7 +712,7 @@ export const createStandardDataLoadingTests = (PageComponent: React.ComponentTyp
         loading: false,
       });
 
-      render(React.createElement(PageComponent));
+      renderComponent();
       testMissingUserHandling(mockFetch);
     });
   };
@@ -643,5 +759,13 @@ export const createCustomMockSetup = (overrides: {
     filterHookReturn: { ...baseFilterReturn, ...overrides.filterHookOverrides },
     scrollHookReturn: { ...baseScrollReturn, ...overrides.scrollHookOverrides },
     languageContext: { ...baseLanguageContext, ...overrides.languageOverrides },
+  };
+};
+
+// Helper for reducing render call duplication in component tests
+export const createComponentRenderer = (Component: React.ComponentType<any>, defaultProps: any) => {
+  return (overrideProps: any = {}) => {
+    const props = { ...defaultProps, ...overrideProps };
+    return render(React.createElement(Component, props));
   };
 }; 

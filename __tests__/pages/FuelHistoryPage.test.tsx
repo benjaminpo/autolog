@@ -1,25 +1,18 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import FuelHistoryPage from '../../app/fuel-history/page';
 import { useAuth } from '../../app/context/AuthContext';
 import { useTranslation } from '../../app/hooks/useTranslation';
 import { useVehicles } from '../../app/hooks/useVehicles';
 import {
-  calculateTotal,
-  calculateAverage,
-  sortByDate,
-  filterByDateRange,
-  validateEntryData,
   calculateFuelEfficiency,
-  calculatePagination,
-  calculatePageOffset,
-  formatCurrency,
-  validateCurrency,
   mockFuelEntries,
   setupStandardPageTest,
   createStandardLayoutTests,
   createStandardDataLoadingTests,
+  createStandardDataProcessingTests,
+  createStandardFormattingTests,
 } from '../utils/testHelpers';
 
 // Mock dependencies
@@ -118,7 +111,6 @@ jest.mock('../../app/components/modals', () => ({
   },
 }));
 
-// Mock Next.js Image component
 jest.mock('next/image', () => {
   return function MockImage({ src, alt, ...props }: any) {
     return React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' });
@@ -167,7 +159,101 @@ describe('FuelHistoryPage', () => {
 
   describe('Layout and Structure', createStandardLayoutTests(FuelHistoryPage, 'Fuel History'));
 
-  describe('Data Loading and Error Handling', createStandardDataLoadingTests(FuelHistoryPage, mockFetch));
+  describe('Data Loading and Error Handling', () => {
+    it('should show loading state initially', () => {
+      const { useVehicles } = require('../../app/hooks/useVehicles');
+      (useVehicles as jest.Mock).mockReturnValue({
+        cars: [],
+        isLoading: true,
+        error: null,
+      });
+
+      render(<FuelHistoryPage />);
+      expect(screen.getByTestId('loading-state')).toBeInTheDocument();
+    });
+
+    it('should show error state when data loading fails', async () => {
+      // Mock all fetch calls to fail
+      mockFetch.mockRejectedValue(new Error('Network error'));
+      
+      render(<FuelHistoryPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+    });
+
+    it('should retry data loading when retry button is clicked', async () => {
+      // Mock all requests to fail initially
+      mockFetch.mockRejectedValue(new Error('Network error'));
+      
+      render(<FuelHistoryPage />);
+      
+      // Wait for error state to appear
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+      
+      // Reset mock and setup success responses for retry
+      mockFetch.mockClear();
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/fuel-entries')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              success: true,
+              entries: mockFuelEntries,
+            }),
+          });
+        }
+        if (url.includes('/api/fuel-companies')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              companies: [{ name: 'Shell' }],
+            }),
+          });
+        }
+        if (url.includes('/api/fuel-types')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              types: [{ name: 'Gasoline' }],
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+      
+      // Click retry button
+      const retryButton = screen.getByText('Retry');
+      fireEvent.click(retryButton);
+      
+      // Wait for error state to disappear and content to load
+      await waitFor(() => {
+        expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('fuel-tab')).toBeInTheDocument();
+      });
+    });
+
+    it('should handle missing user gracefully', () => {
+      const { useAuth } = require('../../app/context/AuthContext');
+      (useAuth as jest.Mock).mockReturnValue({
+        user: null,
+        loading: false,
+      });
+
+      render(<FuelHistoryPage />);
+      // When user is null, loadData function returns early, so no error should occur
+      expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+    });
+  });
 
   describe('Component Integration', () => {
     it('should render FuelTab component with correct props', async () => {
@@ -194,67 +280,9 @@ describe('FuelHistoryPage', () => {
     });
   });
 
-  describe('Fuel Entry Data Processing', () => {
-    it('should calculate total costs correctly', () => {
-      const entries = [
-        { cost: 50, currency: 'USD' },
-        { cost: 75, currency: 'USD' },
-        { cost: 30, currency: 'USD' },
-      ];
-      
-      const total = calculateTotal(entries, 'cost');
-      expect(total).toBe(155);
-    });
+  describe('Fuel Entry Data Processing', createStandardDataProcessingTests());
 
-    it('should calculate average costs correctly', () => {
-      const entries = [
-        { cost: 50 },
-        { cost: 60 },
-        { cost: 70 },
-      ];
-      
-      const average = calculateAverage(entries, 'cost');
-      expect(average).toBe(60);
-    });
-
-    it('should sort entries by date correctly', () => {
-      const entries = [
-        { date: '2023-01-03' },
-        { date: '2023-01-01' },
-        { date: '2023-01-02' },
-      ];
-      
-      const sorted = sortByDate(entries);
-      expect(sorted[0].date).toBe('2023-01-01');
-      expect(sorted[2].date).toBe('2023-01-03');
-    });
-
-    it('should filter entries by date range correctly', () => {
-      const entries = [
-        { date: '2023-01-01' },
-        { date: '2023-01-15' },
-        { date: '2023-02-01' },
-      ];
-      
-      const startDate = new Date('2023-01-01');
-      const endDate = new Date('2023-01-31');
-      const filtered = filterByDateRange(entries, startDate, endDate);
-      
-      expect(filtered).toHaveLength(2);
-    });
-
-    it('should validate entry data correctly', () => {
-      const entries = [
-        { amount: 50, date: '2023-01-01' },
-        { amount: -10, date: '2023-01-02' },
-        { amount: 'invalid', date: '2023-01-03' },
-        { amount: 30, date: null },
-      ];
-      
-      const valid = validateEntryData(entries);
-      expect(valid).toHaveLength(1);
-    });
-
+  describe('Fuel Efficiency Calculation', () => {
     it('should calculate fuel efficiency correctly', () => {
       const entries = [
         { odometer: 1000, amount: 40 },
@@ -264,34 +292,9 @@ describe('FuelHistoryPage', () => {
       const efficiency = calculateFuelEfficiency(entries);
       expect(efficiency).toBe(500 / 45);
     });
-
-    it('should calculate pagination correctly', () => {
-      const totalEntries = 127;
-      const pageSize = 10;
-      const pages = calculatePagination(totalEntries, pageSize);
-      expect(pages).toBe(13);
-    });
-
-    it('should calculate page offset correctly', () => {
-      const currentPage = 3;
-      const pageSize = 10;
-      const offset = calculatePageOffset(currentPage, pageSize);
-      expect(offset).toBe(20);
-    });
   });
 
-  describe('Currency and Formatting', () => {
-    it('should format currency correctly', () => {
-      const formatted = formatCurrency(123.45, 'USD');
-      expect(formatted).toBe('USD 123.45');
-    });
-
-    it('should validate currency correctly', () => {
-      expect(validateCurrency(50, 'USD')).toBe(true);
-      expect(validateCurrency('invalid', 'USD')).toBe(false);
-      expect(validateCurrency(50, 'INVALID_CURRENCY')).toBe(false);
-    });
-  });
+  describe('Currency and Formatting', createStandardFormattingTests());
 
   describe('Accessibility', () => {
     it('should have proper heading structure', async () => {
