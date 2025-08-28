@@ -1,168 +1,222 @@
-describe('FuelHistoryPage Logic Tests', () => {
-  describe('Data Processing', () => {
-    it('should calculate total fuel amount', () => {
-      const fuelEntries = [
-        { amount: 50.00 },
-        { amount: 30.00 },
-        { amount: 40.00 },
-      ];
+import React from 'react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import FuelHistoryPage from '../../app/fuel-history/page';
+import { useAuth } from '../../app/context/AuthContext';
+import { useTranslation } from '../../app/hooks/useTranslation';
+import { useVehicles } from '../../app/hooks/useVehicles';
+import {
+  calculateFuelEfficiency,
+  mockFuelEntries,
+  setupStandardPageTest,
+  createStandardLayoutTests,
+  createStandardDataProcessingTests,
+  createStandardFormattingTests,
+  createStandardAccessibilityTests,
+} from '../utils/testHelpers';
 
-      const total = fuelEntries.reduce((sum, entry) => sum + entry.amount, 0);
+// Mock dependencies - consolidated
+jest.mock('../../app/context/AuthContext', () => ({ useAuth: jest.fn() }));
+jest.mock('../../app/hooks/useTranslation', () => ({ useTranslation: jest.fn() }));
+jest.mock('../../app/hooks/useVehicles', () => ({ useVehicles: jest.fn() }));
+jest.mock('../../app/lib/idUtils', () => ({ getObjectId: jest.fn(() => 'mock-object-id') }));
+jest.mock('../../app/lib/vehicleData', () => ({ fuelCompanies: ['Shell', 'BP', 'Exxon'], fuelTypes: ['Gasoline', 'Diesel', 'Electric'] }));
 
-      expect(total).toBe(120.00);
-    });
+jest.mock('../../app/types/common', () => ({
+  FuelEntry: {},
+}));
 
-    it('should calculate total cost', () => {
-      const fuelEntries = [
-        { amount: 50.00, pricePerUnit: 1.50 },
-        { amount: 30.00, pricePerUnit: 1.60 },
-        { amount: 40.00, pricePerUnit: 1.55 },
-      ];
+// Mock components - compact inline definitions
+jest.mock('../../app/components/PageContainer', () => ({ children, className = '' }: any) => React.createElement('div', { 'data-testid': 'page-container', className }, children));
+jest.mock('../../app/components/TranslatedNavigation', () => ({ TranslatedNavigation: () => React.createElement('nav', { 'data-testid': 'translated-navigation' }, 'Navigation') }));
+jest.mock('../../app/components/AuthButton', () => ({ AuthButton: () => React.createElement('button', { 'data-testid': 'auth-button' }, 'Auth') }));
+jest.mock('../../app/components/GlobalLanguageSelector', () => ({ GlobalLanguageSelector: () => React.createElement('select', { 'data-testid': 'language-selector', title: 'Language selector' }, React.createElement('option', null, 'English')) }));
+jest.mock('../../app/components/ThemeToggle', () => ({ SimpleThemeToggle: () => React.createElement('button', { 'data-testid': 'theme-toggle' }, 'Theme') }));
+jest.mock('../../app/components/LoadingState', () => ({ LoadingState: () => React.createElement('div', { 'data-testid': 'loading-state' }, 'Loading...') }));
+jest.mock('../../app/components/ErrorState', () => ({ ErrorState: ({ error, onRetry }: any) => React.createElement('div', { 'data-testid': 'error-state' }, React.createElement('span', null, error), React.createElement('button', { onClick: onRetry }, 'Retry')) }));
+jest.mock('../../app/components/FuelTab', () => (props: any) => React.createElement('div', { 'data-testid': 'fuel-tab' }, React.createElement('div', null, 'Fuel Tab'), React.createElement('div', { 'data-testid': 'fuel-entries-count' }, props.entries?.length || 0)));
+jest.mock('../../app/components/withTranslations', () => (Component: any) => Component);
+jest.mock('../../app/components/modals', () => ({ Modals: () => React.createElement('div', { 'data-testid': 'modals' }, 'Modals') }));
+jest.mock('next/image', () => ({ src, alt, ...props }: any) => React.createElement('img', { src, alt, ...props, 'data-testid': 'next-image' }));
 
-      const totalCost = fuelEntries.reduce((sum, entry) => sum + (entry.amount * entry.pricePerUnit), 0);
+// Mock fetch globally
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
-      expect(totalCost).toBe(185.00);
-    });
-
-    it('should sort entries by date', () => {
-      const entries = [
-        { date: new Date('2023-01-01') },
-        { date: new Date('2023-01-15') },
-        { date: new Date('2023-01-08') },
-      ];
-
-      const sortedByDate = entries.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-      expect(sortedByDate[0].date.getDate()).toBe(1);
-      expect(sortedByDate[2].date.getDate()).toBe(15);
-    });
-
-    it('should filter entries by date range', () => {
-      const startDate = new Date('2023-01-01');
-      const endDate = new Date('2023-03-31');
-
-      const entries = [
-        { date: '2022-12-15', amount: 100 },
-        { date: '2023-02-10', amount: 150 },
-        { date: '2023-04-05', amount: 200 },
-      ];
-
-      const filteredEntries = entries.filter(entry => {
-        const entryDate = new Date(entry.date);
-        return entryDate >= startDate && entryDate <= endDate;
-      });
-
-      expect(filteredEntries).toHaveLength(1);
-      expect(filteredEntries[0].amount).toBe(150);
-    });
-
-    it('should calculate fuel efficiency', () => {
-      const entries = [
-        { amount: 50.00, odometer: 12000 },
-        { amount: 45.00, odometer: 12500 },
-      ];
-
-      if (entries.length >= 2) {
-        const distance = entries[1].odometer - entries[0].odometer;
-        const efficiency = distance / entries[1].amount;
-
-        expect(efficiency).toBeCloseTo(11.11);
+describe('FuelHistoryPage', () => {
+  beforeEach(setupStandardPageTest(mockFetch, (mockFetch) => {
+    // Custom fetch setup for fuel history
+    mockFetch.mockImplementation((url: string) => {
+      if (url.includes('/api/fuel-entries')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            success: true,
+            entries: mockFuelEntries,
+          }),
+        });
       }
-    });
-  });
-
-  describe('Data Validation', () => {
-    it('should handle empty fuel entries', () => {
-      const entries: any[] = [];
-      const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
-
-      expect(total).toBe(0);
-      expect(entries.length).toBe(0);
-    });
-
-    it('should validate entry data', () => {
-      const invalidEntries = [
-        { amount: null, date: 'invalid-date' },
-        { amount: 'not-a-number', date: '2023-01-01' },
-        { amount: 50, date: null },
-      ];
-
-             const validEntries = invalidEntries.filter((entry: any) =>
-         typeof entry.amount === 'number' &&
-         entry.amount > 0 &&
-         entry.date &&
-         typeof entry.date === 'string'
-       );
-
-      expect(validEntries).toHaveLength(0);
-    });
-  });
-
-  describe('Statistics Calculations', () => {
-    it('should calculate average price per unit', () => {
-      const entries = [
-        { pricePerUnit: 1.50 },
-        { pricePerUnit: 1.60 },
-        { pricePerUnit: 1.55 },
-      ];
-
-      const avgPrice = entries.reduce((sum, entry) => sum + entry.pricePerUnit, 0) / entries.length;
-
-      expect(avgPrice).toBeCloseTo(1.55);
-    });
-
-    it('should find most expensive fill-up', () => {
-      const entries = [
-        { totalCost: 75.00 },
-        { totalCost: 85.00 },
-        { totalCost: 65.00 },
-      ];
-
-      const maxCost = Math.max(...entries.map(entry => entry.totalCost));
-
-      expect(maxCost).toBe(85.00);
-    });
-  });
-
-  describe('Currency Formatting', () => {
-    it('should format currency amounts', () => {
-      const amount = 45.50;
-      const currency = 'USD';
-      const formattedAmount = `${currency} ${amount.toFixed(2)}`;
-
-      expect(formattedAmount).toBe('USD 45.50');
-    });
-
-    it('should handle different currencies', () => {
-      const amounts = [
-        { value: 100, currency: 'USD' },
-        { value: 85, currency: 'EUR' },
-        { value: 12000, currency: 'JPY' },
-      ];
-
-      amounts.forEach(amount => {
-        expect(typeof amount.value).toBe('number');
-        expect(typeof amount.currency).toBe('string');
-        expect(amount.currency.length).toBe(3);
+      if (url.includes('/api/fuel-companies')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            companies: [{ name: 'Shell' }, { name: 'BP' }],
+          }),
+        });
+      }
+      if (url.includes('/api/fuel-types')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            types: [{ name: 'Gasoline' }, { name: 'Diesel' }],
+          }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
       });
     });
-  });
+  }));
 
-  describe('Pagination Logic', () => {
-    it('should calculate pagination', () => {
-      const totalEntries = 150;
-      const pageSize = 25;
-      const totalPages = Math.ceil(totalEntries / pageSize);
+  describe('Layout and Structure', createStandardLayoutTests(FuelHistoryPage, 'Fuel History'));
 
-      expect(totalPages).toBe(6);
+  describe('Data Loading and Error Handling', () => {
+    it('should show loading state initially', () => {
+      const { useVehicles } = require('../../app/hooks/useVehicles');
+      (useVehicles as jest.Mock).mockReturnValue({
+        cars: [],
+        isLoading: true,
+        error: null,
+      });
+
+      render(<FuelHistoryPage />);
+      expect(screen.getByTestId('loading-state')).toBeInTheDocument();
     });
 
-    it('should calculate page offset', () => {
-      const currentPage = 3;
-      const pageSize = 25;
-      const offset = (currentPage - 1) * pageSize;
+    it('should show error state when data loading fails', async () => {
+      // Mock all fetch calls to fail
+      mockFetch.mockRejectedValue(new Error('Network error'));
+      
+      render(<FuelHistoryPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+    });
 
-      expect(offset).toBe(50);
+    it('should retry data loading when retry button is clicked', async () => {
+      // Mock all requests to fail initially
+      mockFetch.mockRejectedValue(new Error('Network error'));
+      
+      render(<FuelHistoryPage />);
+      
+      // Wait for error state to appear
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state')).toBeInTheDocument();
+      });
+      
+      // Reset mock and setup success responses for retry
+      mockFetch.mockClear();
+      mockFetch.mockImplementation((url: string) => {
+        if (url.includes('/api/fuel-entries')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              success: true,
+              entries: mockFuelEntries,
+            }),
+          });
+        }
+        if (url.includes('/api/fuel-companies')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              companies: [{ name: 'Shell' }],
+            }),
+          });
+        }
+        if (url.includes('/api/fuel-types')) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              types: [{ name: 'Gasoline' }],
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({}),
+        });
+      });
+      
+      // Click retry button
+      const retryButton = screen.getByText('Retry');
+      fireEvent.click(retryButton);
+      
+      // Wait for error state to disappear and content to load
+      await waitFor(() => {
+        expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+      });
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('fuel-tab')).toBeInTheDocument();
+      });
+    });
+
+    it('should handle missing user gracefully', () => {
+      const { useAuth } = require('../../app/context/AuthContext');
+      (useAuth as jest.Mock).mockReturnValue({
+        user: null,
+        loading: false,
+      });
+
+      render(<FuelHistoryPage />);
+      // When user is null, loadData function returns early, so no error should occur
+      expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
     });
   });
+
+  describe('Component Integration', () => {
+    it('should render FuelTab component with correct props', async () => {
+      render(<FuelHistoryPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('fuel-tab')).toBeInTheDocument();
+        expect(screen.getByText('Fuel Tab')).toBeInTheDocument();
+      });
+    });
+
+    it('should pass fuel entries to FuelTab', async () => {
+      render(<FuelHistoryPage />);
+
+      await waitFor(() => {
+        const entriesCount = screen.getByTestId('fuel-entries-count');
+        expect(entriesCount).toBeInTheDocument();
+      });
+    });
+
+    it('should render modals component', () => {
+      render(<FuelHistoryPage />);
+      expect(screen.getByTestId('modals')).toBeInTheDocument();
+    });
+  });
+
+  describe('Fuel Entry Data Processing', createStandardDataProcessingTests());
+
+  describe('Fuel Efficiency Calculation', () => {
+    it('should calculate fuel efficiency correctly', () => {
+      const entries = [
+        { odometer: 1000, amount: 40 },
+        { odometer: 1500, amount: 45 },
+      ];
+      
+      const efficiency = calculateFuelEfficiency(entries);
+      expect(efficiency).toBe(500 / 45);
+    });
+  });
+
+  describe('Currency and Formatting', createStandardFormattingTests());
+
+  describe('Accessibility', createStandardAccessibilityTests(FuelHistoryPage));
 });

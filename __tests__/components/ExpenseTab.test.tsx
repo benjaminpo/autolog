@@ -9,7 +9,9 @@ import {
   createMockTranslations, 
   createMockDataTableFiltersReturn, 
   createMockInfiniteScrollReturn,
-  createMockLanguageContext
+  createMockLanguageContext,
+  setupTabComponentMocks,
+  createCustomMockSetup,
 } from '../utils/testHelpers';
 
 // Mock hooks
@@ -150,14 +152,24 @@ const mockScrollHookReturn = createMockInfiniteScrollReturn({
 });
 
 describe('ExpenseTab', () => {
+  // Helper to reduce render call duplication
+  const renderExpenseTab = (props = {}) => {
+    return render(<ExpenseTab {...defaultProps} {...props} />);
+  };
+
   beforeEach(() => {
     // Reset all mocks
     jest.clearAllMocks();
     
-    // Setup default mock returns
-    mockUseLanguage.mockReturnValue(createMockLanguageContext('en', mockTranslations));
-    mockUseDataTableFilters.mockReturnValue(mockFilterHookReturn);
-    mockUseInfiniteScroll.mockReturnValue(mockScrollHookReturn);
+    // Setup default mock returns using helper
+    setupTabComponentMocks(
+      mockUseLanguage,
+      mockUseDataTableFilters,
+      mockUseInfiniteScroll,
+      mockTranslations,
+      mockExpenses,
+      mockExpenses
+    );
 
     // Mock console.log to avoid test noise
     jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -169,7 +181,7 @@ describe('ExpenseTab', () => {
 
   describe('Basic rendering', () => {
     it('should render data table controls', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       expect(screen.getByTestId('data-table-controls')).toBeInTheDocument();
       expect(screen.getByTestId('search-input')).toBeInTheDocument();
@@ -177,7 +189,7 @@ describe('ExpenseTab', () => {
     });
 
     it('should render expense table with headers', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       expect(screen.getByTestId('header-carId')).toBeInTheDocument();
       expect(screen.getByTestId('header-date')).toBeInTheDocument();
@@ -191,7 +203,7 @@ describe('ExpenseTab', () => {
     });
 
     it('should render expense entries in table', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       // Check amounts as they appear in the component (number + currency)
       expect(screen.getByText('100 USD')).toBeInTheDocument();
@@ -199,13 +211,13 @@ describe('ExpenseTab', () => {
       expect(screen.getByText('200 USD')).toBeInTheDocument();
       
       // Check categories
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
-      expect(screen.getByText('Fuel')).toBeInTheDocument();
-      expect(screen.getByText('Insurance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
+      expect(screen.getByText('fuel')).toBeInTheDocument();
+      expect(screen.getByText('insurance')).toBeInTheDocument();
     });
 
     it('should show car names for each expense', () => {
-      render(<ExpenseTab {...defaultProps} />);
+      renderExpenseTab();
       
       // Use getAllByText since Toyota Camry appears twice in the data
       expect(screen.getAllByText('Toyota Camry')).toHaveLength(2);
@@ -380,7 +392,7 @@ describe('ExpenseTab', () => {
       );
       
       // Should render visible items
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
     });
 
     it('should show loading indicator when loading', () => {
@@ -453,9 +465,9 @@ describe('ExpenseTab', () => {
     it('should translate expense categories', () => {
       render(<ExpenseTab {...defaultProps} />);
       
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
-      expect(screen.getByText('Fuel')).toBeInTheDocument();
-      expect(screen.getByText('Insurance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
+      expect(screen.getByText('fuel')).toBeInTheDocument();
+      expect(screen.getByText('insurance')).toBeInTheDocument();
     });
 
     it('should handle missing translations gracefully', () => {
@@ -535,7 +547,7 @@ describe('ExpenseTab', () => {
       );
       
       // Should render without crashing - check for category instead of notes
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
     });
 
     it('should log car data for debugging', () => {
@@ -573,7 +585,7 @@ describe('ExpenseTab', () => {
 
       render(<ExpenseTab {...minimalProps} />);
       
-      expect(screen.getByText('Maintenance')).toBeInTheDocument();
+      expect(screen.getByText('maintenance')).toBeInTheDocument();
     });
 
     it('should handle expenses with missing data', () => {

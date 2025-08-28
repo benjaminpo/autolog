@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { usePageLayout } from '../hooks/usePageLayout';
-import { PageWrapper } from '../components/PageWrapper';
-import { HeaderControls } from '../components/HeaderControls';
+import { useAuth } from '../context/AuthContext';
+import HistoryPageLayout from '../components/HistoryPageLayout';
+import { useTranslation } from '../hooks/useTranslation';
 import FuelTab from '../components/FuelTab';
 import withTranslations from '../components/withTranslations';
 import { useVehicles } from '../hooks/useVehicles';
@@ -17,7 +17,8 @@ const TranslatedFuelTab = withTranslations(FuelTab);
 const TranslatedModals = withTranslations(Modals);
 
 export default function FuelHistoryPage() {
-  const { user, t } = usePageLayout();
+  const { user } = useAuth();
+  const { t } = useTranslation();
   const { cars } = useVehicles();
   const [entries, setEntries] = useState<FuelEntry[]>([]);
   const [showFuelDetails, setShowFuelDetails] = useState<string | null>(null);
@@ -250,28 +251,13 @@ export default function FuelHistoryPage() {
   };
 
   return (
-    <PageWrapper
-      error={error}
-      onRetry={loadData}
-      loadingMessage={(t as any)?.common?.loading || 'Loading fuel history...'}
-      showHeader={false}
-    >
-      {/* Custom Header with title */}
-      <div className="sticky top-0 bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 shadow z-20 border-b border-gray-200 dark:border-gray-700 mb-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-lg font-bold">{(t as any)?.navigation?.fuelHistory || 'Fuel History'}</h1>
-          <HeaderControls />
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600 dark:text-gray-400">
-            {(t as any)?.common?.loading || 'Loading...'}
-          </span>
-        </div>
-      ) : (
+    <>
+      <HistoryPageLayout
+        title={t?.navigation?.fuelHistory || 'Fuel History'}
+        isLoading={isLoading}
+        error={error}
+        onRetry={loadData}
+      >
         <TranslatedFuelTab
           cars={cars}
           entries={entries}
@@ -284,7 +270,7 @@ export default function FuelHistoryPage() {
           hasMore={hasMore}
           loading={isLoadingMore}
         />
-      )}
+      </HistoryPageLayout>
 
       {/* Modals */}
       <TranslatedModals
@@ -311,6 +297,6 @@ export default function FuelHistoryPage() {
         setEditFuelCompany={() => {}}
         setEditFuelType={() => {}}
       />
-    </PageWrapper>
+    </>
   );
 }

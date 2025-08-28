@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -22,7 +22,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (session?.user) {
       setUser({
-        id: session.user.id as string,
+        id: session.user.id,
         name: session.user.name || '',
         email: session.user.email || ''
       });
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, [session]);
 
-  const login = async (email: string, password: string, language?: 'en' | 'zh') => {
+  const login = useCallback(async (email: string, password: string, language?: 'en' | 'zh') => {
     try {
       setLoading(true);
       setError(null);
@@ -81,9 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return false;
     }
-  };
+  }, [router]);
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = useCallback(async (name: string, email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -109,9 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return false;
     }
-  };
+  }, [login]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await signOut({ redirect: false });
       router.push('/auth/login');
@@ -120,10 +120,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Continue with redirect even if sign out fails
       router.push('/auth/login');
     }
-  };
+  }, [router]);
+
+  const value = useMemo(() => ({
+    user,
+    loading,
+    login,
+    register,
+    logout,
+    error,
+    setError
+  }), [user, loading, error, login, register, logout]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, error, setError }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
