@@ -25,20 +25,31 @@ const MockFormComponent = ({ onSubmit, initialData = {} }: { onSubmit: (data: an
 
   return (
     <form onSubmit={handleSubmit} data-testid="mock-form">
-      <input
-        name="name"
-        value={formData.name || ''}
-        onChange={handleChange}
-        placeholder="Name"
-        data-testid="name-input"
-      />
-      <input
-        name="email"
-        value={formData.email || ''}
-        onChange={handleChange}
-        placeholder="Email"
-        data-testid="email-input"
-      />
+      <div>
+        <label htmlFor="name-input">Name</label>
+        <input
+          id="name-input"
+          name="name"
+          value={formData.name || ''}
+          onChange={handleChange}
+          placeholder="Name"
+          data-testid="name-input"
+          aria-required="true"
+        />
+      </div>
+      <div>
+        <label htmlFor="email-input">Email</label>
+        <input
+          id="email-input"
+          name="email"
+          type="email"
+          value={formData.email || ''}
+          onChange={handleChange}
+          placeholder="Email"
+          data-testid="email-input"
+          aria-required="true"
+        />
+      </div>
       <button type="submit" data-testid="submit-button">
         Submit
       </button>
@@ -79,21 +90,61 @@ const MockModal = ({
   onClose: () => void;
   children: React.ReactNode
 }) => {
+  React.useEffect(() => {
+    if (isOpen) {
+      // Focus management for modal
+      const focusableElements = document.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const firstFocusable = focusableElements[0] as HTMLElement;
+      if (firstFocusable) {
+        firstFocusable.focus();
+      }
+    }
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
     <div
       data-testid="modal-overlay"
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)' }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div
         data-testid="modal-content"
         role="dialog"
         aria-modal="true"
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
       >
+        <div id="modal-title" style={{ position: 'absolute', left: '-10000px' }}>
+          Modal Dialog
+        </div>
+        <div id="modal-description" style={{ position: 'absolute', left: '-10000px' }}>
+          Use this dialog to add or edit information
+        </div>
         <button
           data-testid="modal-close"
           onClick={onClose}
+          aria-label="Close modal"
         >
           ×
         </button>
@@ -189,25 +240,32 @@ const MockFilterComponent = ({
 
   return (
     <div data-testid="filter-component">
-      <input
-        type="text"
-        placeholder="Search..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        data-testid="search-input"
-      />
-      <label htmlFor="category-select">Test Select</label>
-      <select
-        id="category-select"
-        data-testid="category-select"
-        title="Select an option"
-        value={selectedCategory}
-        onChange={(e) => setSelectedCategory(e.target.value)}
-      >
-        <option value="all">All Categories</option>
-        <option value="work">Work</option>
-        <option value="personal">Personal</option>
-      </select>
+      <div>
+        <label htmlFor="search-input">Search</label>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          data-testid="search-input"
+          aria-label="Search items by name or email"
+        />
+      </div>
+      <div>
+        <label htmlFor="category-select">Category Filter</label>
+        <select
+          id="category-select"
+          data-testid="category-select"
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          aria-label="Filter by category"
+        >
+          <option value="all">All Categories</option>
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+        </select>
+      </div>
     </div>
   );
 };
@@ -435,6 +493,15 @@ describe('Component Integration Tests', () => {
         <div
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              addEvent('container-click');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Event container - click to trigger container event"
           className="w-full p-4 border border-gray-300 bg-gray-50"
         >
           <button
