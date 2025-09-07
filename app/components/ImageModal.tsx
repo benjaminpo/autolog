@@ -51,6 +51,7 @@ export default function ImageModal({ isOpen, onClose, imageSrc, altText }: Image
       role="dialog"
       aria-modal="true"
       aria-label="Image viewer"
+      tabIndex={-1}
     >
       <div className="relative max-w-[90vw] max-h-[90vh] bg-white dark:bg-gray-800 rounded-lg shadow-xl">
         {/* Close button */}

@@ -32,7 +32,25 @@ const customJestConfig = {
     '!app/**/*.d.ts',
     '!app/node_modules/**',
     '!app/.next/**',
+    '!app/**/types/**',
+    '!app/**/*.config.*',
+    '!app/**/*.stories.*',
   ],
+  coverageReporters: [
+    'text',
+    'lcov',
+    'clover',
+    'html'
+  ],
+  coverageDirectory: 'coverage',
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80
+    }
+  },
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.json',
