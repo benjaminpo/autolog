@@ -88,7 +88,6 @@ const MockModal = ({
     >
       <div
         data-testid="modal-content"
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
@@ -433,13 +432,14 @@ describe('Component Integration Tests', () => {
       };
 
       return (
-        <fieldset
+        <div
           data-testid="event-container"
           onClick={() => addEvent('container-click')}
           onKeyDown={(e) => e.key === 'Enter' && addEvent('container-enter')}
           aria-label="Event testing container"
           tabIndex={0}
-          role="group"
+          role="button"
+          className="w-full p-4 border border-gray-300 bg-transparent text-left cursor-pointer"
         >
           <button
             data-testid="propagation-button"
@@ -465,7 +465,7 @@ describe('Component Integration Tests', () => {
               </div>
             ))}
           </div>
-        </fieldset>
+        </div>
       );
     };
 

@@ -357,7 +357,7 @@ describe('UI Accessibility Tests', () => {
             <div className="form-field">
               <label htmlFor="required-field">
                 Required Field
-                <span className="required-indicator" aria-label="required">*</span>
+                <span className="required-indicator" aria-label="required"> *</span>
               </label>
               <input
                 type="text"
