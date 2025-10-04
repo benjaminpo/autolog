@@ -1,6 +1,18 @@
 # Vehicle Expense Tracker (AutoLog)
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=coverage)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=bugs)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=benjaminpo_autolog&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=benjaminpo_autolog)
+
+[![CI](https://github.com/benjaminpo/autolog/actions/workflows/ci.yml/badge.svg)](https://github.com/benjaminpo/autolog/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/benjaminpo/autolog/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/github/benjaminpo/autolog)
 
 A comprehensive web and mobile application for tracking vehicle expenses, fuel consumption, and income. Built with Next.js, React, TypeScript, and Capacitor for cross-platform mobile support.
 
@@ -109,19 +121,28 @@ npx cap open android
 npx cap open ios
 ```
 
-## 🧪 Test Coverage & Robustness
+## 🧪 Test Coverage & Code Quality
 
 - **Comprehensive test coverage** for all major components, API utilities, and edge cases
 - **Edge case tests** for null/undefined/empty/malformed data, large datasets, rapid prop changes, and internationalization
 - **Stress tests** for performance and concurrent requests
 - **Security tests** for input validation and authentication
 - **Accessibility tests** for WCAG compliance
+- **SonarCloud integration** for continuous code quality monitoring
+- **Automated coverage reporting** with detailed metrics and trends
+- **Code quality gates** preventing regression in maintainability, security, and reliability
 - **All tests pass** as of the latest update
+
+### Coverage Reports
+- **SonarCloud**: Comprehensive code quality analysis with coverage tracking
+- **Codecov**: Detailed coverage reports with pull request integration
+- **Local coverage**: Run `npm run test:coverage` for detailed HTML reports
 
 ## 📚 Documentation
 
 - [API Architecture](./docs/API_ARCHITECTURE.md) - Detailed API design and endpoints
 - [Testing Guide](./docs/testing.md) - Comprehensive testing documentation
+- [SonarCloud Setup](./docs/SONARCLOUD_SETUP.md) - Code quality monitoring configuration
 - [Production OAuth Setup](./docs/PRODUCTION_OAUTH_SETUP.md) - OAuth configuration for production
 - [MongoDB Production Troubleshooting](./docs/MONGODB_PRODUCTION_TROUBLESHOOTING.md) - Database deployment guide
 - [Google OAuth Setup](./GOOGLE_OAUTH_SETUP.md) - Google authentication configuration
