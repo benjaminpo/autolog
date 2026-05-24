@@ -1,0 +1,49 @@
+# General Behavior
+- Be concise. Do not explain standard code patterns unless asked.
+- Focus on the "Unique Value" of the change.
+- If a solution is effectively identical to the existing code, say "No changes needed".
+
+- Always use FastAPI, use Type Hints, use Shadcn UI for frontend.
+- Environment Variables: use .env files for T212_API_KEY and PINECONE_API_KEY so doesn't hardcode them into the logic.
+- Min API call if possible
+- Cache API call if possible
+- Make sure code are lint and have at least 80% unit test and integration test.
+- Cleanup unused code.
+- Update readme.
+- Update gitignore.
+
+# Agent Boundaries
+- NEVER commit code without user review strings.
+- NEVER delete config files (.env, package.json) without explicit confirmation.
+- If you find a security vulnerability, STOP and report it immediately.
+
+# Python
+- All IO-bound operations MUST be `async def`.
+- Use Pydantic V2 `model_validate` patterns.
+- Type hints are mandatory (Python 3.12+ syntax).
+
+# Dependency Verification
+- If you are about to import an npm package, FIRST run `npm list <package>` via the terminal
+  agent and verify it is installed in the project with 100% certainty.
+- If using a Python package, run `pip show <package>` before importing.
+- NEVER assume a package exists based on training data — always verify at runtime.
+- When using a framework API (React, Next.js, etc.), use Context7 MCP to fetch current docs.
+
+# Interface-First Development
+- When adding a new feature, NEVER write implementation directly.
+- First define types/interfaces in a separate block.
+- Present the interface for user approval.
+- Only after explicit approval, write the implementation.
+- This prevents wasted compute on wrong abstractions.
+
+# Zero Placeholders
+- NEVER use placeholder comments like "// TODO: implement this" or "// rest of the code".
+- Every function must be fully implemented or not included at all.
+- If you cannot complete a function, explain WHY and ask for guidance.
+- Autonomous agents (Automations) cannot ask follow-ups — they must complete or abort.
+
+# Defensive Commits
+- Before starting any multi-file refactoring, create a git checkpoint:
+  `git add -A && git commit -m "checkpoint: before <task>"`
+- After every successful test run, commit immediately.
+- Never modify more than 3 files without an intermediate commit.
