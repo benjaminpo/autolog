@@ -46,7 +46,7 @@
     "mongodb": "^6.17.0",
     "mongoose": "^8.18.3",
     "next": "^15.3.5",
-    "next-auth": "^4.24.12",
+    "next-auth": "^4.24.14",
     "papaparse": "^5.5.3",
     "postcss": "^8.5.15",
     "postcss-nesting": "^13.0.2",
@@ -58,6 +58,7 @@
   },
   "overrides": {
     "postcss": "$postcss",
+    "uuid": "^11.1.0",
     "minimatch@3": {
       "brace-expansion": "1.1.13"
     }
