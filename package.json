@@ -48,7 +48,7 @@
     "next": "^15.3.5",
     "next-auth": "^4.24.14",
     "papaparse": "^5.5.3",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.18",
     "postcss-nesting": "^13.0.2",
     "react": "^19.1.1",
     "react-dom": "^19.0.0",
